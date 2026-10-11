@@ -1,0 +1,102 @@
+# Date: 2026/10/10, 20:35:17.
+# Version: 1.0
+#
+# Every line that is not a pattern starts with "#"; git reads any other
+# line as a file pattern.
+
+# ======================================================================
+# Local commit and push tooling: not part of the project
+# ======================================================================
+
+# Local, non project specific commit and push automation helper: never
+# committed to any repository it sits inside.
+COMMIT-PUSH-SCRIPT.bat
+
+
+# Local record of tag version history for the commit and push script.
+TAG-VERSION-LOG.txt
+
+# Local, permanent, overwritten in place commit message text.
+COMMIT-MESSAGE.txt
+
+# Local, permanent, overwritten in place tag message text.
+TAG-MESSAGE.txt
+
+# Last used content hash of COMMIT-MESSAGE.txt, so the script can detect
+# a forgotten update. Local bookkeeping only.
+.commit-message-hash.txt
+
+# Last used content hash of TAG-MESSAGE.txt, for the same reason as
+# stated above. Local bookkeeping only.
+.tag-message-hash.txt
+
+# ======================================================================
+# Node.js and TypeScript
+# ======================================================================
+
+# Third party packages installed by "npm install". They are rebuilt
+# from package.json and package-lock.json, which ARE committed, so the
+# folder itself is never committed: it is large and machine specific.
+node_modules/
+
+# Compiled JavaScript output, if a build step is added later. Only the
+# TypeScript source is committed.
+dist/
+build/
+
+# Incremental compilation cache written by the TypeScript compiler.
+*.tsbuildinfo
+
+# Test coverage reports, regenerated on every coverage run.
+coverage/
+
+# ======================================================================
+# Secrets
+# ======================================================================
+
+# Environment files hold database URLs and API keys [the future
+# Supabase project]. Committing one to a public repository exposes the
+# database to anyone. Must never be committed under any circumstance.
+.env
+.env.*
+
+# ======================================================================
+# Keyman
+# ======================================================================
+
+# Compiled keyboard packages and lexical models; only their sources
+# are committed.
+keyman/**/build/
+*.kmp
+*.kmx
+
+# ======================================================================
+# Logs
+# ======================================================================
+
+# Generated logs from local test runs and npm failures.
+*.log
+npm-debug.log*
+
+# ======================================================================
+# Operating system and editor junk
+# ======================================================================
+
+# OS generated files.
+.DS_Store
+Thumbs.db
+Desktop.ini
+._*
+
+# Editor and IDE local settings.
+.vscode/
+.idea/
+*.swp
+
+# ======================================================================
+# Personal working folders: never intended for this public project
+# ======================================================================
+
+# Personal working folders: never intended for this public project.
+HISTORICAL/
+INSTRUCTIONS/

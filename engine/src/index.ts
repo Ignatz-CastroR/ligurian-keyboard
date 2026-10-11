@@ -1,0 +1,10 @@
+/*
+ * index.ts
+ * Author:   Iosef Tesla R. [Ignatz-CastroR] and contributors
+ * Date:     2026/10/10
+ * Purpose:  Public API of the conversion engine.
+ */
+
+export { skeleton, isPlainAscii } from "./skeleton.ts";
+export { Lexicon, type LexiconEntry, type LoadError, type LookupFilter } from "./lexicon.ts";
+export { convertToken, renderChoice, type Conversion, type ConversionKind } from "./convert.ts";

@@ -14,4 +14,4 @@ Rows with an invalid form or frequency are reported with their line number, neve
 
 This TSV is an **export**, not the place where people edit. The source of truth will be the database in `db/`; a nightly job writes this file plus the Keyman model.
 
-Glosses in Italian and English belong to the lexicon database, linked to the lemma; they are not needed by the input method and are not part of this file.
+Meanings and translations belong to the dictionary database [`db/`]: each lemma has numbered senses, and each sense optional glosses in Italian, Spanish and English. The input method does not need them, so they are not part of this file.

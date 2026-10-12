@@ -10,7 +10,12 @@
     "erasableSyntaxOnly": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["engine/**/*.ts"]
+  "include": [
+    "engine/**/*.ts",
+    "db/**/*.ts"
+  ]
 }

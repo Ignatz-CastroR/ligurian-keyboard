@@ -11,6 +11,12 @@ Until the lexicon manager exists, propose words by pull request or issue as TSV 
 * write `pending` in `status`; reviewers switch it to `approved`;
 * contribute only words from your own knowledge, or from sources whose license allows it. **Do not copy entries from copyrighted dictionaries.**
 
+## Meanings and translations
+
+* Each meaning of a word is a separate **sense**, numbered 1, 2, 3 ...
+* Write each sense's **definition in Italian**. Definitions in Ligurian will come later, once the keyboard makes typing Ligurian easy [`docs/decisions/0015-definitions-in-italian.md`].
+* Translations into **Italian, Spanish and English** are optional. Attach each one to the precise sense it translates.
+
 ## Code
 
 * Code, identifiers and comments in English.

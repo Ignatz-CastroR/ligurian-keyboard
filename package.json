@@ -1,6 +1,6 @@
 {
   "name": "ligurian-keyboard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Scrivi in ligure [grafîa ofiçiâ] da qualsiasi tastiera | Write Ligurian in grafîa ofiçiâ from any keyboard",
   "license": "MIT",
   "private": true,
@@ -9,12 +9,15 @@
     "node": ">=22.18"
   },
   "scripts": {
-    "test": "node --test \"engine/test/**/*.test.ts\"",
+    "test": "node --test \"engine/test/**/*.test.ts\" \"db/test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "demo": "node engine/src/demo.ts",
-    "check": "npm run typecheck && npm test"
+    "check": "npm run typecheck && npm test",
+    "test:engine": "node --test \"engine/test/**/*.test.ts\"",
+    "test:db": "node --test \"db/test/**/*.test.ts\""
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@types/node": "^22.0.0",
     "typescript": "^5.8.0"
   }

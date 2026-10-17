@@ -14,11 +14,88 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- 0.9: bulk import of word lists, each one checked by
+- 0.10: bulk import of word lists, each one checked by
   `validate-lexicon` before it reaches the database.
-- 0.10: database backups, hardening, contributor documentation; a
+- 0.11: database backups, hardening, contributor documentation; a
   beta with native speakers in Genoa.
 - 1.0: when every criterion in the README's roadmap is met.
+
+## [0.9.0] [2026/10/17] [elided words]
+
+### Added
+- Elided words are split at the apostrophe [decision 0029]. The
+  dictionary needed `ægua`, `d'ægua`, `l'ægua` and every other
+  combination of a particle with a word; now each particle [`d'`,
+  `l'`, `quell'`] and each word is entered once, and the input method
+  joins them:
+  - `engine/src/elision.ts`, `splitElision`: a word splits after
+    every apostrophe with a letter right before and right after it;
+    an apostrophe at the start or the end, as in `'na` and `pe'`,
+    never splits, nor does a hyphen. U+02BC, which Unicode files as a
+    letter, counts as an apostrophe.
+  - `engine/src/convert.ts`: a word is looked up whole first, and the
+    whole word always wins. Only when it is not in the dictionary is
+    it split and each part converted on its own, with its own casing:
+    `d'aegua` gives `d'ægua`, `D'AEGUA` gives `D'ÆGUA`. An unknown
+    part stays as typed; with no known part, nothing changes. When a
+    part has several spellings, the menu offers the combinations,
+    ranked by the sum of the parts' ranks, at most 9. The web editor
+    needed no change: it receives the candidates as before.
+  - The Keyman dictionary package carries its own word breaker, a
+    self-contained ES3 copy of the same rule, so after `d'` the
+    suggestions start again for the next word. It also keeps
+    hyphenated words whole, as the previous setting did.
+  - The corpus counter takes the parts of an elided word from the
+    same `splitElision`.
+  Verified by 7 engine tests, an editor test that types `un gotto
+  d'aegua`, and 2 Keyman tests: the word breaker splits exactly where
+  `splitElision` does, in the source and inside the compiled model,
+  on a fixed list and 3,000 pseudo-random strings of Ligurian
+  letters, decomposed accents, apostrophes, hyphens and spaces. The
+  first run of that test found a real disagreement, U+02BC, now
+  settled in the engine.
+- The lexicon manager warns, and asks before saving, when a form
+  being typed joins a particle and a word, such as `d'ægua`, and names
+  its parts: `d'ægua [d' + ægua]`. On a lemma, only the headword being
+  typed is checked, not its saved forms. The ñ warning and this one
+  share one warning area and ask one question each. Texts in Italian,
+  English and Spanish; 1 test. NOTE: run in a simulated browser on the
+  new lemma page, as for 0.8.0: both warnings appear and disappear as
+  they should, and answering no stops the save.
+- The manager's header links to the Android keyboard page,
+  `/tastiera/`, as the editor's already did.
+- Decision record 0029 [elided words]; records 0018, 0020 and 0022
+  point to it, and the open question of 0022 on elided forms is
+  marked as settled.
+
+### Changed
+- The install page says first, in Italian, English and Spanish, that
+  accents are never needed: typing `zeneize` puts `zenéize` in the
+  suggestion bar. The long press comes last, as an option. A new line
+  explains that the word starts again after an apostrophe. The
+  keyboard's welcome page says the same, in Italian and English.
+- `README.md`, `CONTRIBUTING.md`, `admin/README.md`,
+  `editor/README.md` and `keyman/README.md`: elided words, the
+  particles as entries of their own, the phone checklist, test counts
+  [154 in all], and the roadmap, which moves bulk import to 0.10 and
+  backups and the beta to 0.11, in English and in the Italian summary.
+- Keyboard version 0.9.0, following the project's; the keys are
+  unchanged.
+
+### Known issues
+- Keyman adds a space after every accepted suggestion, so choosing a
+  particle such as `d'` from the suggestion bar may leave `d' ` with
+  a space. Typing the particle and going on with the word avoids it;
+  to be observed on a phone.
+- The Android keyboard still cannot replace a word by itself on
+  space: Keyman 18 applies a suggestion only when it is tapped.
+  Keyman 19, in beta since 2026/10/06 with the stable release
+  expected early in 2027, adds autocorrection of high probability
+  typos on Android and iPhone; whether it treats `zeneize` as such a
+  typo for `zenéize` must be tested on a phone with the beta.
+- The particles themselves are not in the dictionary yet. Until they
+  are, the part after them is still converted and the particle stays
+  as typed.
 
 ## [0.8.3] [2026/10/17] [counting fixes; no literal invisible characters]
 
@@ -878,7 +955,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.3...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.3...v0.9.0
 [0.8.3]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.0...v0.8.1

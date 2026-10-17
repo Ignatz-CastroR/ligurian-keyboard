@@ -4,7 +4,7 @@
 * **Date:** 2026/10/17
 * **Decided by:** Eng. José Ignacio Castro de R.
 * **Refines:** [0021](0021-keyman-scope-and-toolchain.md), point 3: the key function is a hand-written copy guarded by tests, not generated from the engine's source
-* **Refined by:** [0023](0023-lexicon-manager-spanish-history-csv.md), on the languages of the install page; [0024](0024-letter-enye.md), on the long press of n
+* **Refined by:** [0023](0023-lexicon-manager-spanish-history-csv.md), on the languages of the install page; [0024](0024-letter-enye.md), on the long press of n; [0029](0029-elision.md), on the word breaker and elided forms
 
 ## Context
 
@@ -55,5 +55,5 @@ Decision [0021](0021-keyman-scope-and-toolchain.md) fixed what version 0.5.0 del
 * **Suggestions themselves cannot be tested automatically.** Keyman's prediction engine is not published as a package. The tests check everything Keyman receives [the key function, the word index, the options, the package contents]; whether the banner behaves well is checked on a real phone.
 * **`æ` typed with the long press probably gets weaker suggestions than `ae` typed in plain letters.** While searching for corrections, Keyman 18 turns each typed character into a key on its own and compares it with single characters of the dictionary's index; `æ` becomes `ae`, two characters, so it never matches and every such word costs edits. `ç` and the hyphen are not affected. No fix exists inside Keyman's word list models without breaking the identity with `skeleton()`; typing `ae` works fully, and the phone checklist in `keyman/README.md` measures how bad the long press case is.
 * **Rows are 1150 units wide.** Keyman puts a 15 unit gap before every key and stretches the last key of any shorter row, so every row is computed to the same width with Keyman's own arithmetic, which a test repeats.
-* **Elided forms are one word.** Like the engine, Keyman's default word breaker keeps `l'ægua` together, so it gets a suggestion only if the dictionary holds `l'ægua` itself. Whether to split at the apostrophe, in the engine and in the keyboard together, is an open question for the native contributors.
+* **Elided forms are one word.** Like the engine, Keyman's default word breaker keeps `l'ægua` together, so it gets a suggestion only if the dictionary holds `l'ægua` itself. Whether to split at the apostrophe, in the engine and in the keyboard together, is an open question for the native contributors. [Settled by [0029](0029-elision.md): both split after the apostrophe since 0.9.0.]
 * **Updating the dictionary on the phone means installing the package again.** Self-distributed packages do not update themselves; that comes only with Keyman's official repository [0021].

@@ -13,6 +13,7 @@
 | Keep typing with the menu open | Accept the highlighted spelling |
 | Backspace right after a conversion | Undo it: the typed word comes back |
 | Ctrl+Z | The browser's own undo, conversions included |
+| Type an elided word, such as `d'aegua` | If the whole word is not in the dictionary, each part is converted on its own: `d'ægua` from `d'` and `ægua` [decision [0029](../docs/decisions/0029-elision.md)] |
 
 On a phone the menu is a bar above the keyboard; tap a spelling. The text must then be copied into the app where it is going: typing straight into other apps is the job of the Android keyboard, installed from the page `/tastiera/` [see [keyman/README.md](../keyman/README.md)].
 

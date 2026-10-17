@@ -3,6 +3,7 @@
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 02:15:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 08:23:03: Spanish; the same languages as the manager.
+ * Updated:  2026/10/17, 12:15:40: an elided word typed in the editor.
  * Purpose:  Tests of the web editor's decisions [ime.ts] and of the
  *           dictionary snapshot [snapshot.ts], on the test fixture,
  *           whose spellings are copied from the Académia's alphabet page.
@@ -44,6 +45,22 @@ test("a single candidate replaces the word and moves the caret", () => {
   if (plan.kind === "replace") {
     assert.equal(applyEdit("a zena ", plan.edit), "a Zêna ", "a proper noun keeps its capital");
     assert.equal(plan.edit.caret, 7, "same length: the caret stays after the space");
+  }
+});
+
+test("an elided word is converted part by part, as the engine decides", () => {
+  const small: Lexicon = Lexicon.fromTsv([
+    "form\tfreq\tvariety\torthography\tstatus",
+    "d'\t500\tzeneize\tofiçiâ\tapproved",
+    "ægua\t150\tzeneize\tofiçiâ\tapproved",
+  ].join("\n"));
+  const before: string = "un gotto d'aegua ";
+  const plan: Plan = typed(small, before);
+  assert.equal(plan.kind, "replace");
+  if (plan.kind === "replace") {
+    const after: string = applyEdit(before, plan.edit);
+    assert.equal(after, "un gotto d'ægua ");
+    assert.equal(plan.edit.caret, after.length);
   }
 });
 

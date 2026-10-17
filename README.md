@@ -164,6 +164,7 @@ Two details make it feel natural:
 
 * **Capitals are kept.** Typing `Zena` or `ZENA` gives `Zêna` or `ZÊNA`; proper nouns keep their capital even when typed in lowercase.
 * **Punctuation is kept.** Typing `"penna?` keeps the quote and the question mark around the converted word.
+* **Elided words are converted part by part.** If the whole word is not in the dictionary, it is split after each inner apostrophe and every part is converted on its own: `d'aegua` gives `d'ægua` from the entries `d'` and `ægua`, so the dictionary needs each particle and each word only once [decision [0029](docs/decisions/0029-elision.md)]. The Android keyboard splits words at the same place, so after `d'` it suggests the next word afresh.
 
 ### In the Android keyboard: suggestions
 
@@ -233,14 +234,14 @@ Both lists live in the database, so adding a variety or a spelling system is a s
 
 | Part | Folder | What it does | State |
 |---|---|---|---|
-| Conversion engine | `engine/` | Computes skeletons, loads the word list, converts typed words, builds the menu | working, 17 tests |
+| Conversion engine | `engine/` | Computes skeletons, loads the word list, converts typed words and elided words, builds the menu | working, 24 tests |
 | Word counts | `corpus/` | Counts the words of the Ligurian Wikipedia, so the most used spelling comes first | working, 15 tests |
 | Terminal demo | `engine/src/demo.ts` | Try the engine from the command line | working |
 | Shared dictionary | `db/` | Words, meanings, translations, roles, review, history | working and deployed, 31 tests |
 | Export | `db/` [`export_lexicon_tsv()`] | Writes the approved words in the engine's format | working |
-| Lexicon manager | `admin/` | Web page to search, propose and review words, in Italian, English and Spanish | working, 28 tests |
-| Web editor | `editor/` | Web page where anyone types Ligurian with the engine and the published dictionary, in Italian, English and Spanish | working, 17 tests |
-| Android keyboard | `keyman/` | Keyman keyboard and dictionary for Android phones and tablets, rebuilt daily | working, 30 tests; to be tested on real phones |
+| Lexicon manager | `admin/` | Web page to search, propose and review words, in Italian, English and Spanish | working, 29 tests |
+| Web editor | `editor/` | Web page where anyone types Ligurian with the engine and the published dictionary, in Italian, English and Spanish | working, 18 tests |
+| Android keyboard | `keyman/` | Keyman keyboard and dictionary for Android phones and tablets, rebuilt daily | working, 32 tests; to be tested on real phones |
 | Other exports | `export/` | Further formats of the dictionary | planned |
 
 **Technology** [decision [0007](docs/decisions/0007-technology-stack.md)]: TypeScript everywhere code must run in a browser or a keyboard, so the folding rules are written once; PostgreSQL hosted by Supabase in Frankfurt, the region closest to Genoa; Keyman, free software by SIL Global, for the phone keyboard; GitHub Pages for the site; GitHub Actions for tests, builds and publication.
@@ -349,7 +350,7 @@ Keyman pairs the two packages through their language code, `lij`, the ISO 639-3 
 
 * **Not yet tested by native speakers on their phones.** Reports are welcome.
 * **Typing `æ` with the long press** probably gives weaker suggestions than typing `ae`: Keyman's correction search compares one typed character at a time, and `æ` stands for two. Typing `ae` always works.
-* **Elided forms** such as `l'ægua` count as one word, in the editor and in the keyboard alike; they get a suggestion only if the dictionary holds them as written.
+* **A particle chosen from the suggestion bar** may be followed by a space, which Keyman adds after every accepted suggestion; typing `d'` in full and going on with the word avoids it [decision [0029](docs/decisions/0029-elision.md)].
 * **iPhone and iPad** are not tested yet; **desktop computers** get no suggestions from Keyman.
 
 ## The lexicon manager
@@ -399,7 +400,7 @@ npm install
 npm run check
 ```
 
-`npm run check` type checks the whole project and runs all 143 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
+`npm run check` type checks the whole project and runs all 154 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
 
 Inside this repository, use `npm run typecheck` or `npx tsc`, never a globally installed `tsc`: the project pins its own TypeScript version.
 
@@ -466,27 +467,27 @@ engine/                 the conversion engine
   src/lexicon.ts          loading and indexing the word list
   src/convert.ts          what happens when a word is finished
   src/demo.ts             terminal demo
-  test/                   17 tests
+  test/                   24 tests
 db/                     the shared dictionary
   migrations/             0001 to 0005, run in order on Supabase
   test/                   31 tests on PGlite; the Supabase stand in is for tests only
   README.md               data model, roles, client rules, deployment
 admin/                  the lexicon manager, published under /admin/
   src/                    TypeScript, one file per page under views/
-  test/                   28 tests
+  test/                   29 tests
   README.md               pages, accounts, downloads, publishing
 editor/                 the web editor, the front page of the site
   src/ime.ts              the input method's decisions, pure functions
   src/main.ts             the page
   public/sw.js            offline copy
   public/tastiera/        the Android install page
-  test/                   17 tests
+  test/                   18 tests
   README.md               use, snapshot, local runs
 keyman/                 the Android keyboard and its dictionary
   ligurian_keyboard/      Keyman keyboard project
   ignatzcastror.lij.ligurian_keyboard/   Keyman dictionary project
   src/                    layout, word list, build
-  test/                   30 tests
+  test/                   32 tests
   README.md               build, rules for changes, testing on a phone
 corpus/                 counting the words of the Ligurian Wikipedia
   src/                    words, the choice of the dump, the dump and its markup, the frequency list
@@ -508,13 +509,13 @@ export/                 further dictionary formats, planned
 
 ## Tests
 
-143 tests guard the project, and every one runs on every push to `main` before anything is published:
+154 tests guard the project, and every one runs on every push to `main` before anything is published:
 
-* **Engine [17]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows.
+* **Engine [24]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows; elided words split after the inner apostrophe and converted part by part, with each part's casing, the menu of combinations and its limit, and the whole word winning over its parts.
 * **Database [31]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Ten of them guard the search keys: the database's own folding equals the engine's on every test word and on every letter the database accepts, a list read from the database itself; the engine loads a word holding any of those letters; and `ñ` is accepted and found by typing `n`.
-* **Lexicon manager [28]:** input checks, with a letter list identical to the real database's; the warning before `ñ` is saved under grafîa ofiçiâ, compared with the database's own spelling system codes; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180 with semicolons, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy.
-* **Web editor [17]:** finishing a word, replacing, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages; its three languages, the same as the manager's, with Spanish really translated.
-* **Android keyboard [30]:** a real build with Keyman's compiler; the compiled dictionary loaded and inspected, proving that its search keys equal the engine's on every character up to U+02FF, every test word in four forms and 5,000 pseudo-random strings whose coverage is itself tested; exactly the Ligurian letters on the layout, in both cases; rows of equal width by Keyman's own arithmetic; the layer rules; the contents of both packages; the refusal of a bad snapshot or a failing compiler, keeping earlier packages; error reporting always off.
+* **Lexicon manager [29]:** input checks, the warning before a particle and a word are saved as one form, with a letter list identical to the real database's; the warning before `ñ` is saved under grafîa ofiçiâ, compared with the database's own spelling system codes; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180 with semicolons, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy.
+* **Web editor [18]:** finishing a word, replacing, an elided word typed in a sentence, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages; its three languages, the same as the manager's, with Spanish really translated.
+* **Android keyboard [32]:** a real build with Keyman's compiler; the model's own word breaker, which splits words exactly where the engine does and keeps hyphenated words whole, in the source and in the compiled model; the compiled dictionary loaded and inspected, proving that its search keys equal the engine's on every character up to U+02FF, every test word in four forms and 5,000 pseudo-random strings whose coverage is itself tested; exactly the Ligurian letters on the layout, in both cases; rows of equal width by Keyman's own arithmetic; the layer rules; the contents of both packages; the refusal of a bad snapshot or a failing compiler, keeping earlier packages; error reporting always off.
 * **Word counts [15]:** the choice of the dump from Wikimedia's own status files, refusing unfinished, unsigned or unreadable runs and any address but Wikimedia's; what a word is, in capitals, with elision and with foreign letters; markup stripped from written-for-the-test wikitext, unclosed markup included; the dump read in pieces cut anywhere, articles only; the frequency list written, read back, and refused line by line when damaged; and, end to end, the corpus deciding which spelling of `penna` the editor offers first.
 * **Documents and text files [5]:** no file holds an invisible character written literally, such as a byte order mark, where a reader cannot see it; decision records numbered without gaps; both tables, in `docs/decisions/README.md` and here, name every record exactly as its own title does; and every "Refines" or "Supersedes" is answered by the record it points to.
 
@@ -562,13 +563,13 @@ Every important decision is recorded in [docs/decisions/](docs/decisions/README.
 | [0026](docs/decisions/0026-workflow-runtimes.md) | Workflow runners and runtimes |
 | [0027](docs/decisions/0027-real-frequencies.md) | Real frequencies from the Ligurian Wikipedia |
 | [0028](docs/decisions/0028-enye-warning-under-oficia.md) | The manager warns before saving ñ under the grafîa ofiçiâ |
+| [0029](docs/decisions/0029-elision.md) | Elided words are split at the apostrophe |
 
 ## Open questions
 
 These need the judgment of native speakers, and contributions are especially welcome:
 
 * **ç written as s.** The *Arfabêto* allows `ç` to be written as `s`. Should typing `se` also offer `çê`?
-* **Elided forms.** Should `l'ægua` be split at the apostrophe, in the editor and in the keyboard alike, or should the dictionary hold every elided form?
 * **Grafia unitäia.** Which extra folding rules, if any, the second spelling system needs.
 * **Definitions in Ligurian.** When the dictionary should start recording them.
 * **Live updates** in the lexicon manager, so reviewers see each other's changes at once.
@@ -589,8 +590,9 @@ Version 1.0.0 is a promise of stability, given when these criteria are met, not 
 | 0.6 | Done: the lexicon manager in Spanish, its latest additions, the CSV download; the letter `ñ` |
 | 0.7 | Done: workflows on Ubuntu 26.04 and Node.js 24, also checked on Node.js 22; the CSV download separated by semicolons |
 | 0.8 | Done: real frequencies from the Ligurian Wikipedia; a warning before `ñ` is saved under grafîa ofiçiâ |
-| 0.9 | Bulk import with validation |
-| 0.10 | Backups, hardening, contributor documentation; beta with speakers in Genoa |
+| 0.9 | Done: elided words split at the apostrophe, in the editor and the keyboard; accents never needed, said plainly; the manager links to the keyboard page |
+| 0.10 | Bulk import with validation |
+| 0.11 | Backups, hardening, contributor documentation; beta with speakers in Genoa |
 | 1.0 | All criteria met |
 
 Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought throughout.
@@ -599,6 +601,7 @@ Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought 
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.9.0, 2026/10/17: elided words.** `d'aegua` becomes `d'ægua` from the entries `d'` and `ægua`, in the editor and in the Android keyboard alike; the manager warns before a particle and a word are saved as one form, and links to the keyboard page; the install page says plainly that accents are never needed.
 * **0.8.3, 2026/10/17:** a stray apostrophe is no longer counted as a word; the snapshot's frequency line says how many rows were found in the list; two invisible characters written as escapes, and a test that forbids them anywhere.
 * **0.8.2, 2026/10/17: the first frequency list.** 83,575 words counted from the Ligurian Wikipedia dump of 2026/10/01; the editor and the keyboard now rank spellings by it.
 * **0.8.1, 2026/10/17:** the frequencies workflow finds the newest finished dump in Wikimedia's own status files; its first run had failed with HTTP 404.
@@ -677,12 +680,12 @@ Il dizionario condiviso è un database dove i collaboratori propongono parole, c
 
 * La tastiera non è ancora stata provata da parlanti nativi sui loro telefoni; ogni segnalazione è benvenuta.
 * La `æ` scritta con la pressione prolungata dà probabilmente suggerimenti più deboli di `ae`; scrivere `ae` funziona sempre.
-* Le forme elise, come `l'ægua`, contano come una parola sola: ricevono un suggerimento solo se il dizionario le contiene così.
+* Le forme elise si dividono all'apostrofo: `d'aegua` dà `d'ægua` dalle voci `d'` e `ægua`, quindi il dizionario ha bisogno di ogni particella e di ogni parola una volta sola. Le particelle `d'`, `l'`, `quell'` e le altre vanno però inserite nel dizionario.
 * Le frequenze delle parole vengono dalla Wikipedia in ligure, scritta per lo più in grafîa ofiçiâ: i suoi testi sono enciclopedici, quindi le parole di tutti i giorni possono risultare meno frequenti che nel parlato.
 
 ### Verso la versione 1.0.0
 
-La 1.0.0 arriverà quando ci saranno: la tastiera Android provata sul campo, qualche migliaio di forme approvate con frequenze reali, regole e formati congelati, le questioni aperte risolte, alcune settimane d'uso reale a Genova, e copie di sicurezza regolari del database. Il percorso: frequenze reali [0.8, fatto], importazione in blocco con verifica [0.9], copie di sicurezza, documentazione e prova con parlanti genovesi [0.10].
+La 1.0.0 arriverà quando ci saranno: la tastiera Android provata sul campo, qualche migliaio di forme approvate con frequenze reali, regole e formati congelati, le questioni aperte risolte, alcune settimane d'uso reale a Genova, e copie di sicurezza regolari del database. Il percorso: frequenze reali [0.8, fatto], forme elise divise all'apostrofo [0.9, fatto], importazione in blocco con verifica [0.10], copie di sicurezza, documentazione e prova con parlanti genovesi [0.11].
 
 ### Contribuire
 

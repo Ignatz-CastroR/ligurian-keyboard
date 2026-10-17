@@ -4,11 +4,22 @@
  * Date:     2026/10/10, 21:08:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Decide what happens to one typed token when the user presses
  *           space: replace silently, show the candidate menu, or keep it.
+ * Updated:  2026/10/17, 12:03:47: elided words. When the whole word is
+ *           not in the dictionary, it is split after its inner
+ *           apostrophes and each part is converted on its own, so
+ *           "d'aegua" becomes "d'ægua" from the entries "d'" and "ægua"
+ *           [decision 0029].
  * Contract: Surrounding punctuation is preserved untouched; the casing
- *           pattern of the typed word is reapplied to every candidate.
+ *           pattern of the typed word, or of each typed part, is
+ *           reapplied to every candidate. A whole word found in the
+ *           dictionary always wins over its parts.
  */
 
 import { Lexicon, type LookupFilter } from "./lexicon.ts";
+import { splitElision } from "./elision.ts";
+
+// The most spellings the menu offers for an elided word.
+export const MAX_COMBINATIONS: number = 9;
 
 export type ConversionKind =
   | "replace"   // exactly one candidate, apply without asking
@@ -36,8 +47,10 @@ export function convertToken(lexicon: Lexicon, token: string, filter: LookupFilt
 
   let candidates: string[] = [];
   if (core !== "") {
-    const pattern: CasePattern = casePatternOf(core);
-    candidates = dedupe(lexicon.lookup(core, filter).map((e) => applyCase(e.form, pattern)));
+    candidates = candidatesFor(lexicon, core, filter);
+    if (candidates.length === 0) {
+      candidates = elidedCandidates(lexicon, splitElision(core), filter);
+    }
   }
 
   let kind: ConversionKind = "unknown";
@@ -49,6 +62,36 @@ export function convertToken(lexicon: Lexicon, token: string, filter: LookupFilt
   }
 
   return { kind, typed: token, prefix, suffix, candidates };
+}
+
+// Every spelling of one typed word, cased like it, best first.
+function candidatesFor(lexicon: Lexicon, typed: string, filter: LookupFilter): string[] {
+  const pattern: CasePattern = casePatternOf(typed);
+  return dedupe(lexicon.lookup(typed, filter).map((e) => applyCase(e.form, pattern)));
+}
+
+// The spellings of an elided word, part by part: a part the dictionary
+// does not know stays as typed. Nothing when no part is known, or when
+// the word has no inner apostrophe. Combinations are ranked by the sum
+// of their parts' ranks, so the best spelling of every part comes first.
+function elidedCandidates(lexicon: Lexicon, parts: string[], filter: LookupFilter): string[] {
+  let result: string[] = [];
+  if (parts.length > 1) {
+    const options: string[][] = parts.map((part) => candidatesFor(lexicon, part, filter));
+    if (options.some((list) => list.length > 0)) {
+      let combos: { text: string; rank: number }[] = [{ text: "", rank: 0 }];
+      options.forEach((list, index) => {
+        const choices: string[] = list.length > 0 ? list.slice(0, MAX_COMBINATIONS) : [parts[index] ?? ""];
+        const next: { text: string; rank: number }[] = [];
+        for (const combo of combos) {
+          choices.forEach((choice, rank) => next.push({ text: combo.text + choice, rank: combo.rank + rank }));
+        }
+        combos = next.sort((a, b) => a.rank - b.rank).slice(0, MAX_COMBINATIONS);
+      });
+      result = dedupe(combos.map((combo) => combo.text));
+    }
+  }
+  return result;
 }
 
 // Rebuild the token with the chosen candidate.

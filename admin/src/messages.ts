@@ -6,6 +6,9 @@
  *           additions, the CSV download and the language menu.
  * Updated:  2026/10/17, 10:52:37: the warning before ñ is saved under the
  *           grafîa ofiçiâ [decision 0028].
+ * Updated:  2026/10/17, 12:38:44: the warning before an elided particle
+ *           and a word are saved as one form [decision 0029]; the link
+ *           to the Android keyboard page.
  * Purpose:  Every text the lexicon manager shows, in Italian [default,
  *           for the Genoese contributors], English and Spanish.
  * Contract: EN and ES have exactly the type of IT, so the compiler
@@ -31,6 +34,7 @@ const IT = {
   appSubtitle: "Gestore del dizionario condiviso",
 
   navEditor: "Scrivi",
+  navKeyboard: "Tastiera Android",
   navSearch: "Cerca",
   navNew: "Nuovo lemma",
   navReview: "Da revisionare",
@@ -160,6 +164,10 @@ const IT = {
     + "Se la parola appartiene a un altro sistema di scrittura, sceglilo nell'elenco o chiedi a un amministratore di aggiungerlo.",
   confirmEnyeOficia: (forms: string): string => `${forms}: la grafîa ofiçiâ non scrive la lettera ñ. `
     + "Salvare comunque con la grafîa ofiçiâ?",
+  warnElision: (forms: string): string => `${forms}: una particella elisa e una parola unite in una sola forma. `
+    + "La tastiera le separa da sola dopo l'apostrofo: basta inserire ogni particella e ogni parola una volta, come voci distinte.",
+  confirmElision: (forms: string): string => `${forms}: una particella elisa e una parola unite. `
+    + "Salvare comunque come una sola forma?",
 
   errFormEmpty: "Il campo è vuoto.",
   errFormTooLong: "Massimo 64 caratteri.",
@@ -183,6 +191,7 @@ const EN: Messages = {
   appSubtitle: "Manager of the shared dictionary",
 
   navEditor: "Write",
+  navKeyboard: "Android keyboard",
   navSearch: "Search",
   navNew: "New lemma",
   navReview: "To review",
@@ -312,6 +321,10 @@ const EN: Messages = {
     + "If the word belongs to another spelling system, choose it in the list or ask an admin to add it.",
   confirmEnyeOficia: (forms: string): string => `${forms}: the grafîa ofiçiâ does not write the letter ñ. `
     + "Save under the grafîa ofiçiâ anyway?",
+  warnElision: (forms: string): string => `${forms}: an elided particle and a word joined in one form. `
+    + "The keyboard splits them by itself after the apostrophe: enter each particle and each word once, as entries of their own.",
+  confirmElision: (forms: string): string => `${forms}: an elided particle and a word joined together. `
+    + "Save it as one form anyway?",
 
   errFormEmpty: "The field is empty.",
   errFormTooLong: "64 characters at most.",
@@ -333,6 +346,7 @@ const ES: Messages = {
   appSubtitle: "Gestor del diccionario compartido",
 
   navEditor: "Escribir",
+  navKeyboard: "Teclado Android",
   navSearch: "Buscar",
   navNew: "Nuevo lema",
   navReview: "Por revisar",
@@ -462,6 +476,10 @@ const ES: Messages = {
     + "Si la palabra pertenece a otro sistema de escritura, elígelo en la lista o pide a un administrador que lo añada.",
   confirmEnyeOficia: (forms: string): string => `${forms}: la grafîa ofiçiâ no escribe la letra ñ. `
     + "¿Guardar de todos modos con la grafîa ofiçiâ?",
+  warnElision: (forms: string): string => `${forms}: una partícula elidida y una palabra unidas en una sola forma. `
+    + "El teclado las separa solo después del apóstrofo: basta con introducir cada partícula y cada palabra una vez, como entradas propias.",
+  confirmElision: (forms: string): string => `${forms}: una partícula elidida y una palabra unidas. `
+    + "¿Guardarla de todos modos como una sola forma?",
 
   errFormEmpty: "El campo está vacío.",
   errFormTooLong: "Como máximo 64 caracteres.",

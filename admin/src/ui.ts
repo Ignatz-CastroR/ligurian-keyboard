@@ -11,7 +11,7 @@
 import type { Messages } from "./messages.ts";
 import type { Role, Status, Tracked, RefItem } from "./types.ts";
 import { AppError } from "./db.ts";
-import { enyeUnderOficia, SPECIAL_LETTERS } from "./forms.ts";
+import { enyeUnderOficia, joinedElisions, SPECIAL_LETTERS } from "./forms.ts";
 
 type Child = Node | string | null | undefined | false;
 type AttrValue = string | number | boolean | ((event: Event) => void) | undefined;
@@ -204,24 +204,43 @@ function insertAtCursor(input: HTMLInputElement, text: string): void {
   input.dispatchEvent(new Event("input"));
 }
 
-// A warning shown under a form while it would save ñ under the grafîa
-// ofiçiâ; update[] is called whenever a form or the spelling system
-// changes [decision 0028].
-export function enyeWarning(t: Messages): { element: HTMLElement; update: (forms: readonly string[], orthography: string) => void } {
-  const element: HTMLElement = h("p", { class: "warn-text", hidden: true, role: "status" });
-  const update = (forms: readonly string[], orthography: string): void => {
-    const found: string[] = enyeUnderOficia(forms, orthography);
-    element.hidden = found.length === 0;
-    element.textContent = found.length === 0 ? "" : t.warnEnyeOficia(found.join(", "));
+// What the manager warns about before saving forms: ñ under the grafîa
+// ofiçiâ [decision 0028], and an elided particle joined to a word
+// [decision 0029]. The elision check looks only at the forms being
+// typed, `fresh`, not at a lemma's forms already saved.
+function formProblems(t: Messages, forms: readonly string[], orthography: string, fresh: readonly string[]):
+  { warnings: string[]; questions: string[] } {
+  const enye: string[] = enyeUnderOficia(forms, orthography);
+  const joined: string[] = joinedElisions(fresh);
+  return {
+    warnings: [
+      ...(enye.length > 0 ? [t.warnEnyeOficia(enye.join(", "))] : []),
+      ...(joined.length > 0 ? [t.warnElision(joined.join(", "))] : []),
+    ],
+    questions: [
+      ...(enye.length > 0 ? [t.confirmEnyeOficia(enye.join(", "))] : []),
+      ...(joined.length > 0 ? [t.confirmElision(joined.join(", "))] : []),
+    ],
+  };
+}
+
+// The warning lines shown under a form; update[] is called whenever a
+// form or the spelling system changes.
+export function formWarning(t: Messages):
+  { element: HTMLElement; update: (forms: readonly string[], orthography: string, fresh?: readonly string[]) => void } {
+  const element: HTMLElement = h("div", { class: "form-warnings", hidden: true, role: "status" });
+  const update = (forms: readonly string[], orthography: string, fresh: readonly string[] = forms): void => {
+    const { warnings } = formProblems(t, forms, orthography, fresh);
+    element.hidden = warnings.length === 0;
+    element.replaceChildren(...warnings.map((text) => h("p", { class: "warn-text" }, text)));
   };
   return { element, update };
 }
 
-// Asked before saving: true when there is nothing to warn about or the
-// person confirms that the spelling system is right.
-export function confirmEnye(t: Messages, forms: readonly string[], orthography: string): boolean {
-  const found: string[] = enyeUnderOficia(forms, orthography);
-  return found.length === 0 || window.confirm(t.confirmEnyeOficia(found.join(", ")));
+// Asked before saving, one question per problem: true when there is
+// nothing to warn about or the person confirms every question.
+export function confirmForms(t: Messages, forms: readonly string[], orthography: string, fresh: readonly string[] = forms): boolean {
+  return formProblems(t, forms, orthography, fresh).questions.every((question) => window.confirm(question));
 }
 
 // Run an action from a button: disable it while waiting, report errors.

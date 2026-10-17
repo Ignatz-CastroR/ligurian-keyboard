@@ -36,6 +36,10 @@ Both buttons in the header download the published dictionary, from the same expo
 
 Every field for a Ligurian spelling has buttons for the special letters `à â ä è é ê ë ì î ï ò ó ô ö ù û ü æ ç`, then `ñ`, which some other Ligurian spelling systems write [decision [0024](../docs/decisions/0024-letter-enye.md)]; hold Shift for the upper case letter. A word with `ñ` is entered under its own spelling system, not `ofiçiâ`: whenever a form with `ñ` would be saved under `ofiçiâ`, a warning appears under the form, and saving asks for confirmation first [decision [0028](../docs/decisions/0028-enye-warning-under-oficia.md)]. Changing a lemma's spelling system to `ofiçiâ` checks its inflected forms too.
 
+Elided particles such as `d'`, `l'` and `quell'` are entries of their own. A form that joins a particle and a word, such as `d'ægua`, raises a warning that names its parts, and saving asks for confirmation: the editor and the keyboard split such words by themselves, so the dictionary needs `d'` and `ægua` once each [decision [0029](../docs/decisions/0029-elision.md)].
+
+The header links to the web editor and to the Android keyboard page, `/tastiera/`.
+
 The **frequency** of a form is a weight, 1 by default. The daily snapshot adds to it the number of times the Ligurian Wikipedia uses the form [decision [0027](../docs/decisions/0027-real-frequencies.md)], so there is usually no need to change it; raise it only to put a form ahead of what the corpus says. The TSV and CSV downloads show the stored value.
 
 ## Files

@@ -29,7 +29,8 @@ Decisions: [0021](../docs/decisions/0021-keyman-scope-and-toolchain.md) [scope, 
 ## Rules for changing anything here
 
 * **Never edit `ligurian_keyboard.keyman-touch-layout` by hand.** Change `src/touch-layout.ts`, run `npm run keyman:layout`, commit both.
-* **Never import anything into the model's `.model.ts`.** Keyman copies `searchTermToKey` into the compiled model as text and runs it on old phones: it must stay self-contained and ES3 compatible. Its header lists what is allowed.
+* **Never import anything into the model's `.model.ts`.** Keyman copies `searchTermToKey` and the word breaker into the compiled model as text and runs them on old phones: they must stay self-contained and ES3 compatible. The header lists what is allowed.
+* **A change to where words split** is made in two places at once: `engine/src/elision.ts` and the model's word breaker. `keyman/test/build.test.ts` fails until they agree [decision 0029].
 * **A change to the folding rules** touches four places; see "The Keyman mirror" in [`docs/skeleton-spec.md`](../docs/skeleton-spec.md).
 * **The keyboard version** in the `.kmn` [`&KEYBOARDVERSION`] must equal `version` in `package.json`; a test checks it. The dictionary's version is set by the build from the snapshot's date; the committed `.model.kps` keeps `0.0.0`.
 * **`kmc` is pinned exactly** in `package.json`. Upgrading it is a deliberate change: rebuild, read every message, run all tests.
@@ -40,5 +41,5 @@ The tests cannot run Keyman's prediction engine, which is not published as a pac
 
 1. Build with the 93 test words: `npm run lexicon:fixture`, then `npm run keyman:build`. The real dictionary may not hold the words below yet.
 2. Copy both files from `keyman/dist/` to the phone and install them as the install page explains.
-3. Check: `zena` suggests `Zêna`; `citae` suggests `çitæ`; note whether `çitæ` typed with the long press letters also suggests `çitæ`, and how high [decision 0022, Consequences, expects it may not]; `canpanna` suggests `canpànn-a`; `penna` offers `pénna` and `pénn-a`; a capital comes at the start of a sentence; long press on every vowel, on `c` and on `n`; a double tap on Shift locks capitals.
+3. Check: `zena` suggests `Zêna`; `citae` suggests `çitæ`; note whether `çitæ` typed with the long press letters also suggests `çitæ`, and how high [decision 0022, Consequences, expects it may not]; `canpanna` suggests `canpànn-a`; `penna` offers `pénna` and `pénn-a`; after `d'`, typing `citae` suggests `çitæ` [the word breaker, decision 0029], and note whether choosing a suggestion right after `d'` adds an unwanted space; a capital comes at the start of a sentence; long press on every vowel, on `c` and on `n`; a double tap on Shift locks capitals.
 4. Afterwards, install the dictionary from the site again, to go back to the real words. Both carry the same day's date as their version; if Keyman refuses to replace one with the other, remove the test dictionary first [Keyman help: "Removing Dictionaries"].

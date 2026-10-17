@@ -3,7 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/17
 * **Decided by:** Eng. José Ignacio Castro de R.
-* **Refined by:** [0023](0023-lexicon-manager-spanish-history-csv.md), on the interface languages
+* **Refined by:** [0023](0023-lexicon-manager-spanish-history-csv.md), on the interface languages; [0029](0029-elision.md), on elided words
 
 ## Context
 

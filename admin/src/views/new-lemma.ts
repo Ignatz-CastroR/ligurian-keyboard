@@ -8,6 +8,8 @@
  * Updated:  2026/10/17, 10:55:04: a warning, and a question before
  *           saving, when the headword has ñ under the grafîa ofiçiâ
  *           [decision 0028].
+ * Updated:  2026/10/17, 12:40:02: also when the headword joins an elided
+ *           particle and a word [decision 0029].
  */
 
 import type { Context } from "../context.ts";
@@ -17,7 +19,7 @@ import { createLemma, lemmasWithKey } from "../db.ts";
 import { canPropose, isStaff } from "../permissions.ts";
 import { checkForm, cleanOptionalText } from "../forms.ts";
 import {
-  confirmEnye, enyeWarning, field, h, letterPalette, posLabel, refItems, runAction, select, showError,
+  confirmForms, field, formWarning, h, letterPalette, posLabel, refItems, runAction, select, showError,
   statusBadge,
 } from "../ui.ts";
 
@@ -36,8 +38,8 @@ export async function renderNewLemma(ctx: Context, root: HTMLElement): Promise<v
     const note: HTMLTextAreaElement = h("textarea", { rows: 3 });
     const approveNow: HTMLInputElement | null = isStaff(ctx.role) ? h("input", { type: "checkbox" }) : null;
     const similar: HTMLElement = h("div", { class: "similar" });
-    const enye = enyeWarning(t);
-    const checkEnye = (): void => enye.update([headword.value], orthography.value);
+    const warning = formWarning(t);
+    const checkForms = (): void => warning.update([headword.value], orthography.value);
     const createButton: HTMLButtonElement = h("button", { type: "submit", class: "primary" }, t.navNew);
 
     const form: HTMLFormElement = h("form", { class: "card edit-form" },
@@ -45,16 +47,16 @@ export async function renderNewLemma(ctx: Context, root: HTMLElement): Promise<v
       h("p", { class: "muted" }, t.newIntro),
       field(t.fieldHeadword, headword), letterPalette(t, headword), similar,
       field(t.fieldPos, pos), field(t.fieldVariety, variety), field(t.fieldOrthography, orthography),
-      enye.element,
+      warning.element,
       field(t.fieldNote, note),
       approveNow !== null && h("label", { class: "check" }, approveNow, t.approveNow),
       h("div", { class: "buttons" }, createButton),
     );
 
     let timer: number | undefined;
-    orthography.addEventListener("change", checkEnye);
+    orthography.addEventListener("change", checkForms);
     headword.addEventListener("input", () => {
-      checkEnye();
+      checkForms();
       window.clearTimeout(timer);
       timer = window.setTimeout(() => void drawSimilar(ctx, headword.value, similar), DEBOUNCE_MS);
     });
@@ -68,7 +70,7 @@ export async function renderNewLemma(ctx: Context, root: HTMLElement): Promise<v
           : check.reason === "too_long" ? t.errFormTooLong : t.errFormInvalid(check.bad.join(" ")));
       } else if (!cleanNote.ok) {
         showError(t.errTextTooLong(2000));
-      } else if (confirmEnye(t, [check.value], orthography.value)) {
+      } else if (confirmForms(t, [check.value], orthography.value)) {
         void runAction(t, createButton, async () => {
           const id: number = await createLemma({
             headword: check.value,

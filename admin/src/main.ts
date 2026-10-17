@@ -163,6 +163,7 @@ function drawHeader(state: State): void {
       h("span", { class: "muted" }, t.appSubtitle)),
     h("nav", {},
       link("../", t.navEditor),
+      link("../tastiera/", t.navKeyboard),
       link("#/search/", t.navSearch),
       canPropose(ctx.role) && link("#/new", t.navNew),
       ctx.userId !== null && link("#/review", t.navReview),

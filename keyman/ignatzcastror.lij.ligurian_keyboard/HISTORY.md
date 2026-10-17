@@ -2,6 +2,10 @@
 
 The package version is the date of the dictionary snapshot it was built from, as YYYY.M.D. The model itself changes only with the project's versions; only the project versions that changed the model, or the words and counts it is built from, are listed here.
 
+## Project 0.9.0 2026/10/17
+
+* An own word breaker: a word ends after an apostrophe with a letter on each side, so after `d'` the suggestions start again for the next word; hyphenated words stay whole, as before [decision 0029].
+
 ## Project 0.8.2 2026/10/17
 
 * The first frequency list: the counts of the Ligurian Wikipedia dump of 2026/10/01 are added to the stored frequencies, so suggestions follow real use.

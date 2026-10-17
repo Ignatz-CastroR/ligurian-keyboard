@@ -8,11 +8,16 @@
  * Updated:  2026/10/17, 07:50:33: the letter ñ [decision 0024].
  * Updated:  2026/10/17, 10:48:19: enyeUnderOficia, the warning before
  *           ñ is saved under the grafîa ofiçiâ [decision 0028].
+ * Updated:  2026/10/17, 12:35:12: joinedElisions, the warning before an
+ *           elided particle and a word are saved as one form [decision
+ *           0029].
  * Contract: LIGURIAN_LETTERS must equal the character class of the
  *           ligurian_form domain, as the migrations leave it [last
  *           changed in db/migrations/0005]; a test compares the two on
  *           a real database. The database still checks everything again.
  */
+
+import { splitElision } from "../../engine/src/elision.ts";
 
 export const LIGURIAN_LETTERS: string = "a-zA-ZàáâäèéêëìíîïòóôöùúûüæçñÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜÆÇÑ'-";
 export const MAX_FORM_LENGTH: number = 64;
@@ -44,6 +49,23 @@ export function enyeUnderOficia(forms: readonly string[], orthography: string): 
     result = forms.map((form) => cleanForm(form)).filter((form) => /[ñÑ]/u.test(form));
   }
   return [...new Set(result)];
+}
+
+// The forms that join an elided particle and a word, such as "d'ægua",
+// each shown with its parts: "d'ægua [d' + ægua]". The input method
+// splits such words by itself, so the dictionary needs "d'" and "ægua"
+// once each; the manager warns and asks before saving the joined form,
+// and saves it if the person confirms, for the rare word that really is
+// one word with an apostrophe inside [decision 0029].
+export function joinedElisions(forms: readonly string[]): string[] {
+  const found: string[] = [];
+  for (const form of forms.map((f) => cleanForm(f))) {
+    const parts: string[] = splitElision(form);
+    if (parts.length > 1) {
+      found.push(`${form} [${parts.join(" + ")}]`);
+    }
+  }
+  return [...new Set(found)];
 }
 
 export type FormCheck =

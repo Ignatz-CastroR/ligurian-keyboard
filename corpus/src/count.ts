@@ -8,6 +8,8 @@
  *           Decision: docs/decisions/0027-real-frequencies.md
  * Updated:  2026/10/17, 11:24:51: a word needs at least one letter; a
  *           lone apostrophe was counted as a word in the first list.
+ * Updated:  2026/10/17, 12:12:02: the parts of an elided word come from
+ *           the engine's splitElision [decision 0029].
  * Contract: Pure functions, no I/O. A word is counted under its
  *           frequency key [frequencyKey]: NFC, lower case, typographic
  *           apostrophes and hyphens made ASCII. Only words that pass
@@ -16,6 +18,7 @@
  */
 
 import { isValidForm } from "../../engine/src/lexicon.ts";
+import { splitElision } from "../../engine/src/elision.ts";
 
 // Letters, apostrophes and hyphens: the characters a word is made of.
 // Everything else, digits included, separates words.
@@ -74,24 +77,10 @@ export function addCounts(text: string, counts: Map<string, number>): void {
   }
 }
 
-// "l'ægua" gives ["l'", "ægua"].
+// "l'ægua" gives ["l'", "ægua"]: the engine's own split, the one the
+// editor and the keyboard use, keeping only the parts worth counting.
 export function splitAtApostrophes(word: string): string[] {
-  const parts: string[] = [];
-  let current: string = "";
-  const chars: string[] = [...word];
-  for (let i: number = 0; i < chars.length; i += 1) {
-    const ch: string = chars[i] ?? "";
-    current += ch;
-    const next: string = chars[i + 1] ?? "";
-    if (ch === "'" && current.length > 1 && /\p{L}/u.test(next)) {
-      parts.push(current);
-      current = "";
-    }
-  }
-  if (current !== "") {
-    parts.push(current);
-  }
-  return parts.filter((part) => isCountableWord(part));
+  return splitElision(word).filter((part) => isCountableWord(part));
 }
 
 function bump(counts: Map<string, number>, word: string): void {

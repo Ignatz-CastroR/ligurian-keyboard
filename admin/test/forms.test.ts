@@ -6,6 +6,8 @@
  *           database built from every migration, not with file 0001.
  * Updated:  2026/10/17, 11:00:43: the warning before ñ is saved under
  *           the grafîa ofiçiâ [decision 0028].
+ * Updated:  2026/10/17, 12:44:30: the warning before an elided particle
+ *           and a word are saved as one form [decision 0029].
  * Purpose:  The checks the lexicon manager runs before sending anything,
  *           and their agreement with the database's own rules.
  */
@@ -15,7 +17,7 @@ import assert from "node:assert/strict";
 import { createDatabase, domainLetters, rowsAs } from "../../db/test/harness.ts";
 import {
   LIGURIAN_LETTERS, OFICIA, SPECIAL_LETTERS, changedFields, checkForm, checkFreq,
-  cleanForm, cleanOptionalText, enyeUnderOficia, formatDateTime, searchKeyFilter,
+  cleanForm, cleanOptionalText, enyeUnderOficia, formatDateTime, joinedElisions, searchKeyFilter,
 } from "../src/forms.ts";
 
 test("the letters accepted here are exactly the database domain's", async () => {
@@ -100,4 +102,11 @@ test("ñ under the grafîa ofiçiâ is found, in either case, and only there", (
 test("the spelling system warned about is the database's own ofiçiâ", async () => {
   const codes: { code: string }[] = await rowsAs(await createDatabase(), "anon", "select code from public.orthographies");
   assert.ok(codes.some((row) => row.code === OFICIA), JSON.stringify(codes));
+});
+
+test("a form joining an elided particle and a word is found, with its parts", () => {
+  assert.deepEqual(joinedElisions(["d'ægua", "pénna"]), ["d'ægua [d' + ægua]"]);
+  assert.deepEqual(joinedElisions(["quell’òmmo"]), ["quell'òmmo [quell' + òmmo]"], "cleaned as when saved");
+  assert.deepEqual(joinedElisions(["d'", "'na", "pe'", "canpànn-a"]), [], "particles and edge apostrophes are fine");
+  assert.deepEqual(joinedElisions(["d'ægua", " d'ægua "]), ["d'ægua [d' + ægua]"], "each form named once");
 });

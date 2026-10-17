@@ -4,6 +4,9 @@
  * Date:     2026/10/17, 04:05:05, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: ñ, Ñ and a decomposed ñ among the
  *           pieces of the pseudo-random strings.
+ * Updated:  2026/10/17, 12:27:55: the model's own word breaker, which
+ *           must split words exactly where the engine's splitElision[]
+ *           does [decision 0029].
  * Purpose:  Tests of the Keyman build on the test fixture: the packages
  *           kmc produces, and above all the compiled dictionary, which
  *           must find every word exactly as the engine does.
@@ -25,6 +28,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runInNewContext } from "node:vm";
 import { skeleton } from "../../engine/src/skeleton.ts";
+import { splitElision } from "../../engine/src/elision.ts";
 import { stampSnapshot } from "../../editor/src/snapshot.ts";
 import modelSource from "../ignatzcastror.lij.ligurian_keyboard/source/ignatzcastror.lij.ligurian_keyboard.model.ts";
 import {
@@ -51,7 +55,18 @@ interface TrieNode {
 
 interface CapturedModel {
   trie: { totalWeight: number; root: TrieNode };
-  options: { searchTermToKey: (term: string) => string; languageUsesCasing: boolean };
+  options: {
+    searchTermToKey: (term: string) => string;
+    languageUsesCasing: boolean;
+    wordBreaker: (text: string) => Span[];
+  };
+}
+
+interface Span {
+  start: number;
+  end: number;
+  length: number;
+  text: string;
 }
 
 let work: string = "";
@@ -230,10 +245,72 @@ test("plain typing reaches the special letters, the hyphen and the capital", () 
   assert.ok(byKey(model.options.searchTermToKey("penna")).includes("pénna"));
 });
 
-test("suggestions follow the user's casing and hyphenated words stay whole", () => {
+test("suggestions follow the user's casing", () => {
   assert.equal(model.options.languageUsesCasing, true);
-  assert.deepEqual(modelSource.wordBreaker, { use: "default", joinWordsAt: ["-"] });
   assert.equal(modelSource.languageUsesCasing, true);
+});
+
+// The pieces of the word breaker's corpus: the Ligurian letters in both
+// cases, decomposed accents, every apostrophe and hyphen, and the space.
+const BREAK_PIECES: readonly string[] = [
+  ..."adlqsnAD", ..."àâäèéêìîòôöùûüæçñÀÂÆÇÑ",
+  "'", "'", "\u2018", "\u2019", "\u02BC", "-", "\u2010", "\u2011", " ", " ", "e\u0302", "a\u0300",
+];
+
+function breakCorpus(): string[] {
+  const next: (n: number) => number = generator(29);
+  const corpus: string[] = [
+    "d'ægua", "D'ÆGUA", "quell'òmmo", "l'ægua d'avéi", "canpànn-a", "'na", "pe'", "d''ægua", "a'b'c",
+    "un gotto d'aeg", "d'", "d' ægua", "-d'a-", "",
+  ];
+  for (let n: number = 0; n < 3000; n += 1) {
+    let text: string = "";
+    const length: number = 1 + next(14);
+    for (let i: number = 0; i < length; i += 1) {
+      text += BREAK_PIECES[next(BREAK_PIECES.length)] ?? "";
+    }
+    corpus.push(text);
+  }
+  return corpus;
+}
+
+// What the engine considers the words of a text: its space-separated
+// tokens, each split after its inner apostrophes.
+function engineWords(text: string): string[] {
+  return text.split(" ").filter((token) => token !== "").flatMap((token) => splitElision(token));
+}
+
+function checkBreaker(breaker: (text: string) => Span[]): string[] {
+  const problems: string[] = [];
+  for (const text of breakCorpus()) {
+    const spans: Span[] = breaker(text);
+    const words: string[] = spans.map((span) => span.text);
+    if (JSON.stringify(words) !== JSON.stringify(engineWords(text))) {
+      problems.push(`${JSON.stringify(text)}: ${JSON.stringify(words)} vs ${JSON.stringify(engineWords(text))}`);
+    }
+    let last: number = 0;
+    for (const span of spans) {
+      if (text.substring(span.start, span.end) !== span.text || span.length !== span.end - span.start || span.start < last) {
+        problems.push(`${JSON.stringify(text)}: bad span ${JSON.stringify(span)}`);
+      }
+      last = span.end;
+    }
+  }
+  return problems;
+}
+
+test("the compiled word breaker splits words exactly where the engine does", () => {
+  assert.equal(typeof model.options.wordBreaker, "function");
+  // Array.from: the compiled model runs in its own JavaScript context,
+  // whose arrays deepEqual would otherwise refuse to compare.
+  assert.deepEqual(Array.from(model.options.wordBreaker("un gotto d'aeg"), (s) => s.text), ["un", "gotto", "d'", "aeg"]);
+  assert.deepEqual(Array.from(model.options.wordBreaker("a canpànn-a"), (s) => s.text), ["a", "canpànn-a"],
+    "hyphenated words stay whole");
+  assert.deepEqual(checkBreaker(model.options.wordBreaker).slice(0, 20), []);
+});
+
+test("the word breaker in the source also splits exactly where the engine does", () => {
+  assert.deepEqual(checkBreaker(modelSource.wordBreaker.use).slice(0, 20), []);
 });
 
 test("the keyboard package declares the keyboard, its version and Ligurian", () => {

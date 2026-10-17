@@ -8,6 +8,7 @@ Words are proposed in the **lexicon manager** [`admin/`, see `admin/README.md`].
 
 * Enter every **wordform** you know: plural, feminine, every verb form. The base form is created automatically with the lemma.
 * Spell in grafîa ofiçiâ as published by the Académia Ligùstica do Brénno; the manager has buttons for the special letters. A word written in another spelling system, for example with `ñ`, is entered with that system chosen.
+* Enter each **elided particle** once, as an entry of its own: `d'`, `l'`, `quell'`. Never enter `d'ægua` or `l'ægua`: enter `ægua`, and the editor and the keyboard join the particle and the word by themselves, since they split a word after its inner apostrophe [`docs/decisions/0029-elision.md`]. The manager warns if a form joins the two.
 * Contribute only words from your own knowledge, or from sources whose license allows it. **Do not copy entries from copyrighted dictionaries.**
 
 Without an account, a word can still be proposed by issue, as a TSV row [see `docs/lexicon-format.md`].

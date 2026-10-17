@@ -8,7 +8,7 @@
 
 ## Context
 
-Decision [0001](0001-input-method-not-editor.md) makes the input method the product, and [0007](0007-technology-stack.md) chose Keyman, by SIL International, to deliver it "on every system". Before building version 0.5.0, Keyman's current documentation and issue tracker were checked on 2026/10/17. Four facts came out of that check.
+Decision [0001](0001-input-method-not-editor.md) makes the input method the product, and [0007](0007-technology-stack.md) chose Keyman, by SIL Global, to deliver it "on every system". Before building version 0.5.0, Keyman's current documentation and issue tracker were checked on 2026/10/17. Four facts came out of that check.
 
 1. **Predictive text exists only on Android, iOS and the web.** Keyman for Windows, macOS and Linux have no predictive text, and the Keyman team closed the request for it as not planned: it would need a JavaScript engine, a package system and a suggestion interface on every desktop system [keymanapp/keyman issue 11915]. On a desktop, a Keyman keyboard can only offer a layout; it cannot consult our dictionary.
 2. **Keyman's word list models use a key function, exactly like our skeleton.** A model turns every word into a search key, so that what the user types matches the stored word whatever its accents. The function is written in TypeScript, given as the `searchTermToKey` property of the model definition, and runs both when the word list is compiled and on every typed word. This is decision [0005](0005-ascii-skeleton-is-computed.md) in Keyman's own terms.

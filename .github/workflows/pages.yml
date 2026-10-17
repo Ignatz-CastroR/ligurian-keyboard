@@ -1,12 +1,15 @@
 # pages.yml
-# Author:   Ignatz-CastroR and contributors
+# Author:   Eng. José Ignacio Castro de R. and contributors
 # Date:     2026/10/17, 02:16:42, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
 # Updated:  2026/10/17, 04:07:53: the Keyman packages, under /tastiera/.
 # Updated:  2026/10/17, 08:50:12: Ubuntu 26.04 named explicitly; actions
 #           on their Node.js 24 versions; the project built on Node.js 24
 #           and also checked on Node.js 22, its declared minimum.
+# Updated:  2026/10/17, 11:35:02: the snapshot is ranked by the
+#           committed frequency list [tools/fetch-lexicon.ts]; header
+#           labels made uniform across the workflows.
 # Purpose:  Check the project, take a fresh snapshot of the published
-#           dictionary, build the Keyman packages, the web editor and
+#           dictionary, ranked by data/frequencies/lijwiki.tsv, build the Keyman packages, the web editor and
 #           the lexicon manager, and publish them on GitHub Pages:
 #             /            the web editor
 #             /admin/      the lexicon manager
@@ -25,9 +28,10 @@
 #           GitHub disables scheduled runs in a repository with no
 #           activity for 60 days; Actions then shows a button to enable
 #           the workflow again. Replaces admin-pages.yml [0.3.0].
-#           Decisions: docs/decisions/0019-editor-dictionary-snapshot.md,
-#           docs/decisions/0022-keyman-keyboard-design.md and
-#           docs/decisions/0026-workflow-runtimes.md
+# Decision: docs/decisions/0019-editor-dictionary-snapshot.md,
+#           docs/decisions/0022-keyman-keyboard-design.md,
+#           docs/decisions/0026-workflow-runtimes.md and
+#           docs/decisions/0027-real-frequencies.md
 
 name: Site on GitHub Pages
 

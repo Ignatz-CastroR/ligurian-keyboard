@@ -1,6 +1,6 @@
 /*
  * db.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:15:56, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:28:44: latestLemmas[], the latest additions.
  * Purpose:  Every conversation between the lexicon manager and the

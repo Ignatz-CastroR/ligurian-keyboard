@@ -1,6 +1,6 @@
 /*
  * ignatzcastror.lij.ligurian_keyboard.model.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 04:05:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: ñ folds to n [decision 0024].
  * Purpose:  Keyman lexical model source for Ligurian: the dictionary

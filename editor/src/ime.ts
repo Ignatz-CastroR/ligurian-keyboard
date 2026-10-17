@@ -1,6 +1,6 @@
 /*
  * ime.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 02:11:51, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  The decisions of the web editor's input method, as pure
  *           functions on [text, caret]: which word was just finished,

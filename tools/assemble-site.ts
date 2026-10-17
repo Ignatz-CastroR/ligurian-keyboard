@@ -1,6 +1,6 @@
 /*
  * assemble-site.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 02:12:33, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 04:06:59: the Keyman packages under tastiera/.
  * Purpose:  Join the builds into the one site GitHub Pages serves:

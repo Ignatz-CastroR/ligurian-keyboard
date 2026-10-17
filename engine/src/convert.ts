@@ -1,7 +1,7 @@
 /*
  * convert.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
- * Date:     2026/10/10
+ * Date:     2026/10/10, 21:08:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Decide what happens to one typed token when the user presses
  *           space: replace silently, show the candidate menu, or keep it.
  * Contract: Surrounding punctuation is preserved untouched; the casing

@@ -1,6 +1,6 @@
 /*
  * types.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:14:02, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  The shapes of the rows the lexicon manager reads from the
  *           database. They mirror db/migrations/0001 and 0004 column by

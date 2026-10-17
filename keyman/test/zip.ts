@@ -1,6 +1,6 @@
 /*
  * zip.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 04:02:25, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Read the files inside a Keyman package [.kmp], which is a
  *           zip archive, so the tests can check what kmc put in it.

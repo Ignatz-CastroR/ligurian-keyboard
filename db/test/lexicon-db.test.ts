@@ -1,14 +1,14 @@
 /*
  * lexicon-db.test.ts
- * Author:    Eng. José Ignacio Castro de R. and contributors
- * Date:      2026/10/11
- * Purpose:   Prove the database rules: roles, review workflow, automatic
- *            base forms, senses and their translations, soft deletion,
- *            optimistic locking, history, and that the export is read
- *            correctly by the engine.
- * Contract:  Every test builds its own database; no test depends on
- *            another. A rule is tested from the side of the person who
- *            must NOT be able to break it.
+ * Author:   Eng. José Ignacio Castro de R. and contributors
+ * Date:     2026/10/11, 18:39:15, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Purpose:  Prove the database rules: roles, review workflow, automatic
+ *           base forms, senses and their translations, soft deletion,
+ *           optimistic locking, history, and that the export is read
+ *           correctly by the engine.
+ * Contract: Every test builds its own database; no test depends on
+ *           another. A rule is tested from the side of the person who
+ *           must NOT be able to break it.
  */
 
 import { test } from "node:test";

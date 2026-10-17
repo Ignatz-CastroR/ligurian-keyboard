@@ -1,5 +1,7 @@
 # Date: 2026/10/10, 20:35:17.
-# Version: 1.0
+# Version: 1.1
+# Updated: 2026/10/17, 11:31:46: build output named folder by folder;
+#          Wikipedia dumps; stale comments brought up to date.
 #
 # Every line that is not a pattern starts with "#"; git reads any other
 # line as a file pattern.
@@ -38,10 +40,12 @@ TAG-MESSAGE.txt
 # folder itself is never committed: it is large and machine specific.
 node_modules/
 
-# Compiled JavaScript output, if a build step is added later. Only the
-# TypeScript source is committed.
-dist/
-build/
+# Build output of the lexicon manager and the web editor, rebuilt by
+# Vite; only the TypeScript source is committed. Each folder is named
+# with its leading "/", so that a future source folder called "dist" or
+# "build" elsewhere is never hidden by accident.
+/admin/dist/
+/editor/dist/
 
 # The assembled Pages site [editor at the root, manager under admin/],
 # rebuilt by npm run site:build and by the workflow.
@@ -62,8 +66,8 @@ coverage/
 # Secrets
 # ======================================================================
 
-# Environment files hold database URLs and API keys [the future
-# Supabase project]. Committing one to a public repository exposes the
+# Environment files hold database URLs and API keys of the Supabase
+# project. Committing one to a public repository exposes the
 # database to anyone. Must never be committed under any circumstance.
 .env
 .env.*
@@ -77,11 +81,24 @@ coverage/
 # Keyman
 # ======================================================================
 
-# Compiled keyboard packages and lexical models; only their sources
-# are committed.
+# Compiled keyboard packages and lexical models, and the staging copy
+# they are built from; only their sources are committed. The second
+# pattern also covers the build/ folder Keyman Developer writes inside
+# a project opened by hand.
+/keyman/dist/
 keyman/**/build/
 *.kmp
 *.kmx
+
+# ======================================================================
+# Corpus
+# ======================================================================
+
+# Wikipedia dumps downloaded to count word frequencies: tens of
+# megabytes, and republished by Wikimedia itself. Only the frequency
+# list counted from them, data/frequencies/lijwiki.tsv, is committed.
+*.xml.bz2
+lijwiki-*.xml
 
 # ======================================================================
 # Logs

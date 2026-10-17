@@ -1,0 +1,102 @@
+# frequencies.yml
+# Author:   Eng. José Ignacio Castro de R. and contributors
+# Date:     2026/10/17, 10:41:26, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+# Purpose:  Count the words of the Ligurian Wikipedia and offer the
+#           result, data/frequencies/lijwiki.tsv, as a downloadable
+#           artifact of the run.
+# When:     only by hand: Actions, "Frequencies from the Ligurian
+#           Wikipedia", Run workflow. Wikimedia publishes a new dump
+#           about twice a month; recounting a few times a year is
+#           plenty.
+# Contract: Reads, never writes: the job holds no write permission and
+#           no git credentials. A person downloads the artifact, puts
+#           the file at data/frequencies/lijwiki.tsv, reads the diff and
+#           commits it; the next Pages build then ranks the dictionary
+#           with it. The dump is checked against Wikimedia's own SHA-1
+#           list before it is counted. If anything fails, no artifact is
+#           produced and the committed list stays as it was.
+# Decision: docs/decisions/0027-real-frequencies.md
+
+name: Frequencies from the Ligurian Wikipedia
+
+on:
+  workflow_dispatch:
+    inputs:
+      dump_date:
+        description: "Dump date as YYYYMMDD, or latest"
+        required: true
+        default: latest
+        type: string
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  count:
+    runs-on: ubuntu-26.04
+    env:
+      USER_AGENT: "ligurian-keyboard frequency counter; https://github.com/Ignatz-CastroR/ligurian-keyboard"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      - name: Find the dump
+        id: dump
+        env:
+          DUMP_DATE: ${{ inputs.dump_date }}
+        run: |
+          if [ "$DUMP_DATE" = "latest" ]; then
+            DUMP_DATE="$(curl -fsSL --retry 3 -A "$USER_AGENT" \
+              https://dumps.wikimedia.org/lijwiki/latest/lijwiki-latest-pages-articles.xml.bz2-rss.xml \
+              | grep -oE 'lijwiki/[0-9]{8}' | head -n 1 | cut -d / -f 2)"
+          fi
+          if [[ ! "$DUMP_DATE" =~ ^[0-9]{8}$ ]]; then
+            echo "::error::No valid dump date [got '$DUMP_DATE']; give one as YYYYMMDD."
+            exit 1
+          fi
+          echo "date=$DUMP_DATE" >> "$GITHUB_OUTPUT"
+          echo "file=lijwiki-$DUMP_DATE-pages-articles.xml.bz2" >> "$GITHUB_OUTPUT"
+
+      - name: Download and verify the dump
+        env:
+          DUMP_DATE: ${{ steps.dump.outputs.date }}
+          DUMP_FILE: ${{ steps.dump.outputs.file }}
+        run: |
+          base="https://dumps.wikimedia.org/lijwiki/$DUMP_DATE"
+          curl -fSL --retry 3 -A "$USER_AGENT" -o "$DUMP_FILE" "$base/$DUMP_FILE"
+          curl -fsSL --retry 3 -A "$USER_AGENT" "$base/lijwiki-$DUMP_DATE-sha1sums.txt" \
+            | grep -E " $DUMP_FILE\$" > dump.sha1
+          test -s dump.sha1
+          sha1sum --check dump.sha1
+
+      - name: Count the words
+        env:
+          DUMP_DATE: ${{ steps.dump.outputs.date }}
+          DUMP_FILE: ${{ steps.dump.outputs.file }}
+        run: |
+          bzip2 -dc "$DUMP_FILE" | node tools/count-frequencies.ts \
+            --source "Ligurian Wikipedia [lij.wikipedia.org], dump lijwiki-$DUMP_DATE-pages-articles" -
+          {
+            echo "### Frequency list from lijwiki-$DUMP_DATE"
+            echo
+            head -n 5 data/frequencies/lijwiki.tsv | sed 's/^# /* /'
+            echo
+            echo "Download the artifact, put lijwiki.tsv at data/frequencies/lijwiki.tsv, read the diff, commit."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: frequencies-lijwiki-${{ steps.dump.outputs.date }}
+          path: data/frequencies/lijwiki.tsv
+          if-no-files-found: error
+          retention-days: 30

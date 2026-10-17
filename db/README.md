@@ -14,7 +14,7 @@ The source of truth for every word the keyboard knows and every meaning the dict
 | `test/supabase-shim.sql` | **Tests only:** the parts of Supabase the migrations need |
 | `test/harness.ts` | A fresh in-memory database per test; switching between users |
 | `test/lexicon-db.test.ts` | 21 tests; each rule is tested from the side that must not break it |
-| `test/search-keys.test.ts` | 6 tests; the SQL folding agrees with the engine's on every fixture form and every letter |
+| `test/search-keys.test.ts` | 10 tests; the SQL folding agrees with the engine's on every fixture form and on every letter the database accepts, read from the database itself; the engine loads a word holding any of those letters; `ñ` is accepted and found by typing `n`; invalid spellings are refused |
 
 Every design decision behind this database is recorded in [docs/decisions/](../docs/decisions/README.md).
 

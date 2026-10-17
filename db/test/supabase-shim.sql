@@ -1,12 +1,12 @@
 /*
  * supabase-shim.sql
- * Author:    Eng. José Ignacio Castro de R. and contributors
- * Date:      2026/10/10
- * Purpose:   The minimum of Supabase that the migrations depend on, so
- *            the tests run on a bare PostgreSQL [PGlite] with no server.
- * Contract:  TEST ONLY. Never run this on a real Supabase project, which
- *            already has all of it. auth.uid[] reads the user id from
- *            request.jwt.claims exactly as Supabase's own function does.
+ * Author:   Eng. José Ignacio Castro de R. and contributors
+ * Date:     2026/10/10, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Purpose:  The minimum of Supabase that the migrations depend on, so
+ *           the tests run on a bare PostgreSQL [PGlite] with no server.
+ * Contract: TEST ONLY. Never run this on a real Supabase project, which
+ *           already has all of it. auth.uid[] reads the user id from
+ *           request.jwt.claims exactly as Supabase's own function does.
  */
 
 create role anon nologin;

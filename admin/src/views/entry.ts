@@ -1,6 +1,6 @@
 /*
  * entry.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:21:50, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  One dictionary entry: the lemma, its forms, its numbered
  *           senses with their translations, and its history. Every
@@ -9,6 +9,9 @@
  * Contract: After every change the whole entry is reloaded from the
  *           database, so the page never shows a state that was not
  *           stored. A version conflict reloads too, then explains.
+ * Updated:  2026/10/17, 10:57:21: a warning, and a question before
+ *           saving, when a form would have ñ under the grafîa ofiçiâ
+ *           [decision 0028].
  */
 
 import type { Context } from "../context.ts";
@@ -23,8 +26,8 @@ import {
 } from "../permissions.ts";
 import { changedFields, checkForm, checkFreq, cleanOptionalText, formatDateTime, shortId } from "../forms.ts";
 import {
-  appendAll, clear, describeError, field, h, letterPalette, posLabel, refItems, runAction, select,
-  replaceAll, showError, showInfo, statusBadge,
+  appendAll, clear, confirmEnye, describeError, enyeWarning, field, h, letterPalette, posLabel, refItems,
+  runAction, select, replaceAll, showError, showInfo, statusBadge,
 } from "../ui.ts";
 
 type Reload = () => Promise<void>;
@@ -180,10 +183,18 @@ function lemmaSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
     const note: HTMLTextAreaElement = h("textarea", { rows: 3 });
     note.value = lemma.note ?? "";
     const saveButton: HTMLButtonElement = h("button", { type: "submit", class: "primary" }, t.save);
+    // A change of spelling system concerns the inflected forms too.
+    const otherForms: string[] = entry.wordforms
+      .filter((w) => !w.is_base && w.deleted_at === null).map((w) => w.form);
+    const enye = enyeWarning(t);
+    const checkEnye = (): void => enye.update([headword.value, ...otherForms], orthography.value);
+    headword.addEventListener("input", checkEnye);
+    orthography.addEventListener("change", checkEnye);
 
     const form: HTMLFormElement = h("form", { class: "edit-form" },
       field(t.fieldHeadword, headword), letterPalette(t, headword),
       field(t.fieldPos, pos), field(t.fieldVariety, variety), field(t.fieldOrthography, orthography),
+      enye.element,
       field(t.fieldNote, note),
       h("div", { class: "buttons" }, saveButton, h("button", { type: "button", onclick: show }, t.cancel)),
     );
@@ -191,7 +202,7 @@ function lemmaSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
       event.preventDefault();
       const newHeadword: string | null = readForm(ctx, headword);
       const newNote = readOptional(ctx, note, 2000);
-      if (newHeadword !== null && newNote.ok) {
+      if (newHeadword !== null && newNote.ok && confirmEnye(t, [newHeadword, ...otherForms], orthography.value)) {
         void changeAndReload(ctx, saveButton, () => updateRow("lemmas", lemma.id, lemma.version, {
           headword: newHeadword,
           part_of_speech: pos.value === "" ? null : pos.value,
@@ -202,6 +213,7 @@ function lemmaSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
       }
     });
     section.replaceChildren(form);
+    checkEnye();
     headword.focus();
   };
 
@@ -217,7 +229,7 @@ function formsSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
   const { t } = ctx;
   const list: HTMLElement = h("ul", { class: "item-list" });
   for (const wordform of entry.wordforms) {
-    list.append(wordformItem(ctx, wordform, reload));
+    list.append(wordformItem(ctx, wordform, entry.lemma.orthography, reload));
   }
 
   return h("section", { class: "card" },
@@ -227,7 +239,7 @@ function formsSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
   );
 }
 
-function wordformItem(ctx: Context, wordform: Wordform, reload: Reload): HTMLElement {
+function wordformItem(ctx: Context, wordform: Wordform, orthography: string, reload: Reload): HTMLElement {
   const { t } = ctx;
   const item: HTMLElement = h("li", {});
 
@@ -247,8 +259,10 @@ function wordformItem(ctx: Context, wordform: Wordform, reload: Reload): HTMLEle
     const tag: HTMLInputElement = h("input", { type: "text", value: wordform.grammatical_tag ?? "", maxlength: 40 });
     const freq: HTMLInputElement = h("input", { type: "number", min: 0, step: 1, value: wordform.freq });
     const saveButton: HTMLButtonElement = h("button", { type: "submit", class: "primary" }, t.save);
+    const enye = enyeWarning(t);
+    form.addEventListener("input", () => enye.update([form.value], orthography));
     const editor: HTMLFormElement = h("form", { class: "edit-form" },
-      field(t.fieldForm, form), !wordform.is_base && letterPalette(t, form),
+      field(t.fieldForm, form), !wordform.is_base && letterPalette(t, form), !wordform.is_base && enye.element,
       wordform.is_base && h("p", { class: "muted" }, t.entryBaseNote),
       field(t.fieldTag, tag), field(t.fieldFreq, freq),
       h("div", { class: "buttons" }, saveButton, h("button", { type: "button", onclick: show }, t.cancel)),
@@ -260,7 +274,7 @@ function wordformItem(ctx: Context, wordform: Wordform, reload: Reload): HTMLEle
       const newFreq: number | null = checkFreq(freq.value);
       if (newFreq === null) {
         showError(t.errFreq);
-      } else if (newForm !== null && newTag.ok) {
+      } else if (newForm !== null && newTag.ok && (wordform.is_base || confirmEnye(t, [newForm], orthography))) {
         const patch: Record<string, unknown> = { grammatical_tag: newTag.value, freq: newFreq };
         if (!wordform.is_base) {
           patch["form"] = newForm;
@@ -282,10 +296,12 @@ function addWordformForm(ctx: Context, entry: Entry, reload: Reload): HTMLElemen
   const freq: HTMLInputElement = h("input", { type: "number", min: 0, step: 1, value: 1 });
   const approveNow: HTMLInputElement | null = approveNowBox(ctx);
   const addButton: HTMLButtonElement = h("button", { type: "submit" }, t.add);
+  const enye = enyeWarning(t);
+  form.addEventListener("input", () => enye.update([form.value], entry.lemma.orthography));
 
   const editor: HTMLFormElement = h("form", { class: "edit-form add-form" },
     h("h4", {}, t.entryAddForm),
-    field(t.fieldForm, form), letterPalette(t, form),
+    field(t.fieldForm, form), letterPalette(t, form), enye.element,
     field(t.fieldTag, tag), field(t.fieldFreq, freq),
     approveNow !== null && h("label", { class: "check" }, approveNow, t.approveNow),
     h("div", { class: "buttons" }, addButton),
@@ -297,7 +313,7 @@ function addWordformForm(ctx: Context, entry: Entry, reload: Reload): HTMLElemen
     const newFreq: number | null = checkFreq(freq.value);
     if (newFreq === null) {
       showError(t.errFreq);
-    } else if (newForm !== null && newTag.ok) {
+    } else if (newForm !== null && newTag.ok && confirmEnye(t, [newForm], entry.lemma.orthography)) {
       void changeAndReload(ctx, addButton, async () => {
         await createWordform(entry.lemma.id, newForm, newTag.value, newFreq, statusFrom(approveNow));
       }, reload);

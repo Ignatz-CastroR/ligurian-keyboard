@@ -1,6 +1,6 @@
 /*
  * build.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 04:01:14, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Build the two Keyman packages from a dictionary snapshot:
  *             ligurian_keyboard.kmp                       the keyboard

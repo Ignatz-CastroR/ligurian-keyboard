@@ -3,7 +3,8 @@
 * **Status:** accepted
 * **Date:** 2026/10/17
 * **Decided by:** Eng. José Ignacio Castro de R.
-* **Refines:** [0004](0004-orthography-and-variety-per-entry.md), on the letters a spelling may contain, and [0005](0005-ascii-skeleton-is-computed.md), on the folding rules
+* **Refines:** [0004](0004-orthography-and-variety-per-entry.md), on the letters a spelling may contain; [0005](0005-ascii-skeleton-is-computed.md), on the folding rules; and [0022](0022-keyman-keyboard-design.md), on the long press of n
+* **Refined by:** [0028](0028-enye-warning-under-oficia.md), on ñ saved under the grafîa ofiçiâ
 
 ## Context
 

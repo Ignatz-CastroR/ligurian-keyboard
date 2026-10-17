@@ -1,6 +1,6 @@
 /*
  * touch-layout.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 04:04:24, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: ñ on a long press of n [decision 0024].
  * Purpose:  The on-screen layout of the Ligurian Keyman keyboard, built

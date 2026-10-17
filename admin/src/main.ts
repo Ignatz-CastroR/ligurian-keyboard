@@ -1,6 +1,6 @@
 /*
  * main.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:19:30, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:28:26: language menu [Italian, English,
  *           Spanish]; CSV download next to the TSV one.
@@ -56,8 +56,8 @@ const messageBar: HTMLElement | null = document.querySelector("#message");
 
 /* Browser storage can be missing or throw [private windows, blocked
    site data]; the language then simply falls back to Italian. The key
-   is shared with the web editor, which knows only Italian and English
-   and reads "es" as Italian. */
+   is shared with the web editor, which offers the same three
+   languages, so a choice made on one page holds on the other. */
 function loadLang(): Lang {
   let lang: Lang = "it";
   try {

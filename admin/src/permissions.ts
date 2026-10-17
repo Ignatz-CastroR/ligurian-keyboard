@@ -1,6 +1,6 @@
 /*
  * permissions.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:14:11, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Decide which buttons the interface shows to whom.
  * Contract: Cosmetic only. The database enforces every rule itself

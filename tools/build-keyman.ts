@@ -1,6 +1,6 @@
 /*
  * build-keyman.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 04:01:24, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Build the Keyman keyboard and dictionary packages from the
  *           dictionary snapshot the web editor uses.

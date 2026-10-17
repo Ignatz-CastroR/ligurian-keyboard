@@ -1,8 +1,11 @@
 /*
  * lexicon.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
- * Date:     2026/10/10
+ * Date:     2026/10/10, 21:08:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: the letter ñ [decision 0024].
+ * Updated:  2026/10/17, 09:47:05: isValidForm exported for the corpus
+ *           counter [decision 0027]; the byte order mark written as an
+ *           escape, as the project's rule requires.
  * Purpose:  Load the published wordform list and index it by skeleton.
  * Format:   TSV with header: form, freq, variety, orthography, status
  *           See docs/lexicon-format.md.
@@ -34,6 +37,12 @@ const REQUIRED_COLUMNS: readonly string[] = ["form", "freq", "variety", "orthogr
 
 // Letters a Ligurian wordform may contain, plus apostrophe and hyphen.
 const VALID_FORM: RegExp = /^[a-zàáâäèéêëìíîïòóôöùúûüæçñ'-]+$/iu;
+
+// True when a string may be a Ligurian wordform: the one test the
+// loader, the corpus counter and the tools share.
+export function isValidForm(form: string): boolean {
+  return VALID_FORM.test(form);
+}
 
 export class Lexicon {
   private readonly index: Map<string, LexiconEntry[]> = new Map();
@@ -81,7 +90,7 @@ export class Lexicon {
   }
 
   private loadTsv(text: string): void {
-    const lines: string[] = text.replace(/^﻿/, "").split(/\r?\n/);
+    const lines: string[] = text.replace(/^\uFEFF/u, "").split(/\r?\n/);
     // The header is the first line that is neither blank nor a # comment.
     let headerAt: number = 0;
     while (headerAt < lines.length && isSkippable(lines[headerAt] ?? "")) {
@@ -109,7 +118,7 @@ export class Lexicon {
     const freq: number = Number(freqText);
     const status: string = (cells[col("status")] ?? "").trim();
 
-    if (!VALID_FORM.test(form)) {
+    if (!isValidForm(form)) {
       this.errors.push({ line: lineNo, message: `invalid form "${form}"` });
     } else if (freqText === "" || !Number.isFinite(freq) || freq < 0) {
       this.errors.push({ line: lineNo, message: `invalid freq "${freqText}"` });

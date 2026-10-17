@@ -18,7 +18,7 @@ The same conversion code must run in three places: in web browsers [the editor a
 * **PostgreSQL** for the database, hosted by **Supabase**, which adds logins, permissions and an HTTP API.
   * Everything is plain PostgreSQL SQL, apart from `auth.users` and `auth.uid()`. The database can move to any PostgreSQL server.
   * Project region: **Central EU [Frankfurt]**, the closest to Genoa. Free plan.
-* **Keyman** [SIL International, free and open source] for keyboards on Windows, macOS, Linux, Android, iOS and the web, instead of writing an input method for each system.
+* **Keyman** [SIL Global, free and open source] for keyboards on Windows, macOS, Linux, Android, iOS and the web, instead of writing an input method for each system.
 * **Web apps** for the editor and the lexicon manager: nothing to install, any device.
 * **Tests:** Node's built-in test runner. The database is tested on **PGlite**, a real PostgreSQL compiled to WebAssembly, so the tests need no server and no PostgreSQL installation.
 * Rejected: Python and Go [they cannot run in the browser without heavy toolchains]; plain JavaScript [no type checking]; COBOL, Fortran and Rust [wrong tools for browser and keyboard code].

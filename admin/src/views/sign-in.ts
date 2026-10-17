@@ -1,6 +1,6 @@
 /*
  * sign-in.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:18:59, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Sign in with email and password. There is no sign up:
  *           accounts are created by an admin [admin/README.md].

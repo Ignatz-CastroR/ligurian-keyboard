@@ -12,7 +12,7 @@ The project needs a name readable by two audiences: Genoese Italian speakers and
 
 * **Name: `ligurian-keyboard`.** "Keyboard" is understood by everyone; "IME" is jargon.
 * **Home:** the maintainer's public GitHub account, `Ignatz-CastroR`. Contributors of good will are welcome.
-* **Discoverability for Italian speakers** comes from the bilingual description, the Italian section that opens `README.md`, and the topics: `ligure` `genovese` `zeneize` `lingua-ligure` `tastiera` `grafia-oficia` `ligurian` `input-method` `typescript`.
+* **Discoverability for Italian speakers** comes from the bilingual description, the Italian summary at the end of `README.md`, announced in Italian in its first lines, and the topics: `ligure` `genovese` `zeneize` `lingua-ligure` `tastiera` `grafia-oficia` `ligurian` `input-method` `typescript`.
 * Genoese associations will be contacted and invited to take part.
 
 ## Consequences

@@ -1,19 +1,21 @@
 /*
  * forms.test.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:20:45, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: the letters are compared with a real
  *           database built from every migration, not with file 0001.
+ * Updated:  2026/10/17, 11:00:43: the warning before ñ is saved under
+ *           the grafîa ofiçiâ [decision 0028].
  * Purpose:  The checks the lexicon manager runs before sending anything,
  *           and their agreement with the database's own rules.
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createDatabase, domainLetters } from "../../db/test/harness.ts";
+import { createDatabase, domainLetters, rowsAs } from "../../db/test/harness.ts";
 import {
-  LIGURIAN_LETTERS, SPECIAL_LETTERS, changedFields, checkForm, checkFreq,
-  cleanForm, cleanOptionalText, formatDateTime, searchKeyFilter,
+  LIGURIAN_LETTERS, OFICIA, SPECIAL_LETTERS, changedFields, checkForm, checkFreq,
+  cleanForm, cleanOptionalText, enyeUnderOficia, formatDateTime, searchKeyFilter,
 } from "../src/forms.ts";
 
 test("the letters accepted here are exactly the database domain's", async () => {
@@ -83,4 +85,19 @@ test("changedFields ignores bookkeeping columns", () => {
   const after = { headword: "pénna", version: 2, updated_at: "b", headword_key: "penna", note: null };
   assert.deepEqual(changedFields(before, after), ["headword"]);
   assert.deepEqual(changedFields(null, after), []);
+});
+
+test("ñ under the grafîa ofiçiâ is found, in either case, and only there", () => {
+  assert.deepEqual(enyeUnderOficia(["Españ", "pénna"], "ofiçiâ"), ["Españ"]);
+  assert.deepEqual(enyeUnderOficia(["ÑAÑA", " ñaña "], "ofiçiâ"), ["ÑAÑA", "ñaña"], "cleaned as when saved");
+  assert.deepEqual(enyeUnderOficia(["ñaña", "ñaña"], "ofiçiâ"), ["ñaña"], "each form named once");
+  assert.deepEqual(enyeUnderOficia(["ñaña"], "unitäia"), [], "other spelling systems may write ñ");
+  assert.deepEqual(enyeUnderOficia(["ñaña"], "ofic\u0327i\u00e2"), ["ñaña"], "a decomposed name is still ofiçiâ");
+  assert.deepEqual(enyeUnderOficia(["pénna", "Zêna"], "ofiçiâ"), []);
+  assert.deepEqual(enyeUnderOficia([], "ofiçiâ"), []);
+});
+
+test("the spelling system warned about is the database's own ofiçiâ", async () => {
+  const codes: { code: string }[] = await rowsAs(await createDatabase(), "anon", "select code from public.orthographies");
+  assert.ok(codes.some((row) => row.code === OFICIA), JSON.stringify(codes));
 });

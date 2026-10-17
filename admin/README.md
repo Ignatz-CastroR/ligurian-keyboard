@@ -34,7 +34,9 @@ Both buttons in the header download the published dictionary, from the same expo
 * **TSV:** the engine's own format [`docs/lexicon-format.md`], with comment lines stating the license.
 * **CSV:** the same rows for spreadsheets, separated by **semicolons**, as Excel set to Italian or Spanish expects, so a double click opens the file in columns; otherwise RFC 4180: fields quoted only when they hold a semicolon, a double quote, a line break or surrounding spaces, CRLF line endings, and a UTF-8 byte order mark so that Excel shows the Ligurian letters correctly [decision [0025](../docs/decisions/0025-csv-semicolon.md)]. Excel set to English expects commas: open the file there through **Data → From Text/CSV**; LibreOffice asks for the separator when it opens the file, and Google Sheets detects it when importing.
 
-Every field for a Ligurian spelling has buttons for the special letters `à â ä è é ê ë ì î ï ò ó ô ö ù û ü æ ç`, then `ñ`, which some other Ligurian spelling systems write [decision [0024](../docs/decisions/0024-letter-enye.md)]; hold Shift for the upper case letter. A word with `ñ` is entered under its own spelling system, not `ofiçiâ`.
+Every field for a Ligurian spelling has buttons for the special letters `à â ä è é ê ë ì î ï ò ó ô ö ù û ü æ ç`, then `ñ`, which some other Ligurian spelling systems write [decision [0024](../docs/decisions/0024-letter-enye.md)]; hold Shift for the upper case letter. A word with `ñ` is entered under its own spelling system, not `ofiçiâ`: whenever a form with `ñ` would be saved under `ofiçiâ`, a warning appears under the form, and saving asks for confirmation first [decision [0028](../docs/decisions/0028-enye-warning-under-oficia.md)]. Changing a lemma's spelling system to `ofiçiâ` checks its inflected forms too.
+
+The **frequency** of a form is a weight, 1 by default. The daily snapshot adds to it the number of times the Ligurian Wikipedia uses the form [decision [0027](../docs/decisions/0027-real-frequencies.md)], so there is usually no need to change it; raise it only to put a form ahead of what the corpus says. The TSV and CSV downloads show the stored value.
 
 ## Files
 
@@ -91,7 +93,7 @@ There is no sign up page. To add a person:
 
    Use **Variables**, not Secrets: both values are public by design, and variables stay readable for checking.
 2. **Settings → Pages → Build and deployment → Source:** GitHub Actions.
-3. Push to `main`. The workflow `.github/workflows/pages.yml` runs every test, takes a snapshot of the dictionary, builds the web editor and the manager, and publishes them together: the editor at `https://<user>.github.io/ligurian-keyboard/`, the manager at `https://<user>.github.io/ligurian-keyboard/admin/` [since 0.4.0; until then the manager was at the root].
+3. Push to `main`. The workflow `.github/workflows/pages.yml` runs every test, takes a snapshot of the dictionary, builds the Keyman packages, the web editor and the manager, and publishes them together, with the Android install page and the packages under `/tastiera/`: the editor at `https://<user>.github.io/ligurian-keyboard/`, the manager at `https://<user>.github.io/ligurian-keyboard/admin/` [since 0.4.0; until then the manager was at the root].
 4. In Supabase → **Authentication → URL Configuration**, set the **Site URL** to the manager's address, ending in `/admin/`, and add it to the **Redirect URLs**.
 
 When the manager runs locally [`npm run admin:dev`], its "Scrivi" link leads nowhere useful: the editor is a separate local server [`npm run editor:dev`, see [editor/README.md](../editor/README.md)].

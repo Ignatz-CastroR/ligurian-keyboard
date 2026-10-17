@@ -2,7 +2,7 @@
 
 Version 0.2, 2026/10/17 [0.1, 2026/10/10; 0.2 adds ñ]. Normative source: Académia Ligùstica do Brénno, *Arfabêto*, <https://www.zeneize.net/grafia/arfabeto.htm>.
 
-The **skeleton** of a word is the plain ASCII string a user types to reach it. The engine computes it from the stored spelling; contributors never type keys by hand. Implementation: `engine/src/skeleton.ts`. Any change to one must be mirrored in the other and covered by a test.
+The **skeleton** of a word is the plain ASCII string a user types to reach it. The engine computes it from the stored spelling; contributors never type keys by hand. Implementation: `engine/src/skeleton.ts`, with three copies kept identical by tests: see "The SQL mirror" and "The Keyman mirror" below. A change to one rule means changing all four places.
 
 ## Rules, applied in this order
 

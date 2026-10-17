@@ -1,6 +1,6 @@
 /*
  * messages.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 02:12:54, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 08:23:03: Spanish, and a language menu with the
  *           same entries as the lexicon manager's [decision 0023].

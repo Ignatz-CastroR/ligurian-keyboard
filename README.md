@@ -234,10 +234,11 @@ Both lists live in the database, so adding a variety or a spelling system is a s
 | Part | Folder | What it does | State |
 |---|---|---|---|
 | Conversion engine | `engine/` | Computes skeletons, loads the word list, converts typed words, builds the menu | working, 17 tests |
+| Word counts | `corpus/` | Counts the words of the Ligurian Wikipedia, so the most used spelling comes first | working, 10 tests |
 | Terminal demo | `engine/src/demo.ts` | Try the engine from the command line | working |
 | Shared dictionary | `db/` | Words, meanings, translations, roles, review, history | working and deployed, 31 tests |
 | Export | `db/` [`export_lexicon_tsv()`] | Writes the approved words in the engine's format | working |
-| Lexicon manager | `admin/` | Web page to search, propose and review words, in Italian, English and Spanish | working, 26 tests |
+| Lexicon manager | `admin/` | Web page to search, propose and review words, in Italian, English and Spanish | working, 28 tests |
 | Web editor | `editor/` | Web page where anyone types Ligurian with the engine and the published dictionary, in Italian, English and Spanish | working, 17 tests |
 | Android keyboard | `keyman/` | Keyman keyboard and dictionary for Android phones and tablets, rebuilt daily | working, 30 tests; to be tested on real phones |
 | Other exports | `export/` | Further formats of the dictionary | planned |
@@ -288,10 +289,11 @@ Accounts are created by an admin; there is no self sign up.
 1. A contributor **proposes** a word in the lexicon manager; it is stored as `pending`. Its base form and its search key are computed by the database at once.
 2. A reviewer **approves** it. From that moment it is **published**: visible to every visitor in the lexicon manager and included in the export.
 3. **The site is rebuilt**: every day at 03:17 UTC [21:17 in Costa Rica; 04:17 or 05:17 in Genoa, depending on daylight saving], on every change to the code, or by hand from GitHub's Actions page. The build takes a **snapshot** of the export, `export_lexicon_tsv()`.
-4. **The snapshot is checked** with the engine's own loader. If any row is invalid, or no approved word exists, the build stops and the site keeps its previous version: a broken dictionary is never published.
-5. **The web editor** receives the whole snapshot, every variety and spelling system.
-6. **The Android dictionary package** is rebuilt from the same snapshot: its approved `zeneize` forms in `ofiçiâ`, indexed by skeleton, versioned by the snapshot's date, for example `2026.10.17`.
-7. People see the new word **the next time they open the editor**, or **after they install the new dictionary package**. Keyman does not update a package downloaded from a website by itself; installing it again replaces it.
+4. **The snapshot is ranked:** each word written in grafîa ofiçiâ receives the number of times the Ligurian Wikipedia uses it, added to its frequency in the dictionary [`data/frequencies/lijwiki.tsv`; decision [0027](docs/decisions/0027-real-frequencies.md)].
+5. **The snapshot is checked** with the engine's own loader. If any row is invalid, or no approved word exists, or the frequency list is damaged, the build stops and the site keeps its previous version: a broken dictionary is never published.
+6. **The web editor** receives the whole snapshot, every variety and spelling system.
+7. **The Android dictionary package** is rebuilt from the same snapshot: its approved `zeneize` forms in `ofiçiâ`, indexed by skeleton, versioned by the snapshot's date, for example `2026.10.17`.
+8. People see the new word **the next time they open the editor**, or **after they install the new dictionary package**. Keyman does not update a package downloaded from a website by itself; installing it again replaces it.
 
 So a word approved today reaches everyone within a day, and at once if a maintainer runs the site workflow by hand.
 
@@ -369,7 +371,7 @@ Good Ligurian dictionaries exist, but they are their authors' copyrighted work. 
 
 * Contributors enter words **from their own knowledge**, or from sources whose license allows reuse.
 * **Permission first:** the Académia Ligùstica do Brénno and A Compagna will be asked whether their word lists may seed the dictionary, in exchange for credit and editorial roles.
-* **Word frequencies**, which order the menu and the suggestions, will be counted from a freely licensed body of text such as the Ligurian Wikipedia. Until then every word has the same weight, and ties are broken alphabetically.
+* **Word frequencies**, which order the menu and the suggestions, are counted from the **Ligurian Wikipedia**, which writes in grafîa ofiçiâ and whose text is under CC BY-SA 4.0 [decision [0027](docs/decisions/0027-real-frequencies.md)]. A maintainer runs the workflow "Frequencies from the Ligurian Wikipedia" a few times a year; it downloads Wikimedia's latest dump, checks it, counts every word of every article and offers the list as a file to download, which the maintainer reviews and commits as `data/frequencies/lijwiki.tsv`. When the site is built, each word in grafîa ofiçiâ gets its count added to the frequency stored in the dictionary, so a word the corpus never uses keeps its stored weight and a reviewer can still raise a word by hand. Until the first list is committed, every word has the same weight and ties are broken alphabetically.
 
 The real dictionary is just beginning. The file `data/fixtures/test-lexicon.tsv` holds 93 forms from the Académia's public alphabet page, used only by the tests and the demo.
 
@@ -397,7 +399,7 @@ npm install
 npm run check
 ```
 
-`npm run check` type checks the whole project and runs all 121 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
+`npm run check` type checks the whole project and runs all 137 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
 
 Inside this repository, use `npm run typecheck` or `npx tsc`, never a globally installed `tsc`: the project pins its own TypeScript version.
 
@@ -426,7 +428,7 @@ Both packages appear in `keyman/dist/`. Copy them to an Android phone and instal
 
 ### Set up your own database
 
-[db/README.md](db/README.md), section "Deploying to Supabase", lists every step: running the four migrations in order, creating the first user and making it admin.
+[db/README.md](db/README.md), section "Deploying to Supabase", lists every step: running the five migrations in order, creating the first user and making it admin.
 
 ### Every command
 
@@ -440,12 +442,15 @@ Both packages appear in `keyman/dist/`. Copy them to an Android phone and instal
 | `npm run test:admin` | Lexicon manager tests |
 | `npm run test:editor` | Web editor tests |
 | `npm run test:keyman` | Android keyboard tests |
+| `npm run test:corpus` | Word counting tests |
+| `npm run test:docs` | Decision record tests |
 | `npm run demo` | Terminal demo of the input method |
 | `npm run admin:dev` | Lexicon manager on your computer, reloading on every change |
 | `npm run admin:build` | Build the lexicon manager into `admin/dist/` |
 | `npm run admin:preview` | Serve that build locally |
 | `npm run lexicon:fixture` | Use the test dictionary as the snapshot |
-| `npm run lexicon:snapshot` | Take a snapshot of the real dictionary [needs `.env`] |
+| `npm run lexicon:snapshot` | Take a snapshot of the real dictionary, ranked by the frequency list when one is committed [needs `.env`] |
+| `npm run frequencies:count -- --source "..." <dump.xml>` | Count the words of an uncompressed Wikipedia dump into `data/frequencies/lijwiki.tsv` |
 | `npm run editor:dev` | Web editor on your computer, reloading on every change |
 | `npm run editor:build` | Build the web editor into `editor/dist/` |
 | `npm run keyman:build` | Build the Android keyboard and dictionary packages into `keyman/dist/` from the snapshot |
@@ -468,7 +473,7 @@ db/                     the shared dictionary
   README.md               data model, roles, client rules, deployment
 admin/                  the lexicon manager, published under /admin/
   src/                    TypeScript, one file per page under views/
-  test/                   26 tests
+  test/                   28 tests
   README.md               pages, accounts, downloads, publishing
 editor/                 the web editor, the front page of the site
   src/ime.ts              the input method's decisions, pure functions
@@ -483,27 +488,35 @@ keyman/                 the Android keyboard and its dictionary
   src/                    layout, word list, build
   test/                   30 tests
   README.md               build, rules for changes, testing on a phone
-tools/                  dictionary snapshot, Keyman packages, site assembly
+corpus/                 counting the words of the Ligurian Wikipedia
+  src/                    words, the dump and its markup, the frequency list
+  test/                   10 tests
+  README.md               how a count is made and committed
+tools/                  dictionary snapshot, word counts, Keyman packages, site assembly
 docs/
   skeleton-spec.md        the folding rules, their sources and their copies
   lexicon-format.md       the word list exchange format
   decisions/              one record per design decision
+  test/                   4 tests: the decision tables follow the records
 data/
   fixtures/test-lexicon.tsv   93 forms for tests only
+  frequencies/            word counts from the Ligurian Wikipedia
   LICENSE.md              CC BY-SA 4.0 for lexicon data
 export/                 further dictionary formats, planned
-.github/workflows/      tests, daily site build, Keyman packages for releases
+.github/workflows/      tests, daily site build, Keyman packages for releases, word counts
 ```
 
 ## Tests
 
-121 tests guard the project, and every one runs on every push to `main` before anything is published:
+137 tests guard the project, and every one runs on every push to `main` before anything is published:
 
 * **Engine [17]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows.
 * **Database [31]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Ten of them guard the search keys: the database's own folding equals the engine's on every test word and on every letter the database accepts, a list read from the database itself; the engine loads a word holding any of those letters; and `ñ` is accepted and found by typing `n`.
-* **Lexicon manager [26]:** input checks, with a letter list identical to the real database's; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180 with semicolons, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy.
+* **Lexicon manager [28]:** input checks, with a letter list identical to the real database's; the warning before `ñ` is saved under grafîa ofiçiâ, compared with the database's own spelling system codes; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180 with semicolons, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy.
 * **Web editor [17]:** finishing a word, replacing, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages; its three languages, the same as the manager's, with Spanish really translated.
 * **Android keyboard [30]:** a real build with Keyman's compiler; the compiled dictionary loaded and inspected, proving that its search keys equal the engine's on every character up to U+02FF, every test word in four forms and 5,000 pseudo-random strings whose coverage is itself tested; exactly the Ligurian letters on the layout, in both cases; rows of equal width by Keyman's own arithmetic; the layer rules; the contents of both packages; the refusal of a bad snapshot or a failing compiler, keeping earlier packages; error reporting always off.
+* **Word counts [10]:** what a word is, in capitals, with elision and with foreign letters; markup stripped from written-for-the-test wikitext, unclosed markup included; the dump read in pieces cut anywhere, articles only; the frequency list written, read back, and refused line by line when damaged; and, end to end, the corpus deciding which spelling of `penna` the editor offers first.
+* **Decision records [4]:** numbered without gaps; both tables, in `docs/decisions/README.md` and here, name every record exactly as its own title does; and every "Refines" or "Supersedes" is answered by the record it points to.
 
 ## Automation
 
@@ -511,8 +524,9 @@ export/                 further dictionary formats, planned
 |---|---|---|
 | **Site on GitHub Pages** [`pages.yml`] | every push to `main`; every day at 03:17 UTC; by hand | runs every test on Node.js 24, and again on Node.js 22, the oldest version the project supports; takes a snapshot of the dictionary, builds the Keyman packages, the web editor and the lexicon manager, publishes them. If anything fails, the site keeps its last good version. |
 | **Keyman packages for a release** [`release-assets.yml`] | when a release is published; by hand, for an existing tag | runs every test, takes a snapshot, builds both Keyman packages and attaches them to the release. The build runs with a read only token; a separate step with write access only uploads the two files. |
+| **Frequencies from the Ligurian Wikipedia** [`frequencies.yml`] | by hand only | downloads Wikimedia's latest dump of the Ligurian Wikipedia, checks its SHA-1, counts its words and offers `lijwiki.tsv` as a file to download. It writes nothing: a maintainer reviews the file and commits it. |
 
-Both run on **Ubuntu 26.04**, named explicitly rather than through `ubuntu-latest`, so that GitHub's next change of image cannot alter a build unannounced, and use the Node.js 24 versions of GitHub's actions [decision [0026](docs/decisions/0026-workflow-runtimes.md)]. Both need two repository variables, `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`; both values are public by design. GitHub pauses scheduled runs after 60 days without activity in the repository; the Actions page then offers to enable them again.
+All three run on **Ubuntu 26.04**, named explicitly rather than through `ubuntu-latest`, so that GitHub's next change of image cannot alter a build unannounced, and use the Node.js 24 versions of GitHub's actions [decision [0026](docs/decisions/0026-workflow-runtimes.md)]. Both need two repository variables, `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`; both values are public by design. GitHub pauses scheduled runs after 60 days without activity in the repository; the Actions page then offers to enable them again.
 
 ## Design decisions
 
@@ -521,31 +535,33 @@ Every important decision is recorded in [docs/decisions/](docs/decisions/README.
 | N° | Decision |
 |---|---|
 | [0001](docs/decisions/0001-input-method-not-editor.md) | An input method, not a standalone editor |
-| [0002](docs/decisions/0002-one-dictionary-database.md) | One dictionary database, not two; homographs allowed |
-| [0003](docs/decisions/0003-open-data-and-licenses.md) | Open data; MIT for code, CC BY-SA 4.0 for data |
-| [0004](docs/decisions/0004-orthography-and-variety-per-entry.md) | Spelling system and variety for every entry; grafîa ofiçiâ by default |
+| [0002](docs/decisions/0002-one-dictionary-database.md) | One dictionary database, not two dictionaries |
+| [0003](docs/decisions/0003-open-data-and-licenses.md) | Open data and licenses |
+| [0004](docs/decisions/0004-orthography-and-variety-per-entry.md) | Orthography and variety recorded for every entry |
 | [0005](docs/decisions/0005-ascii-skeleton-is-computed.md) | The ASCII key of every word is computed, never typed |
-| [0006](docs/decisions/0006-wordforms-entered-by-hand.md) | Every form entered by hand; no inflection generator yet |
-| [0007](docs/decisions/0007-technology-stack.md) | TypeScript, PostgreSQL on Supabase, Keyman, web apps |
-| [0008](docs/decisions/0008-repository-name-and-home.md) | The name `ligurian-keyboard`, on the maintainer's GitHub account |
-| [0009](docs/decisions/0009-data-sources.md) | No copying of copyrighted dictionaries; permission first |
-| [0010](docs/decisions/0010-versioning-and-releases.md) | Semantic versioning, annotated tags, changelog |
-| [0011](docs/decisions/0011-roles-and-review-workflow.md) | Roles and review enforced by the database |
-| [0012](docs/decisions/0012-never-hard-delete.md) | No hard deletes; history; protection against lost edits |
-| [0013](docs/decisions/0013-senses-and-optional-translations.md) | Numbered senses with optional translations |
+| [0006](docs/decisions/0006-wordforms-entered-by-hand.md) | Every wordform is entered by hand; no morphology generator yet |
+| [0007](docs/decisions/0007-technology-stack.md) | Technology stack |
+| [0008](docs/decisions/0008-repository-name-and-home.md) | Repository name and home |
+| [0009](docs/decisions/0009-data-sources.md) | Where the words come from |
+| [0010](docs/decisions/0010-versioning-and-releases.md) | Versioning and releases |
+| [0011](docs/decisions/0011-roles-and-review-workflow.md) | Roles and the review workflow |
+| [0012](docs/decisions/0012-never-hard-delete.md) | Never hard delete; keep the whole history |
+| [0013](docs/decisions/0013-senses-and-optional-translations.md) | Meanings as numbered senses, with optional translations |
 | [0014](docs/decisions/0014-automatic-base-form.md) | The base form is created automatically and follows its lemma |
-| [0015](docs/decisions/0015-definitions-in-italian.md) | Definitions in Italian now; in Ligurian once typing it is easy |
+| [0015](docs/decisions/0015-definitions-in-italian.md) | Definitions are written in Italian, for now |
 | [0016](docs/decisions/0016-database-first-then-interface.md) | Database first, then the lexicon manager |
 | [0017](docs/decisions/0017-ascii-search-keys-in-the-database.md) | ASCII search keys stored in the database |
 | [0018](docs/decisions/0018-lexicon-manager-design.md) | Design of the lexicon manager |
 | [0019](docs/decisions/0019-editor-dictionary-snapshot.md) | The web editor reads a daily snapshot of the dictionary |
 | [0020](docs/decisions/0020-web-editor-design.md) | Design of the web editor |
-| [0021](docs/decisions/0021-keyman-scope-and-toolchain.md) | Keyman keyboard: Android first, built with `kmc`, self-distributed |
+| [0021](docs/decisions/0021-keyman-scope-and-toolchain.md) | Keyman keyboard: scope, toolchain and distribution |
 | [0022](docs/decisions/0022-keyman-keyboard-design.md) | Design of the Keyman keyboard and dictionary |
 | [0023](docs/decisions/0023-lexicon-manager-spanish-history-csv.md) | Lexicon manager in Spanish, latest additions, CSV download |
-| [0024](docs/decisions/0024-letter-enye.md) | The letter ñ: accepted, folded to `n`, on the keyboard |
+| [0024](docs/decisions/0024-letter-enye.md) | The letter ñ |
 | [0025](docs/decisions/0025-csv-semicolon.md) | The CSV download is separated by semicolons |
-| [0026](docs/decisions/0026-workflow-runtimes.md) | Workflows on Ubuntu 26.04, named explicitly; actions on Node.js 24; the project checked on Node.js 24 and 22 |
+| [0026](docs/decisions/0026-workflow-runtimes.md) | Workflow runners and runtimes |
+| [0027](docs/decisions/0027-real-frequencies.md) | Real frequencies from the Ligurian Wikipedia |
+| [0028](docs/decisions/0028-enye-warning-under-oficia.md) | The manager warns before saving ñ under the grafîa ofiçiâ |
 
 ## Open questions
 
@@ -572,7 +588,7 @@ Version 1.0.0 is a promise of stability, given when these criteria are met, not 
 |---|---|
 | 0.6 | Done: the lexicon manager in Spanish, its latest additions, the CSV download; the letter `ñ` |
 | 0.7 | Done: workflows on Ubuntu 26.04 and Node.js 24, also checked on Node.js 22; the CSV download separated by semicolons |
-| 0.8 | Real frequencies from a freely licensed body of text |
+| 0.8 | Done: real frequencies from the Ligurian Wikipedia; a warning before `ñ` is saved under grafîa ofiçiâ |
 | 0.9 | Bulk import with validation |
 | 0.10 | Backups, hardening, contributor documentation; beta with speakers in Genoa |
 | 1.0 | All criteria met |
@@ -583,19 +599,20 @@ Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought 
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.8.0, 2026/10/17: real frequencies.** The words of the Ligurian Wikipedia are counted, and the editor's menu and the keyboard's suggestions put the most used spelling first. The lexicon manager warns, and asks, before a word with `ñ` is saved under grafîa ofiçiâ, which does not write that letter.
 * **0.7.0, 2026/10/17: ready for GitHub's new runners.** Both workflows run on Ubuntu 26.04 and on the Node.js 24 versions of GitHub's actions, and the project is built on Node.js 24 and still checked on Node.js 22. The CSV download is separated by semicolons, so Excel set to Italian or Spanish opens it in columns with a double click.
 * **0.6.0, 2026/10/17: the site in Spanish.** A Spanish interface beside Italian and English, in the lexicon manager, the web editor and the install page; the 20 latest additions below the search field; the dictionary downloadable as CSV as well as TSV. The letter `ñ`, written by some other Ligurian spelling systems, is accepted everywhere: a button in the manager, the search key `n`, a long press of `n` on the Android keyboard.
 * **0.5.1, 2026/10/17:** the copyright holder's name made uniform, inside the Keyman packages too.
 * **0.5.0, 2026/10/17: the Android keyboard.** A Keyman keyboard with an Italian layout and every Ligurian letter on long press, and a dictionary package whose suggestions use the engine's own search keys; both rebuilt every day, offered on an install page under `/tastiera/`, and attached to every release.
 * **0.4.1, 2026/10/17:** singular and plural in the web editor's dictionary status.
 * **0.4.0, 2026/10/17: the web editor.** The front page of the site: type plain letters and get grafîa ofiçiâ, with the candidate menu, undo, filters, copy and download, on computers and phones, offline after one visit. A daily snapshot of the dictionary; the lexicon manager moves to `/admin/`.
-* **0.3.0, 2026/10/11: the lexicon manager.** The web page to search, propose and review words; search by plain letters through keys computed by the database; publication on GitHub Pages. The database is deployed on Supabase.
+* **0.3.0, 2026/10/17: the lexicon manager.** The web page to search, propose and review words; search by plain letters through keys computed by the database; publication on GitHub Pages. The database is deployed on Supabase.
 * **0.2.0, 2026/10/11: the shared dictionary.** The PostgreSQL database with lemmas, forms, numbered senses and translations; roles and review enforced by the database; history; export to the engine's format; the first design decision records.
 * **0.1.0, 2026/10/10: the conversion engine.** ASCII folding based on the Académia's alphabet, the word list loader, conversion with the candidate menu, the terminal demo.
 
 ## Contributing
 
-Words, corrections, translations, code and reviews from native speakers are all welcome, in English, Italian or Ligurian. See [CONTRIBUTING.md](CONTRIBUTING.md). Genoese associations interested in the project are invited to open an issue.
+Words, corrections, translations, code and reviews from native speakers are all welcome, in English, Italian, Spanish or Ligurian. See [CONTRIBUTING.md](CONTRIBUTING.md). Genoese associations interested in the project are invited to open an issue.
 
 ## Licenses
 
@@ -658,15 +675,15 @@ Il dizionario condiviso è un database dove i collaboratori propongono parole, c
 * La tastiera non è ancora stata provata da parlanti nativi sui loro telefoni; ogni segnalazione è benvenuta.
 * La `æ` scritta con la pressione prolungata dà probabilmente suggerimenti più deboli di `ae`; scrivere `ae` funziona sempre.
 * Le forme elise, come `l'ægua`, contano come una parola sola: ricevono un suggerimento solo se il dizionario le contiene così.
-* Le frequenze delle parole non ci sono ancora: per ora l'ordine dei suggerimenti è alfabetico.
+* Le frequenze delle parole vengono dalla Wikipedia in ligure, che è scritta in grafîa ofiçiâ: i suoi testi sono enciclopedici, quindi le parole di tutti i giorni possono risultare meno frequenti che nel parlato. Finché il primo elenco di frequenze non è pubblicato, l'ordine dei suggerimenti è alfabetico.
 
 ### Verso la versione 1.0.0
 
-La 1.0.0 arriverà quando ci saranno: la tastiera Android provata sul campo, qualche migliaio di forme approvate con frequenze reali, regole e formati congelati, le questioni aperte risolte, alcune settimane d'uso reale a Genova, e copie di sicurezza regolari del database. Il percorso: frequenze reali [0.8], importazione in blocco con verifica [0.9], copie di sicurezza, documentazione e prova con parlanti genovesi [0.10].
+La 1.0.0 arriverà quando ci saranno: la tastiera Android provata sul campo, qualche migliaio di forme approvate con frequenze reali, regole e formati congelati, le questioni aperte risolte, alcune settimane d'uso reale a Genova, e copie di sicurezza regolari del database. Il percorso: frequenze reali [0.8, fatto], importazione in blocco con verifica [0.9], copie di sicurezza, documentazione e prova con parlanti genovesi [0.10].
 
 ### Contribuire
 
-Sono benvenuti parole, correzioni, traduzioni, codice e revisioni di parlanti nativi, in italiano, in ligure o in inglese: vedi [CONTRIBUTING.md](CONTRIBUTING.md). Le associazioni genovesi interessate possono aprire una *issue*.
+Sono benvenuti parole, correzioni, traduzioni, codice e revisioni di parlanti nativi, in italiano, in ligure, in spagnolo o in inglese: vedi [CONTRIBUTING.md](CONTRIBUTING.md). Le associazioni genovesi interessate possono aprire una *issue*.
 
 ### Licenze e indipendenza
 

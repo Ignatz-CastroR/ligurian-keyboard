@@ -1,6 +1,6 @@
 # Contributing
 
-Contributions in English, Italian or Ligurian are welcome.
+Contributions in English, Italian, Spanish or Ligurian are welcome.
 
 ## Words
 
@@ -21,5 +21,6 @@ Without an account, a word can still be proposed by issue, as a TSV row [see `do
 ## Code
 
 * Code, identifiers and comments in English.
-* Every change to `engine/src/skeleton.ts` updates `docs/skeleton-spec.md` and adds a test.
+* A change to the folding rules in `engine/src/skeleton.ts` is made in four places at once, as `docs/skeleton-spec.md` explains: that page, `engine/src/skeleton.ts`, a new migration replacing `private.skeleton()`, and the Keyman model's `searchTermToKey`, plus `LONG_PRESS` in `keyman/src/touch-layout.ts` when a letter is added. The tests fail until all of them agree.
+* Every new design decision gets a record in `docs/decisions/` and a row in both decision tables, in `docs/decisions/README.md` and in `README.md`; `docs/test/decisions.test.ts` checks that the tables follow the records.
 * `npm run check` must pass.

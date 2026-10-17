@@ -5,7 +5,7 @@ The engine reads a UTF-8 TSV file. Lines that are blank or start with `#` are ig
 | Column | Required | Meaning |
 |---|---|---|
 | `form` | yes | One **wordform**, exactly as spelled, NFC. Inflected forms are separate rows: `brasso` and `brasse` are two rows. |
-| `freq` | yes | Non-negative number; higher ranks earlier in the menu. |
+| `freq` | yes | Non-negative number; higher ranks earlier in the menu. In the database and in the manager's downloads it is the stored value, 1 by default. In the daily snapshot it is a ranking weight: the stored value plus the number of times the Ligurian Wikipedia uses the form, for rows in the spelling system of the frequency list [decision [0027](decisions/0027-real-frequencies.md)]. The snapshot then carries a `# Frequencies:` line naming the list. |
 | `variety` | yes | `zeneize`, `savoneize`, `tabarchin`, `monegasco`, ... |
 | `orthography` | yes | `ofiçiâ` by default; `unitäia` reserved for later. |
 | `status` | yes | Only `approved` rows reach users; `pending` and `rejected` are skipped. |

@@ -1,9 +1,11 @@
 /*
  * messages.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:15:15, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:28:09: Spanish; texts for the latest
  *           additions, the CSV download and the language menu.
+ * Updated:  2026/10/17, 10:52:37: the warning before ñ is saved under the
+ *           grafîa ofiçiâ [decision 0028].
  * Purpose:  Every text the lexicon manager shows, in Italian [default,
  *           for the Genoese contributors], English and Spanish.
  * Contract: EN and ES have exactly the type of IT, so the compiler
@@ -154,6 +156,10 @@ const IT = {
 
   saved: "Salvato.",
   confirmDelete: "Eliminare questa voce? Un amministratore potrà ripristinarla.",
+  warnEnyeOficia: (forms: string): string => `La grafîa ofiçiâ non scrive la lettera ñ: ${forms}. `
+    + "Se la parola appartiene a un altro sistema di scrittura, sceglilo nell'elenco o chiedi a un amministratore di aggiungerlo.",
+  confirmEnyeOficia: (forms: string): string => `${forms}: la grafîa ofiçiâ non scrive la lettera ñ. `
+    + "Salvare comunque con la grafîa ofiçiâ?",
 
   errFormEmpty: "Il campo è vuoto.",
   errFormTooLong: "Massimo 64 caratteri.",
@@ -302,6 +308,10 @@ const EN: Messages = {
 
   saved: "Saved.",
   confirmDelete: "Delete this entry? An admin can restore it.",
+  warnEnyeOficia: (forms: string): string => `The grafîa ofiçiâ does not write the letter ñ: ${forms}. `
+    + "If the word belongs to another spelling system, choose it in the list or ask an admin to add it.",
+  confirmEnyeOficia: (forms: string): string => `${forms}: the grafîa ofiçiâ does not write the letter ñ. `
+    + "Save under the grafîa ofiçiâ anyway?",
 
   errFormEmpty: "The field is empty.",
   errFormTooLong: "64 characters at most.",
@@ -448,6 +458,10 @@ const ES: Messages = {
 
   saved: "Guardado.",
   confirmDelete: "¿Eliminar esta entrada? Un administrador podrá restaurarla.",
+  warnEnyeOficia: (forms: string): string => `La grafîa ofiçiâ no escribe la letra ñ: ${forms}. `
+    + "Si la palabra pertenece a otro sistema de escritura, elígelo en la lista o pide a un administrador que lo añada.",
+  confirmEnyeOficia: (forms: string): string => `${forms}: la grafîa ofiçiâ no escribe la letra ñ. `
+    + "¿Guardar de todos modos con la grafîa ofiçiâ?",
 
   errFormEmpty: "El campo está vacío.",
   errFormTooLong: "Como máximo 64 caracteres.",

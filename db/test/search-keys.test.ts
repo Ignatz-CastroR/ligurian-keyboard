@@ -1,15 +1,15 @@
 /*
  * search-keys.test.ts
- * Author:    Ignatz-CastroR and contributors
- * Date:      2026/10/11, 20:11:58, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
- * Updated:   2026/10/17, 07:50:33: the alphabet is read from the
- *            database itself; the letter ñ [decision 0024].
- * Purpose:   Prove that the database's private.skeleton[] folds exactly
- *            like the engine's skeleton[], and that the generated search
- *            keys follow every change of spelling.
- * Contract:  The engine is the reference. If these tests fail after a
- *            change to engine/src/skeleton.ts, migration 0004 [or a new
- *            migration replacing its function] must be updated to match.
+ * Author:   Eng. José Ignacio Castro de R. and contributors
+ * Date:     2026/10/11, 20:11:58, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 07:50:33: the alphabet is read from the
+ *           database itself; the letter ñ [decision 0024].
+ * Purpose:  Prove that the database's private.skeleton[] folds exactly
+ *           like the engine's skeleton[], and that the generated search
+ *           keys follow every change of spelling.
+ * Contract: The engine is the reference. If these tests fail after a
+ *           change to engine/src/skeleton.ts, migration 0004 [or a new
+ *           migration replacing its function] must be updated to match.
  */
 
 import { test } from "node:test";

@@ -20,7 +20,9 @@
     "admin/**/*.ts",
     "editor/**/*.ts",
     "tools/**/*.ts",
-    "keyman/**/*.ts"
+    "keyman/**/*.ts",
+    "corpus/**/*.ts",
+    "docs/**/*.ts"
   ],
   "exclude": [
     "admin/dist",

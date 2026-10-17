@@ -1,6 +1,6 @@
 /*
  * users.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:18:50, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Everyone edits their own display name. Reviewers see the
  *           list of people; admins also rename them and change roles.

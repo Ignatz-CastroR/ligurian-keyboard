@@ -1,6 +1,6 @@
 /*
  * permissions.test.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:21:21, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Prove that the buttons the manager shows match what the
  *           real database accepts: for every role and kind of row, the

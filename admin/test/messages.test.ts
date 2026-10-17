@@ -1,6 +1,6 @@
 /*
  * messages.test.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 07:30:36, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Tests of the lexicon manager's three languages
  *           [admin/src/messages.ts]. The compiler already refuses a

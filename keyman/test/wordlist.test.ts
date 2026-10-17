@@ -1,6 +1,6 @@
 /*
  * wordlist.test.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 04:03:24, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Tests of the snapshot to Keyman word list conversion
  *           [keyman/src/wordlist.ts], on small TSV texts built here.

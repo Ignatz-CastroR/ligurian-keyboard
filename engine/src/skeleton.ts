@@ -1,7 +1,7 @@
 /*
  * skeleton.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
- * Date:     2026/10/10
+ * Date:     2026/10/10, 21:08:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: ñ folds to n [decision 0024].
  * Purpose:  Fold a Ligurian word written in grafîa ofiçiâ into its plain
  *           ASCII "skeleton", the key a user types on any keyboard.

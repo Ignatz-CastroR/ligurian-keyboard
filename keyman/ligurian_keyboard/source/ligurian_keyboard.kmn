@@ -1,5 +1,5 @@
 ﻿c ligurian_keyboard.kmn
-c Author:   Ignatz-CastroR and contributors
+c Author:   Eng. José Ignacio Castro de R. and contributors
 c Date:     2026/10/17, 04:01:36, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
 c Updated:  2026/10/17, 07:50:33: ñ on a long press of n.
 c Purpose:  Keyman keyboard for Ligurian on phones and tablets. The user
@@ -22,7 +22,7 @@ c Decision: docs/decisions/0022-keyman-keyboard-design.md
 store(&VERSION) '17.0'
 store(&NAME) 'Ligure [grafîa ofiçiâ]'
 store(&COPYRIGHT) '© 2026 Eng. José Ignacio Castro de R. and contributors'
-store(&KEYBOARDVERSION) '0.7.0'
+store(&KEYBOARDVERSION) '0.8.0'
 store(&TARGETS) 'mobile tablet'
 store(&LAYOUTFILE) 'ligurian_keyboard.keyman-touch-layout'
 

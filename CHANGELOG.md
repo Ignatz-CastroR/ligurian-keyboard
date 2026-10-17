@@ -14,9 +14,150 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- 0.8: real frequencies, counted from a freely licensed body of text,
-  so that the editor's menu and the keyboard's suggestion bar put the
-  common spelling first instead of the alphabetical one.
+- 0.9: bulk import of word lists, each one checked by
+  `validate-lexicon` before it reaches the database.
+- 0.10: database backups, hardening, contributor documentation; a
+  beta with native speakers in Genoa.
+- 1.0: when every criterion in the README's roadmap is met.
+
+## [0.8.0] [2026/10/17] [real frequencies; the ñ warning]
+
+### Added
+- Real frequencies from the Ligurian Wikipedia [decision 0027]. The
+  Ligurian Wikipedia writes in grafîa ofiçiâ, and its text is under
+  CC BY-SA 4.0, the license of the project's data. Its words are
+  counted and the counts are added to the dictionary's own
+  frequencies when the daily snapshot is taken, so the editor's menu
+  and the keyboard's suggestion bar put the most used spelling first
+  instead of the alphabetical one. Verified end to end in a test: the
+  fixture offers `pénn-a` before `pénna` for `penna`; after a count in
+  which `pénna` is more frequent, `pénna` comes first, and no form is
+  gained or lost.
+- `corpus/`, three modules of pure functions:
+  - `src/wikitext.ts` splits a MediaWiki dump into pages as it
+    arrives, keeps the articles [namespace 0, no redirects] and strips
+    the wiki markup. Verified on a dump cut into pieces of 1, 7 and 64
+    characters, and on a synthetic dump of 20,000 pages and 90 MB,
+    counted in 13 seconds;
+  - `src/count.ts` finds the words the way the editor sees them and
+    counts each under its frequency key [NFC, lower case, ASCII
+    apostrophe]; an elided word counts whole and in its parts;
+  - `src/frequency-list.ts` writes, reads and applies
+    `data/frequencies/lijwiki.tsv`; a damaged list is reported line by
+    line.
+  10 tests, on wikitext and dumps written for the tests; no Wikipedia
+  text is copied into the repository.
+- `tools/count-frequencies.ts` [`npm run frequencies:count`]: a dump
+  in, the frequency list out; it reads the file back with its own
+  reader before writing it, and writes nothing on any error.
+- `.github/workflows/frequencies.yml`, "Frequencies from the Ligurian
+  Wikipedia", run by hand: it downloads the latest dump [or a dated
+  one], checks it against Wikimedia's SHA-1 list, counts it and offers
+  `lijwiki.tsv` as an artifact. It has no write permission; a person
+  reviews and commits the file. NOTE: until the first list is
+  committed, the snapshot uses the database's frequencies unchanged,
+  as before.
+- `data/frequencies/README.md` and `corpus/README.md`: the format, how
+  to make a new count, the attribution; `data/LICENSE.md` names the
+  Ligurian Wikipedia as the source of the counts.
+- The lexicon manager warns before a form with `ñ` is saved under the
+  grafîa ofiçiâ, which does not write that letter [decision 0028].
+  A warning line appears under the form while the condition holds,
+  and saving asks for confirmation; the database still accepts the
+  word, because only a person can tell whether the letter or the
+  spelling system is wrong. Checked when proposing a lemma, editing a
+  lemma [a change to `ofiçiâ` checks its inflected forms too], and
+  adding or editing an inflected form. Texts in Italian, English and
+  Spanish. `enyeUnderOficia` in `admin/src/forms.ts`, with 2 tests,
+  one of which checks the code `ofiçiâ` against the real database.
+  NOTE: the new lemma page was also run in a simulated browser
+  [happy-dom, outside the repository]: the warning appears for
+  `Españ`, hides under `unitäia`, returns under `ofiçiâ`, and saving
+  stops when the question is answered no; `pénna` raises nothing. The
+  entry page's forms share the same two helpers, but were checked by
+  the type checker only.
+- `docs/test/decisions.test.ts`, 4 tests [`npm run test:docs`]: both
+  decision tables name every record exactly as its own title does,
+  with its date and status, and every "Refines" or "Supersedes" is
+  answered by the record it points to. Both tables had drifted from
+  the records by hand.
+- Decision records 0027 [real frequencies; it supersedes the point of
+  0009 about normalizing the corpus] and 0028 [the ñ warning].
+
+### Changed
+- `tools/fetch-lexicon.ts` ranks the snapshot with the committed
+  frequency list, adds a `# Frequencies:` line naming it, and stops
+  the build if the list is damaged. The snapshot's `freq` is now a
+  ranking weight; `docs/lexicon-format.md` says so. The manager's TSV
+  and CSV downloads keep the stored value.
+- `engine/src/lexicon.ts` exports `isValidForm`, the one test of a
+  valid form now shared by the loader and the corpus counter.
+- Every source header names the author as "Eng. José Ignacio Castro
+  de R. and contributors", as `LICENSE` names the copyright holder.
+  0.5.1 had changed only the engine and database test headers; 56
+  other files still read "Ignatz-CastroR and contributors". The old
+  headers without a time or a place gained the place, and the time
+  where one is on record: that of the commit that first published the
+  file. The database test headers are aligned like every other. The
+  pages `admin/index.html` and `editor/index.html` and both Keyman
+  `.kpj` projects gained the header they lacked; kmc still compiles
+  the projects, as the Keyman tests prove. NOTE: the migrations in
+  `db/migrations/` are left exactly as they were run on Supabase,
+  header included.
+- Keyboard version 0.8.0, following the project's; the keyboard is
+  unchanged. The dictionary package's counts now come from the ranked
+  snapshot; its `HISTORY.md` says so, and states its rule exactly:
+  only the project versions that changed the model or its words are
+  listed.
+- `.gitignore` version 1.1: the build folders named one by one with a
+  leading `/`, so that no future source folder called `dist` or
+  `build` is hidden; Wikipedia dumps excluded; stale comments updated.
+- Workflow headers: the decisions are listed under one `Decision:`
+  label in all three workflows.
+- Decision tables in `docs/decisions/README.md` and `README.md`
+  rebuilt from the records' own titles; 0011 dated 2026/10/10, as the
+  record itself; 0009 and 0023 marked as superseded in part. Missing
+  answers added: 0024 refines 0022; 0019, 0018 and 0024 are refined
+  by 0027 and 0028.
+- `README.md`: the corpus, the workflow, the snapshot's ranking step,
+  the commands, the layout, the test counts and the roadmap, in
+  English and in the Italian summary.
+
+### Fixed
+- `engine/src/lexicon.ts` still held the byte order mark as the
+  invisible character itself, the very mistake 0.7.0 fixed in the
+  manager; it now writes `\uFEFF`. Found by a byte search of every
+  tracked file. NOTE: the BOM at the start of
+  `keyman/ligurian_keyboard/source/ligurian_keyboard.kmn` stays: it
+  is the file's encoding mark, not a character in code.
+- `README.md` spoke of four migrations; there are five.
+- `db/README.md` counted 6 search key tests; there are 10.
+- `admin/src/main.ts` said the web editor knows only Italian and
+  English; it has offered Spanish since 0.6.0.
+- `CHANGELOG.md`, 0.6.0: the install page is in three languages, not
+  two. 0.3.0 is dated 2026/10/17, the day of its tag, in the CHANGELOG
+  and in the README.
+- Decision records 0007 and 0021 say "SIL Global", the name the rest
+  of the project uses; 0008 places the Italian summary at the end of
+  `README.md`, where it is.
+- `CONTRIBUTING.md`: a change to the folding rules names all four
+  places, as `docs/skeleton-spec.md` does, and Spanish joins the
+  languages of contribution, as in `README.md`;
+  `docs/skeleton-spec.md` no longer speaks of a single copy.
+- `admin/README.md` and `editor/README.md`: the site build also makes
+  the Keyman packages and the install page.
+- `keyman/ignatzcastror.lij.ligurian_keyboard/README.md`: the word
+  list is written into the staging copy, not into the committed
+  folder; the dictionary's `readme.htm` carries the copyright line,
+  as the keyboard's does.
+
+### Known issues
+- The counts reflect encyclopedic prose; everyday words may rank lower
+  than in speech, and generated stub articles weigh in. A second
+  corpus can be added as another file of the same format.
+- The workflow finds the latest dump through Wikimedia's RSS file for
+  it; if that file changes, the run stops before counting, and a dump
+  date typed by hand still works.
 
 ## [0.7.0] [2026/10/17] [new runners; CSV with semicolons]
 
@@ -198,7 +339,7 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 - Keyboard version 0.6.0, following the project's, and this time with
   a real change: `ñ` on `n`. Installed copies are replaced by the new
   package. The keyboard's `HISTORY.md`, `readme.htm`, `welcome.htm`
-  and `README.md`, the install page under `/tastiera/` in both
+  and `README.md`, the install page under `/tastiera/` in all three
   languages, and the dictionary's `HISTORY.md` say so.
 - `docs/skeleton-spec.md`, version 0.2: the rule `ñ` → `n`; the SQL
   mirror now lives in migration 0005.
@@ -448,7 +589,7 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 - `.gitignore`: `_site/` and `editor/public/lexicon.tsv`, both
   generated, never committed.
 
-## [0.3.0] [2026/10/11] [the lexicon manager]
+## [0.3.0] [2026/10/17] [the lexicon manager]
 
 The database is deployed on Supabase from this version, in the
 Central EU region [Frankfurt], the closest to Genoa.
@@ -634,7 +775,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.5.0...v0.5.1

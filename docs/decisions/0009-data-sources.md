@@ -3,6 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/10
 * **Decided by:** Eng. José Ignacio Castro de R.
+* **Superseded in part by:** [0027](0027-real-frequencies.md), on normalizing the corpus before counting
 
 ## Context
 

@@ -1,6 +1,10 @@
 # Dizionario ligure [grafîa ofiçiâ]: lexical model history
 
-The package version is the date of the dictionary snapshot it was built from, as YYYY.M.D. The model itself changes only with the project's versions, listed here.
+The package version is the date of the dictionary snapshot it was built from, as YYYY.M.D. The model itself changes only with the project's versions; only the project versions that changed the model, or the words and counts it is built from, are listed here.
+
+## Project 0.8.0 2026/10/17
+
+* The counts come from the snapshot ranked by the Ligurian Wikipedia: each form's stored frequency plus the number of times the Ligurian Wikipedia uses it, so the most used spelling is suggested first [decision 0027].
 
 ## Project 0.6.0 2026/10/17
 

@@ -1,9 +1,12 @@
 # release-assets.yml
-# Author:   Ignatz-CastroR and contributors
+# Author:   Eng. José Ignacio Castro de R. and contributors
 # Date:     2026/10/17, 04:08:05, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
 # Updated:  2026/10/17, 05:50:07: build and upload split into two jobs.
 # Updated:  2026/10/17, 08:50:12: Ubuntu 26.04 named explicitly; actions
 #           on their Node.js 24 versions; the project built on Node.js 24.
+# Updated:  2026/10/17, 11:36:40: the dictionary package's counts come
+#           from the snapshot ranked by the frequency list [decision
+#           0027]; header labels made uniform across the workflows.
 # Purpose:  Attach the two Keyman packages to a GitHub release:
 #             ligurian_keyboard.kmp
 #             ignatzcastror.lij.ligurian_keyboard.model.kmp
@@ -26,8 +29,9 @@
 #           them with gh. The tag reaches the shell only as a quoted
 #           environment variable, never inside a script.
 # Decision: docs/decisions/0021-keyman-scope-and-toolchain.md,
-#           docs/decisions/0022-keyman-keyboard-design.md and
-#           docs/decisions/0026-workflow-runtimes.md
+#           docs/decisions/0022-keyman-keyboard-design.md,
+#           docs/decisions/0026-workflow-runtimes.md and
+#           docs/decisions/0027-real-frequencies.md
 
 name: Keyman packages for a release
 

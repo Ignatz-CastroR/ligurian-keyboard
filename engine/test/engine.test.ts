@@ -1,7 +1,7 @@
 /*
  * engine.test.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
- * Date:     2026/10/10
+ * Date:     2026/10/10, 21:08:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: the letter ñ [decision 0024].
  * Purpose:  Unit tests for skeleton folding, lexicon loading and token
  *           conversion. Expected spellings come from the Académia

@@ -1,6 +1,6 @@
 /*
  * snapshot.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 02:12:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  The dictionary snapshot the web editor reads: a copy of
  *           export_lexicon_tsv[] taken when the site is built, with one

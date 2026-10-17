@@ -56,7 +56,7 @@ npm run editor:dev
 
 Open the address Vite prints. Ctrl+C stops it.
 
-To try the whole site as GitHub Pages serves it, editor and manager together:
+To try the whole site as GitHub Pages serves it, with the editor, the manager, the install page and the Keyman packages:
 
 ```
 npm run site:build
@@ -67,6 +67,6 @@ npm run site:preview
 
 ## Known limits
 
-* **Candidate order is alphabetical** until real frequencies exist.
+* **Candidate order follows the Ligurian Wikipedia:** the most used spelling first, from the committed frequency list [`data/frequencies/`, decision [0027](../docs/decisions/0027-real-frequencies.md)]. Encyclopedic prose is not everyday speech, so a common spoken word may still come second. Without the list, the order is alphabetical.
 * **Some phone keyboards autocorrect anyway,** turning plain ASCII Ligurian into Italian words before the editor sees it. If that happens, switch off autocorrect in the phone keyboard's settings while writing Ligurian.
 * **A conversion cannot be undone after the caret has moved;** retype the word instead.

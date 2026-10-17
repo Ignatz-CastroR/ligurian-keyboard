@@ -1,6 +1,6 @@
 /*
  * use-fixture-lexicon.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 02:12:33, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Put the 93-form test fixture where the web editor looks for
  *           its dictionary, so the editor can be tried locally without

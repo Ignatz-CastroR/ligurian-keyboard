@@ -1,6 +1,6 @@
 /*
  * write-touch-layout.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 03:59:06, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Write the Keyman keyboard's on-screen layout file from its
  *           description in keyman/src/touch-layout.ts.

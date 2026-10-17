@@ -1,6 +1,6 @@
 /*
  * build.test.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 04:05:05, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: ñ, Ñ and a decomposed ñ among the
  *           pieces of the pseudo-random strings.

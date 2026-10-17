@@ -1,6 +1,6 @@
 /*
  * editor.test.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 02:15:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 08:23:03: Spanish; the same languages as the manager.
  * Purpose:  Tests of the web editor's decisions [ime.ts] and of the

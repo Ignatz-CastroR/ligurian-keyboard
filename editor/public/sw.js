@@ -1,6 +1,6 @@
 /*
  * sw.js
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 02:14:31, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Let the web editor open without a connection after one
  *           visit. Network first: when online, every file and the

@@ -1,6 +1,6 @@
 /*
  * export.test.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 07:30:01, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 08:50:12: semicolon separated [decision 0025].
  * Purpose:  Tests of the TSV to CSV conversion [admin/src/export.ts]:

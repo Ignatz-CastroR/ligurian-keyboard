@@ -3,7 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/17
 * **Decided by:** Eng. José Ignacio Castro de R.
-* **Refined by:** [0026](0026-workflow-runtimes.md), on the machines that build the site
+* **Refined by:** [0026](0026-workflow-runtimes.md), on the machines that build the site; [0027](0027-real-frequencies.md), on the corpus counts added to the snapshot
 
 ## Context
 

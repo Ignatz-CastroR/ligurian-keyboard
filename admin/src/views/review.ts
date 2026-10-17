@@ -1,6 +1,6 @@
 /*
  * review.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:18:34, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  The review queue: everything pending, oldest first.
  *           Reviewers and admins approve or reject from here;

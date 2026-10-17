@@ -1,6 +1,6 @@
 /*
  * export.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 07:27:39, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 08:50:12: semicolon separated [decision 0025].
  * Purpose:  Turn the published lexicon, exported by the database as TSV,

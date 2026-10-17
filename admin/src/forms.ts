@@ -1,11 +1,13 @@
 /*
  * forms.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:14:29, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Check and clean what people type before it is sent, and
  *           format what the database returns. Pure functions, no DOM,
  *           so they are tested in Node [admin/test/].
  * Updated:  2026/10/17, 07:50:33: the letter ñ [decision 0024].
+ * Updated:  2026/10/17, 10:48:19: enyeUnderOficia, the warning before
+ *           ñ is saved under the grafîa ofiçiâ [decision 0028].
  * Contract: LIGURIAN_LETTERS must equal the character class of the
  *           ligurian_form domain, as the migrations leave it [last
  *           changed in db/migrations/0005]; a test compares the two on
@@ -26,6 +28,23 @@ export const SPECIAL_LETTERS: readonly string[] = [
   "à", "â", "ä", "è", "é", "ê", "ë", "ì", "î", "ï",
   "ò", "ó", "ô", "ö", "ù", "û", "ü", "æ", "ç", "ñ",
 ];
+
+// The grafîa ofiçiâ, the project's default spelling system, which does
+// not write ñ [decisions 0004 and 0024].
+export const OFICIA: string = "ofiçiâ";
+
+// The forms that would be saved with ñ under the grafîa ofiçiâ: the
+// manager warns and asks before saving them, and saves them if the
+// person confirms, because the database cannot know whether the letter
+// or the spelling system is the mistake [decision 0028]. Empty when
+// there is nothing to warn about.
+export function enyeUnderOficia(forms: readonly string[], orthography: string): string[] {
+  let result: string[] = [];
+  if (orthography.normalize("NFC") === OFICIA) {
+    result = forms.map((form) => cleanForm(form)).filter((form) => /[ñÑ]/u.test(form));
+  }
+  return [...new Set(result)];
+}
 
 export type FormCheck =
   | { ok: true; value: string }

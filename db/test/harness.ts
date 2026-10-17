@@ -1,14 +1,14 @@
 /*
  * harness.ts
- * Author:    Eng. José Ignacio Castro de R. and contributors
- * Date:      2026/10/10
- * Updated:   2026/10/17, 07:50:33: domainLetters[], the letters the
- *            database really accepts after every migration.
- * Purpose:   Build a fresh in-memory PostgreSQL [PGlite] with the Supabase
- *            shim and every migration, and switch between identities
- *            the way Supabase does for each API request.
- * Contract:  Each call to createDatabase[] returns an isolated database.
- *            Migrations run in file name order, as Supabase runs them.
+ * Author:   Eng. José Ignacio Castro de R. and contributors
+ * Date:     2026/10/10, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 07:50:33: domainLetters[], the letters the
+ *           database really accepts after every migration.
+ * Purpose:  Build a fresh in-memory PostgreSQL [PGlite] with the Supabase
+ *           shim and every migration, and switch between identities
+ *           the way Supabase does for each API request.
+ * Contract: Each call to createDatabase[] returns an isolated database.
+ *           Migrations run in file name order, as Supabase runs them.
  */
 
 import { readFileSync, readdirSync } from "node:fs";

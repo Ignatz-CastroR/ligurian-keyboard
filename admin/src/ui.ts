@@ -1,6 +1,6 @@
 /*
  * ui.ts
- * Author:   Ignatz-CastroR and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:21:41, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Small helpers to build the page without a framework.
  * Contract: Text is always inserted with textContent, never innerHTML,
@@ -11,7 +11,7 @@
 import type { Messages } from "./messages.ts";
 import type { Role, Status, Tracked, RefItem } from "./types.ts";
 import { AppError } from "./db.ts";
-import { SPECIAL_LETTERS } from "./forms.ts";
+import { enyeUnderOficia, SPECIAL_LETTERS } from "./forms.ts";
 
 type Child = Node | string | null | undefined | false;
 type AttrValue = string | number | boolean | ((event: Event) => void) | undefined;
@@ -202,6 +202,26 @@ function insertAtCursor(input: HTMLInputElement, text: string): void {
   input.focus();
   input.setSelectionRange(start + text.length, start + text.length);
   input.dispatchEvent(new Event("input"));
+}
+
+// A warning shown under a form while it would save ñ under the grafîa
+// ofiçiâ; update[] is called whenever a form or the spelling system
+// changes [decision 0028].
+export function enyeWarning(t: Messages): { element: HTMLElement; update: (forms: readonly string[], orthography: string) => void } {
+  const element: HTMLElement = h("p", { class: "warn-text", hidden: true, role: "status" });
+  const update = (forms: readonly string[], orthography: string): void => {
+    const found: string[] = enyeUnderOficia(forms, orthography);
+    element.hidden = found.length === 0;
+    element.textContent = found.length === 0 ? "" : t.warnEnyeOficia(found.join(", "));
+  };
+  return { element, update };
+}
+
+// Asked before saving: true when there is nothing to warn about or the
+// person confirms that the spelling system is right.
+export function confirmEnye(t: Messages, forms: readonly string[], orthography: string): boolean {
+  const found: string[] = enyeUnderOficia(forms, orthography);
+  return found.length === 0 || window.confirm(t.confirmEnyeOficia(found.join(", ")));
 }
 
 // Run an action from a button: disable it while waiting, report errors.

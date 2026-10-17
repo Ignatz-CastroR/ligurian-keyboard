@@ -1,6 +1,6 @@
 {
   "name": "ligurian-keyboard",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Scrivi in ligure [grafîa ofiçiâ] da qualsiasi tastiera | Write Ligurian in grafîa ofiçiâ from any keyboard",
   "license": "MIT",
   "private": true,
@@ -9,7 +9,7 @@
     "node": ">=22.18"
   },
   "scripts": {
-    "test": "node --test \"engine/test/**/*.test.ts\" \"db/test/**/*.test.ts\" \"admin/test/**/*.test.ts\" \"editor/test/**/*.test.ts\" \"keyman/test/**/*.test.ts\"",
+    "test": "node --test \"engine/test/**/*.test.ts\" \"db/test/**/*.test.ts\" \"admin/test/**/*.test.ts\" \"editor/test/**/*.test.ts\" \"keyman/test/**/*.test.ts\" \"corpus/test/**/*.test.ts\" \"docs/test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "demo": "node engine/src/demo.ts",
     "check": "npm run typecheck && npm test",
@@ -18,6 +18,8 @@
     "test:admin": "node --test \"admin/test/**/*.test.ts\"",
     "test:editor": "node --test \"editor/test/**/*.test.ts\"",
     "test:keyman": "node --test \"keyman/test/**/*.test.ts\"",
+    "test:corpus": "node --test \"corpus/test/**/*.test.ts\"",
+    "test:docs": "node --test \"docs/test/**/*.test.ts\"",
     "admin:dev": "vite --config admin/vite.config.ts",
     "admin:build": "vite build --config admin/vite.config.ts",
     "admin:preview": "vite preview --config admin/vite.config.ts",
@@ -25,6 +27,7 @@
     "editor:build": "vite build --config editor/vite.config.ts",
     "lexicon:snapshot": "node --env-file-if-exists=.env tools/fetch-lexicon.ts",
     "lexicon:fixture": "node tools/use-fixture-lexicon.ts",
+    "frequencies:count": "node tools/count-frequencies.ts",
     "keyman:layout": "node tools/write-touch-layout.ts",
     "keyman:build": "node tools/build-keyman.ts",
     "site:build": "npm run keyman:build && npm run editor:build && npm run admin:build && node tools/assemble-site.ts",

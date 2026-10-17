@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ignatzcastror.lij.ligurian_keyboard.kpj
+  Author:   Eng. José Ignacio Castro de R. and contributors
+  Date:     2026/10/17, 06:26:43, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+  Updated:  2026/10/17, 11:47:58: this header [the date is that of the
+            commit that first published the file].
+  Purpose:  Keyman project of the Ligurian lexical model, compiled by
+            kmc from a staging copy [keyman/src/build.ts].
+-->
 <KeymanDeveloperProject>
   <Options>
     <Version>2.0</Version>

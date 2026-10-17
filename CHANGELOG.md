@@ -20,6 +20,39 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
   beta with native speakers in Genoa.
 - 1.0: when every criterion in the README's roadmap is met.
 
+## [0.8.3] [2026/10/17] [counting fixes; no literal invisible characters]
+
+### Fixed
+- `corpus/src/frequency-list.ts` held the byte order mark as the
+  invisible character itself, twice, since 0.8.0: the very mistake
+  0.7.0 and 0.8.0 had fixed elsewhere, made again in the file that
+  0.8.0 added. Both are written as escapes now. Found while preparing
+  this version, by the same byte search as before; nothing had
+  guarded against it.
+- A word must hold at least one letter [`isCountableWord` in
+  `corpus/src/count.ts`]. The first list counted a lone apostrophe,
+  `'`, 633 times. It matched no form and changed no ranking. The
+  committed `data/frequencies/lijwiki.tsv` loses that one row and its
+  `# Words:` line reads 83,574; nothing else in it changes. The reader
+  refuses such a row from now on, so a list made by an older counter
+  cannot slip it back in.
+- The snapshot's `# Frequencies:` line said "17 rows in ofiçiâ ranked
+  by it", which reads as if the snapshot held 17 rows; it held 22. It
+  now says "17 of 22 rows in ofiçiâ found in it": `applyFrequencies`
+  also reports how many rows were in the list's orthography.
+
+### Added
+- `docs/test/source-text.test.ts`: every text file of the repository
+  is read, and the test fails on any byte order mark, zero width
+  space or joiner, word joiner or no-break space written literally.
+  The one exception is the encoding mark at the start of the Keyman
+  `.kmn` source. 143 tests in all.
+
+### Changed
+- `README.md`: test counts, the list's word count, the new test.
+- Keyboard version 0.8.3, following the project's; the keyboard is
+  unchanged.
+
 ## [0.8.2] [2026/10/17] [the first frequency list]
 
 ### Added
@@ -845,7 +878,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.3...HEAD
+[0.8.3]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.7.0...v0.8.0

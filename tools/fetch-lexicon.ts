@@ -17,6 +17,9 @@
  *           its orthography, and a "# Frequencies:" line records which
  *           list was used. A list that fails to read stops the build,
  *           like a bad snapshot [decision 0027].
+ * Updated:  2026/10/17, 11:24:51: the "# Frequencies:" line says how many
+ *           of the rows in the list's orthography were found in it, so
+ *           it cannot be read as the size of the snapshot.
  * Returns:  exit code 0 when the snapshot was written; 1 when a setting
  *           is missing, the call fails or the snapshot fails its checks.
  *           On failure nothing is written, so a bad snapshot can never
@@ -49,7 +52,7 @@ function rankWithCorpus(tsv: string): { tsv: string; problems: string[] } {
     } else {
       const ranked = applyFrequencies(tsv, list);
       const note: string = `# Frequencies: ${list.source}; counted ${list.counted}; `
-        + `${ranked.matched} rows in ${list.orthography} ranked by it.`;
+        + `${ranked.matched} of ${ranked.eligible} rows in ${list.orthography} found in it.`;
       console.log(note.slice(2));
       result = { tsv: `${note}\n${ranked.tsv}`, problems: [] };
     }

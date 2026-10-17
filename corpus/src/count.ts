@@ -6,6 +6,8 @@
  *           editor sees words, so that the counts can rank spellings
  *           that share one ASCII key.
  *           Decision: docs/decisions/0027-real-frequencies.md
+ * Updated:  2026/10/17, 11:24:51: a word needs at least one letter; a
+ *           lone apostrophe was counted as a word in the first list.
  * Contract: Pure functions, no I/O. A word is counted under its
  *           frequency key [frequencyKey]: NFC, lower case, typographic
  *           apostrophes and hyphens made ASCII. Only words that pass
@@ -21,6 +23,12 @@ const WORD: RegExp = /[\p{L}\p{M}'’‘ʼ‐‑-]+/gu;
 
 // An apostrophe inside a word: "l'ægua", "pe'r".
 const INNER_APOSTROPHE: RegExp = /(?<=\p{L})'(?=\p{L})/u;
+
+// A word worth counting: a valid Ligurian form with at least one
+// letter, so that a stray apostrophe or hyphen is never a word.
+export function isCountableWord(word: string): boolean {
+  return isValidForm(word) && /\p{L}/u.test(word);
+}
 
 // The key a word is counted and looked up under. Two spellings that
 // differ only in capitals or in the kind of apostrophe are one word for
@@ -41,7 +49,7 @@ export function words(text: string): string[] {
   const result: string[] = [];
   for (const match of text.normalize("NFC").matchAll(WORD)) {
     const word: string = frequencyKey(match[0]).replace(/^-+|-+$/gu, "");
-    if (word !== "" && isValidForm(word)) {
+    if (isCountableWord(word)) {
       result.push(word);
     }
   }
@@ -83,7 +91,7 @@ export function splitAtApostrophes(word: string): string[] {
   if (current !== "") {
     parts.push(current);
   }
-  return parts.filter((part) => isValidForm(part));
+  return parts.filter((part) => isCountableWord(part));
 }
 
 function bump(counts: Map<string, number>, word: string): void {

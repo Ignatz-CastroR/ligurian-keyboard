@@ -12,6 +12,9 @@
  *           row per word: its frequency key and a whole count of at
  *           least 1, sorted by form in code point order, so that two
  *           versions of the file differ only where the counts did.
+ * Updated:  2026/10/17, 11:24:51: the byte order mark written as an
+ *           escape; a form needs at least one letter; applyFrequencies
+ *           also reports how many rows were in the list's orthography.
  * Contract: Pure functions, no I/O. readFrequencyList reports every bad
  *           line by number and never drops one silently, as the lexicon
  *           loader does. applyFrequencies only ever raises a freq: the
@@ -19,8 +22,7 @@
  *           count, for rows written in the list's orthography.
  */
 
-import { frequencyKey } from "./count.ts";
-import { isValidForm } from "../../engine/src/lexicon.ts";
+import { frequencyKey, isCountableWord } from "./count.ts";
 
 export interface FrequencyList {
   source: string;          // what was counted, e.g. the dump's name and date
@@ -46,7 +48,7 @@ export const DEFAULT_MIN_COUNT: number = 2;
 
 export function formatFrequencyList(list: FrequencyList, minCount: number = DEFAULT_MIN_COUNT): string {
   const rows: string[] = [...list.counts]
-    .filter(([form, count]) => count >= minCount && isValidForm(form))
+    .filter(([form, count]) => count >= minCount && isCountableWord(form))
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
     .map(([form, count]) => `${form}\t${count}`);
   return [
@@ -69,7 +71,7 @@ export function readFrequencyList(text: string): { list: FrequencyList; problems
   let counted: string = "";
   let headerSeen: boolean = false;
 
-  const lines: string[] = text.replace(/^﻿/u, "").split(/\r?\n/u);
+  const lines: string[] = text.replace(/^\uFEFF/u, "").split(/\r?\n/u);
   lines.forEach((raw: string, index: number) => {
     const line: string = raw.trim();
     const lineNo: number = index + 1;
@@ -113,7 +115,7 @@ function readRow(line: string, lineNo: number, counts: Map<string, number>, prob
   const countText: string = cells[1] ?? "";
   if (cells.length !== 2) {
     problems.push({ line: lineNo, message: "expected two columns, form and count" });
-  } else if (!isValidForm(form) || frequencyKey(form) !== form) {
+  } else if (!isCountableWord(form) || frequencyKey(form) !== form) {
     problems.push({ line: lineNo, message: `invalid form "${form}"` });
   } else if (!/^[1-9]\d{0,9}$/u.test(countText)) {
     problems.push({ line: lineNo, message: `invalid count "${countText}"` });
@@ -128,11 +130,13 @@ function readRow(line: string, lineNo: number, counts: Map<string, number>, prob
 // row in the list's orthography, freq becomes freq + count[form]. Other
 // rows, comments and the header pass through unchanged, and a row the
 // lexicon loader would reject is left exactly as it was, for the
-// snapshot check to report. Returns the new text and how many rows
-// received a count.
-export function applyFrequencies(tsv: string, list: FrequencyList): { tsv: string; matched: number } {
+// snapshot check to report. Returns the new text, how many rows were
+// written in the list's orthography, and how many of them received a
+// count.
+export function applyFrequencies(tsv: string, list: FrequencyList): { tsv: string; eligible: number; matched: number } {
   const lines: string[] = tsv.split("\n");
   let header: string[] | null = null;
+  let eligible: number = 0;
   let matched: number = 0;
   const out: string[] = lines.map((raw: string): string => {
     const line: string = raw.replace(/\r$/u, "");
@@ -140,7 +144,7 @@ export function applyFrequencies(tsv: string, list: FrequencyList): { tsv: strin
     if (line.trim() === "" || line.trimStart().startsWith("#")) {
       // passes through
     } else if (header === null) {
-      header = line.replace(/^﻿/u, "").split("\t").map((cell) => cell.trim());
+      header = line.replace(/^\uFEFF/u, "").split("\t").map((cell) => cell.trim());
     } else {
       const cells: string[] = line.split("\t");
       const at = (name: string): number => (header ?? []).indexOf(name);
@@ -148,7 +152,11 @@ export function applyFrequencies(tsv: string, list: FrequencyList): { tsv: strin
       const freqText: string = (cells[at("freq")] ?? "").trim();
       const orthography: string = (cells[at("orthography")] ?? "").trim().normalize("NFC");
       const count: number = list.counts.get(frequencyKey(form)) ?? 0;
-      if (at("freq") !== -1 && /^\d+$/u.test(freqText) && orthography === list.orthography && count > 0) {
+      const inList: boolean = at("freq") !== -1 && /^\d+$/u.test(freqText) && orthography === list.orthography;
+      if (inList) {
+        eligible += 1;
+      }
+      if (inList && count > 0) {
         cells[at("freq")] = String(Number(freqText) + count);
         result = cells.join("\t") + (raw.endsWith("\r") ? "\r" : "");
         matched += 1;
@@ -156,5 +164,5 @@ export function applyFrequencies(tsv: string, list: FrequencyList): { tsv: strin
     }
     return result;
   });
-  return { tsv: out.join("\n"), matched };
+  return { tsv: out.join("\n"), eligible, matched };
 }

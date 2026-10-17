@@ -371,7 +371,7 @@ Good Ligurian dictionaries exist, but they are their authors' copyrighted work. 
 
 * Contributors enter words **from their own knowledge**, or from sources whose license allows reuse.
 * **Permission first:** the Académia Ligùstica do Brénno and A Compagna will be asked whether their word lists may seed the dictionary, in exchange for credit and editorial roles.
-* **Word frequencies**, which order the menu and the suggestions, are counted from the **Ligurian Wikipedia**, which writes mostly in grafîa ofiçiâ and whose text is under CC BY-SA 4.0 [decision [0027](docs/decisions/0027-real-frequencies.md)]. A maintainer runs the workflow "Frequencies from the Ligurian Wikipedia" a few times a year; it downloads Wikimedia's latest dump, checks it, counts every word of every article and offers the list as a file to download, which the maintainer reviews and commits as `data/frequencies/lijwiki.tsv`. When the site is built, each word in grafîa ofiçiâ gets its count added to the frequency stored in the dictionary, so a word the corpus never uses keeps its stored weight and a reviewer can still raise a word by hand. The list in use since 0.8.2 counts the dump of 2026/10/01: 83,575 distinct words, each seen at least twice, about 2.2 million occurrences in all.
+* **Word frequencies**, which order the menu and the suggestions, are counted from the **Ligurian Wikipedia**, which writes mostly in grafîa ofiçiâ and whose text is under CC BY-SA 4.0 [decision [0027](docs/decisions/0027-real-frequencies.md)]. A maintainer runs the workflow "Frequencies from the Ligurian Wikipedia" a few times a year; it downloads Wikimedia's latest dump, checks it, counts every word of every article and offers the list as a file to download, which the maintainer reviews and commits as `data/frequencies/lijwiki.tsv`. When the site is built, each word in grafîa ofiçiâ gets its count added to the frequency stored in the dictionary, so a word the corpus never uses keeps its stored weight and a reviewer can still raise a word by hand. The list in use since 0.8.2 counts the dump of 2026/10/01: 83,574 distinct words since 0.8.3, each seen at least twice, about 2.2 million occurrences in all.
 
 The real dictionary is just beginning. The file `data/fixtures/test-lexicon.tsv` holds 93 forms from the Académia's public alphabet page, used only by the tests and the demo.
 
@@ -399,7 +399,7 @@ npm install
 npm run check
 ```
 
-`npm run check` type checks the whole project and runs all 142 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
+`npm run check` type checks the whole project and runs all 143 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
 
 Inside this repository, use `npm run typecheck` or `npx tsc`, never a globally installed `tsc`: the project pins its own TypeScript version.
 
@@ -443,7 +443,7 @@ Both packages appear in `keyman/dist/`. Copy them to an Android phone and instal
 | `npm run test:editor` | Web editor tests |
 | `npm run test:keyman` | Android keyboard tests |
 | `npm run test:corpus` | Word counting tests |
-| `npm run test:docs` | Decision record tests |
+| `npm run test:docs` | Decision record and text file tests |
 | `npm run demo` | Terminal demo of the input method |
 | `npm run admin:dev` | Lexicon manager on your computer, reloading on every change |
 | `npm run admin:build` | Build the lexicon manager into `admin/dist/` |
@@ -497,7 +497,7 @@ docs/
   skeleton-spec.md        the folding rules, their sources and their copies
   lexicon-format.md       the word list exchange format
   decisions/              one record per design decision
-  test/                   4 tests: the decision tables follow the records
+  test/                   5 tests: the decision tables follow the records; no invisible character written literally
 data/
   fixtures/test-lexicon.tsv   93 forms for tests only
   frequencies/            word counts from the Ligurian Wikipedia
@@ -508,7 +508,7 @@ export/                 further dictionary formats, planned
 
 ## Tests
 
-142 tests guard the project, and every one runs on every push to `main` before anything is published:
+143 tests guard the project, and every one runs on every push to `main` before anything is published:
 
 * **Engine [17]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows.
 * **Database [31]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Ten of them guard the search keys: the database's own folding equals the engine's on every test word and on every letter the database accepts, a list read from the database itself; the engine loads a word holding any of those letters; and `ñ` is accepted and found by typing `n`.
@@ -516,7 +516,7 @@ export/                 further dictionary formats, planned
 * **Web editor [17]:** finishing a word, replacing, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages; its three languages, the same as the manager's, with Spanish really translated.
 * **Android keyboard [30]:** a real build with Keyman's compiler; the compiled dictionary loaded and inspected, proving that its search keys equal the engine's on every character up to U+02FF, every test word in four forms and 5,000 pseudo-random strings whose coverage is itself tested; exactly the Ligurian letters on the layout, in both cases; rows of equal width by Keyman's own arithmetic; the layer rules; the contents of both packages; the refusal of a bad snapshot or a failing compiler, keeping earlier packages; error reporting always off.
 * **Word counts [15]:** the choice of the dump from Wikimedia's own status files, refusing unfinished, unsigned or unreadable runs and any address but Wikimedia's; what a word is, in capitals, with elision and with foreign letters; markup stripped from written-for-the-test wikitext, unclosed markup included; the dump read in pieces cut anywhere, articles only; the frequency list written, read back, and refused line by line when damaged; and, end to end, the corpus deciding which spelling of `penna` the editor offers first.
-* **Decision records [4]:** numbered without gaps; both tables, in `docs/decisions/README.md` and here, name every record exactly as its own title does; and every "Refines" or "Supersedes" is answered by the record it points to.
+* **Documents and text files [5]:** no file holds an invisible character written literally, such as a byte order mark, where a reader cannot see it; decision records numbered without gaps; both tables, in `docs/decisions/README.md` and here, name every record exactly as its own title does; and every "Refines" or "Supersedes" is answered by the record it points to.
 
 ## Automation
 
@@ -599,6 +599,7 @@ Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought 
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.8.3, 2026/10/17:** a stray apostrophe is no longer counted as a word; the snapshot's frequency line says how many rows were found in the list; two invisible characters written as escapes, and a test that forbids them anywhere.
 * **0.8.2, 2026/10/17: the first frequency list.** 83,575 words counted from the Ligurian Wikipedia dump of 2026/10/01; the editor and the keyboard now rank spellings by it.
 * **0.8.1, 2026/10/17:** the frequencies workflow finds the newest finished dump in Wikimedia's own status files; its first run had failed with HTTP 404.
 * **0.8.0, 2026/10/17: real frequencies.** The words of the Ligurian Wikipedia are counted, and the editor's menu and the keyboard's suggestions put the most used spelling first. The lexicon manager warns, and asks, before a word with `ñ` is saved under grafîa ofiçiâ, which does not write that letter.

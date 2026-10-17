@@ -5,6 +5,8 @@
  * Purpose:  Tests of the corpus counter: words [count.ts], the dump
  *           reader and markup stripper [wikitext.ts], and the frequency
  *           list with its effect on a snapshot [frequency-list.ts].
+ * Updated:  2026/10/17, 11:29:40: a word needs a letter; the rows in
+ *           the list's orthography are reported.
  * Method:   Every wikitext and dump below is written for these tests,
  *           with spellings from the test fixture [the Académia's
  *           alphabet page]; no Wikipedia text is copied.
@@ -54,6 +56,7 @@ test("words keep Ligurian letters, inner hyphens and edge apostrophes; digits an
   assert.deepEqual(words("1915 anni2026 x"), ["anni", "x"]);
   assert.deepEqual(words("Łódź e Zêna"), ["e", "zêna"], "a word with a letter Ligurian never writes is not counted");
   assert.deepEqual(words("—tagiæn—"), ["tagiæn"]);
+  assert.deepEqual(words("' '' - -- 'n zêna '"), ["'n", "zêna"], "a stray apostrophe or hyphen is never a word");
 });
 
 test("an elided word counts whole and in its parts", () => {
@@ -138,10 +141,10 @@ test("the frequency list is written sorted, without rare words, and reads back i
 test("a damaged frequency list reports every bad line by number", () => {
   const text: string = [
     "# Source: test", "# Counted: now", "form\tcount",
-    "zêna\t3", "Zêna\t3", "pénna\t0", "pénna\tmolte", "zêna\t4", "uno\tdue\ttre", "x1\t5",
+    "zêna\t3", "Zêna\t3", "pénna\t0", "pénna\tmolte", "zêna\t4", "uno\tdue\ttre", "x1\t5", "'\t633", "-\t2",
   ].join("\n");
   const { problems } = readFrequencyList(text);
-  assert.deepEqual(problems.map((p) => p.line), [5, 6, 7, 8, 9, 10, 0]);
+  assert.deepEqual(problems.map((p) => p.line), [5, 6, 7, 8, 9, 10, 11, 12, 0]);
   assert.match(problems.at(-1)?.message ?? "", /Orthography/u);
 });
 
@@ -156,8 +159,9 @@ test("corpus counts are added to the snapshot's freq, in the list's orthography 
     "nonvista\t1\tzeneize\tofiçiâ\tapproved",
     "",
   ].join("\n");
-  const { tsv, matched } = applyFrequencies(snapshot, list({ "pénna": 3, "pénn-a": 40, "zêna": 100 }));
-  assert.equal(matched, 3);
+  const { tsv, eligible, matched } = applyFrequencies(snapshot, list({ "pénna": 3, "pénn-a": 40, "zêna": 100 }));
+  assert.equal(eligible, 4, "four rows in ofiçiâ, the unitäia row is not one of them");
+  assert.equal(matched, 3, "three of them found in the corpus");
   assert.deepEqual(tsv.split("\n"), [
     "# License: CC BY-SA 4.0",
     "form\tfreq\tvariety\torthography\tstatus",

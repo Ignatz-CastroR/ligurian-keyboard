@@ -7,11 +7,59 @@ the project is in early development and anything may change.
 ## [Unreleased]
 
 ### Planned
-* Deployment of the database to Supabase.
-* Lexicon manager [`admin/`]: web page to propose, review and approve
-  entries.
 * Web editor [`editor/`].
 * Export of the approved lexicon to a Keyman keyboard.
+
+## [0.3.0] 2026/10/11
+
+Lexicon manager: the web page to search, propose and review entries.
+The database is now deployed on Supabase [Central EU, Frankfurt].
+
+### Added
+* `admin/`: the lexicon manager [TypeScript, Vite, Supabase JS].
+  * Search by ASCII key, on headwords and on inflected forms; open to
+    signed out visitors for the published entries.
+  * Entry page: lemma, forms, numbered senses and translations, with
+    edit, approve, reject, delete and restore buttons according to
+    the role; history for reviewers and admins.
+  * New lemma page, with special letter buttons and a list of
+    existing lemmas sharing the same ASCII key.
+  * Review queue, oldest first.
+  * Own profile; list of people and role changes for staff.
+  * TSV export of the published lexicon.
+  * Interface in Italian and English.
+  * Optimistic locking on every update; version conflicts reload the
+    entry and explain.
+  * `admin/test/`: 14 tests; every button rule is checked against
+    real update attempts on an embedded PostgreSQL.
+* `db/migrations/0004_search_keys.sql`: `private.skeleton()`, a SQL
+  copy of the engine's folding, and generated, indexed columns
+  `lemmas.headword_key` and `wordforms.form_key`.
+* `db/test/search-keys.test.ts`: 6 tests; the SQL folding matches the
+  engine on every fixture form and every letter in both cases.
+* `.github/workflows/admin-pages.yml`: runs every test, builds the
+  manager and publishes it on GitHub Pages.
+* `.env.example`: template of the manager's two settings.
+* Decision records `0017` [ASCII search keys in the database] and
+  `0018` [design of the lexicon manager].
+
+### Changed
+* `package.json`: version 0.3.0; dependency `@supabase/supabase-js`;
+  dev dependency `vite`; scripts `test:admin`, `admin:dev`,
+  `admin:build`, `admin:preview`; `test` runs the admin tests too.
+* `package-lock.json`: updated.
+* `tsconfig.json`: type checks `admin/`.
+* `.gitignore`: keeps `.env.example` while ignoring every other
+  `.env` file.
+* `db/README.md`: migration 0004, search keys, deployment notes.
+* `docs/skeleton-spec.md`: the SQL mirror of the folding rules.
+* `docs/decisions/README.md`: records 0017 and 0018; realtime updates
+  listed as an open question.
+* `README.md`: rewritten as a full description of the project: its
+  purpose, how typing works, spelling systems and varieties, the parts
+  of the project, the shared dictionary, the lexicon manager, data
+  sources, setup, layout, tests, decisions, open questions, roadmap,
+  and a short summary of every version.
 
 ## [0.2.0] 2026/10/11
 

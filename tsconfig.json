@@ -16,6 +16,11 @@
   },
   "include": [
     "engine/**/*.ts",
-    "db/**/*.ts"
+    "db/**/*.ts",
+    "admin/**/*.ts"
+  ],
+  "exclude": [
+    "admin/dist",
+    "node_modules"
   ]
 }

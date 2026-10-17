@@ -60,6 +60,11 @@ coverage/
 .env
 .env.*
 
+# Exception: the template with placeholder values, no real keys, which
+# shows contributors which variables to set. "!" re-includes a file an
+# earlier pattern excluded.
+!.env.example
+
 # ======================================================================
 # Keyman
 # ======================================================================

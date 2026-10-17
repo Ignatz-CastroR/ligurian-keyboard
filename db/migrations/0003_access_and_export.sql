@@ -1,7 +1,7 @@
 /*
  * 0003_access_and_export.sql
- * Author:    Iosef Tesla R. [Ignatz-CastroR] and contributors
- * Date:      2026/10/10
+ * Author:    Ignatz-CastroR and contributors
+ * Date:      2026/10/10, 20:10:11, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:   Row level security, table privileges, the reviewers' queue,
  *            the public dictionary view and the export that produces the
  *            engine's TSV.

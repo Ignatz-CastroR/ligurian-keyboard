@@ -1,7 +1,7 @@
 /*
  * 0001_lexicon_schema.sql
- * Author:    Iosef Tesla R. [Ignatz-CastroR] and contributors
- * Date:      2026/10/10
+ * Author:    Ignatz-CastroR and contributors
+ * Date:      2026/10/10, 18:13:17, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:   Tables of the shared Ligurian dictionary: lemmas, their
  *            spelled wordforms, their numbered senses [meanings] and the
  *            optional Italian, Spanish and English glosses of each sense,

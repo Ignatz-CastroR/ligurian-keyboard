@@ -1,7 +1,7 @@
 /*
  * 0002_rules_and_history.sql
- * Author:    Iosef Tesla R. [Ignatz-CastroR] and contributors
- * Date:      2026/10/10
+ * Author:    Ignatz-CastroR and contributors
+ * Date:      2026/10/10, 19:25:13, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:   Triggers that enforce the editing rules no client can be
  *            trusted to respect, and that write the audit history.
  * Contract:  A session without a user id [auth.uid[] is null] is a

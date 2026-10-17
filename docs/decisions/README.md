@@ -22,6 +22,8 @@ A decision is never edited away. If it changes, a new record replaces it, and th
 | [0014](0014-automatic-base-form.md) | The base form is created automatically and follows its lemma | 2026/10/11 | accepted |
 | [0015](0015-definitions-in-italian.md) | Definitions in Italian for now; in Ligurian once the input method is mature | 2026/10/11 | accepted |
 | [0016](0016-database-first-then-interface.md) | Database first, then the lexicon manager | 2026/10/11 | accepted |
+| [0017](0017-ascii-search-keys-in-the-database.md) | ASCII search keys stored in the database | 2026/10/11 | accepted |
+| [0018](0018-lexicon-manager-design.md) | Design of the lexicon manager | 2026/10/11 | accepted |
 
 ## Still open
 
@@ -29,4 +31,5 @@ These questions are not decided yet. Each will get its own record once it is.
 
 * **ç written as s:** should typing `se` also offer `çê`? To be answered by native contributors. See `docs/skeleton-spec.md`.
 * **Grafia unitäia:** which extra folding rules it needs, if any.
+* **Realtime updates in the lexicon manager:** whether reviewers should see each other's changes live. See [0018](0018-lexicon-manager-design.md).
 * **When to add Ligurian definitions:** a judgment call by the maintainers, once the input method is mature. See [0015](0015-definitions-in-italian.md).

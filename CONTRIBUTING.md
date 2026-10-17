@@ -4,12 +4,13 @@ Contributions in English, Italian or Ligurian are welcome.
 
 ## Words
 
-Until the lexicon manager exists, propose words by pull request or issue as TSV rows [see `docs/lexicon-format.md`]:
+Words are proposed in the **lexicon manager** [`admin/`, see `admin/README.md`]. Ask a maintainer for an account; every proposal waits as `pending` until a reviewer approves it.
 
-* one row per **wordform**: singular, plural, feminine, every verb form you know;
-* spell in grafîa ofiçiâ as published by the Académia Ligùstica do Brénno;
-* write `pending` in `status`; reviewers switch it to `approved`;
-* contribute only words from your own knowledge, or from sources whose license allows it. **Do not copy entries from copyrighted dictionaries.**
+* Enter every **wordform** you know: plural, feminine, every verb form. The base form is created automatically with the lemma.
+* Spell in grafîa ofiçiâ as published by the Académia Ligùstica do Brénno; the manager has buttons for the special letters.
+* Contribute only words from your own knowledge, or from sources whose license allows it. **Do not copy entries from copyrighted dictionaries.**
+
+Without an account, a word can still be proposed by issue, as a TSV row [see `docs/lexicon-format.md`].
 
 ## Meanings and translations
 

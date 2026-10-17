@@ -44,3 +44,7 @@ Kept as is because they are already ASCII: `j`, `x`, the digraph `eu`, the trigr
 1. **ç written as s.** The Arfabêto says ç may always be replaced by a single s [çê → sê]. Should typing `se` also offer `çê`? Today it does not.
 2. **ae ambiguity.** A real *a + e* sequence and æ share the key `ae`. The menu handles it, but frequent words may deserve priority by corpus frequency.
 3. **Grafia unitäia.** When a second orthography is added, does it need extra folding rules [e.g. its own diacritics]? The table is designed to be extended, not replaced.
+
+## The SQL mirror
+
+The database holds a copy of these rules, `private.skeleton()` in `db/migrations/0004_search_keys.sql`, to compute the search keys of every lemma and wordform [decision [0017](decisions/0017-ascii-search-keys-in-the-database.md)]. `db/test/search-keys.test.ts` fails if the two ever disagree. **Changing a rule here means changing `engine/src/skeleton.ts` and adding a new migration that replaces `private.skeleton()`.**

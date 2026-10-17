@@ -20,6 +20,40 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
   beta with native speakers in Genoa.
 - 1.0: when every criterion in the README's roadmap is met.
 
+## [0.8.2] [2026/10/17] [the first frequency list]
+
+### Added
+- `data/frequencies/lijwiki.tsv`, the first frequency list, counted
+  by the workflow "Frequencies from the Ligurian Wikipedia" from the
+  dump `lijwiki-20261001-pages-articles` on 2026/10/17 16:52:26 UTC:
+  83,575 distinct words, each seen at least twice, 2,228,526
+  occurrences in all. From the next Pages build on, the snapshot adds
+  these counts to the stored frequencies of every form in grafîa
+  ofiçiâ, so the editor's menu and the keyboard's suggestions rank
+  spellings by real use. Checked before committing with the
+  project's own reader: no bad line, LF endings, no byte order mark.
+  Some counts: `Zêna` 2,020, `çitæ` 1,811, `zenéize` 807, `pénn-a`
+  15, `pénna` 10.
+
+### Changed
+- `README.md`: the list in use, in English and in the Italian
+  summary; the Ligurian Wikipedia is described as writing mostly, not
+  only, in grafîa ofiçiâ.
+- Keyboard version 0.8.2, following the project's; the keyboard is
+  unchanged. The dictionary package's `HISTORY.md` records the first
+  list.
+
+### Known issues
+- The Ligurian Wikipedia is not written only in grafîa ofiçiâ: the
+  list also holds `zena` [1,909] beside `Zêna` [2,020], and 427 words
+  with `ñ` [3,517 occurrences]. Such spellings match no ofiçiâ form
+  unless one is spelled the same, so they rarely affect a ranking.
+- Wikipedia's own vocabulary weighs in: `progètti` is seen 8,623
+  times, mostly from navigation text, not prose.
+- A lone apostrophe, `'`, is counted as a word [633 times]. It
+  matches no form, so it is harmless; the counter should require at
+  least one letter, a fix for the next recount.
+
 ## [0.8.1] [2026/10/17] [the dump found from Wikimedia's status files]
 
 ### Fixed
@@ -811,7 +845,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.2...HEAD
+[0.8.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.6.0...v0.7.0

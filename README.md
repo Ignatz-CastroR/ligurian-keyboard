@@ -371,7 +371,7 @@ Good Ligurian dictionaries exist, but they are their authors' copyrighted work. 
 
 * Contributors enter words **from their own knowledge**, or from sources whose license allows reuse.
 * **Permission first:** the Académia Ligùstica do Brénno and A Compagna will be asked whether their word lists may seed the dictionary, in exchange for credit and editorial roles.
-* **Word frequencies**, which order the menu and the suggestions, are counted from the **Ligurian Wikipedia**, which writes in grafîa ofiçiâ and whose text is under CC BY-SA 4.0 [decision [0027](docs/decisions/0027-real-frequencies.md)]. A maintainer runs the workflow "Frequencies from the Ligurian Wikipedia" a few times a year; it downloads Wikimedia's latest dump, checks it, counts every word of every article and offers the list as a file to download, which the maintainer reviews and commits as `data/frequencies/lijwiki.tsv`. When the site is built, each word in grafîa ofiçiâ gets its count added to the frequency stored in the dictionary, so a word the corpus never uses keeps its stored weight and a reviewer can still raise a word by hand. Until the first list is committed, every word has the same weight and ties are broken alphabetically.
+* **Word frequencies**, which order the menu and the suggestions, are counted from the **Ligurian Wikipedia**, which writes mostly in grafîa ofiçiâ and whose text is under CC BY-SA 4.0 [decision [0027](docs/decisions/0027-real-frequencies.md)]. A maintainer runs the workflow "Frequencies from the Ligurian Wikipedia" a few times a year; it downloads Wikimedia's latest dump, checks it, counts every word of every article and offers the list as a file to download, which the maintainer reviews and commits as `data/frequencies/lijwiki.tsv`. When the site is built, each word in grafîa ofiçiâ gets its count added to the frequency stored in the dictionary, so a word the corpus never uses keeps its stored weight and a reviewer can still raise a word by hand. The list in use since 0.8.2 counts the dump of 2026/10/01: 83,575 distinct words, each seen at least twice, about 2.2 million occurrences in all.
 
 The real dictionary is just beginning. The file `data/fixtures/test-lexicon.tsv` holds 93 forms from the Académia's public alphabet page, used only by the tests and the demo.
 
@@ -599,6 +599,7 @@ Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought 
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.8.2, 2026/10/17: the first frequency list.** 83,575 words counted from the Ligurian Wikipedia dump of 2026/10/01; the editor and the keyboard now rank spellings by it.
 * **0.8.1, 2026/10/17:** the frequencies workflow finds the newest finished dump in Wikimedia's own status files; its first run had failed with HTTP 404.
 * **0.8.0, 2026/10/17: real frequencies.** The words of the Ligurian Wikipedia are counted, and the editor's menu and the keyboard's suggestions put the most used spelling first. The lexicon manager warns, and asks, before a word with `ñ` is saved under grafîa ofiçiâ, which does not write that letter.
 * **0.7.0, 2026/10/17: ready for GitHub's new runners.** Both workflows run on Ubuntu 26.04 and on the Node.js 24 versions of GitHub's actions, and the project is built on Node.js 24 and still checked on Node.js 22. The CSV download is separated by semicolons, so Excel set to Italian or Spanish opens it in columns with a double click.
@@ -676,7 +677,7 @@ Il dizionario condiviso è un database dove i collaboratori propongono parole, c
 * La tastiera non è ancora stata provata da parlanti nativi sui loro telefoni; ogni segnalazione è benvenuta.
 * La `æ` scritta con la pressione prolungata dà probabilmente suggerimenti più deboli di `ae`; scrivere `ae` funziona sempre.
 * Le forme elise, come `l'ægua`, contano come una parola sola: ricevono un suggerimento solo se il dizionario le contiene così.
-* Le frequenze delle parole vengono dalla Wikipedia in ligure, che è scritta in grafîa ofiçiâ: i suoi testi sono enciclopedici, quindi le parole di tutti i giorni possono risultare meno frequenti che nel parlato. Finché il primo elenco di frequenze non è pubblicato, l'ordine dei suggerimenti è alfabetico.
+* Le frequenze delle parole vengono dalla Wikipedia in ligure, scritta per lo più in grafîa ofiçiâ: i suoi testi sono enciclopedici, quindi le parole di tutti i giorni possono risultare meno frequenti che nel parlato.
 
 ### Verso la versione 1.0.0
 

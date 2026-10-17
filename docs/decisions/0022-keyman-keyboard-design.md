@@ -2,7 +2,7 @@
 
 * **Status:** accepted
 * **Date:** 2026/10/17
-* **Decided by:** Iosef Tesla R. [Ignatz-CastroR]
+* **Decided by:** Eng. José Ignacio Castro de R.
 * **Refines:** [0021](0021-keyman-scope-and-toolchain.md), point 3: the key function is a hand-written copy guarded by tests, not generated from the engine's source
 
 ## Context

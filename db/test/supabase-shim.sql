@@ -1,6 +1,6 @@
 /*
  * supabase-shim.sql
- * Author:    Iosef Tesla R. [Ignatz-CastroR] and contributors
+ * Author:    Eng. José Ignacio Castro de R. and contributors
  * Date:      2026/10/10
  * Purpose:   The minimum of Supabase that the migrations depend on, so
  *            the tests run on a bare PostgreSQL [PGlite] with no server.

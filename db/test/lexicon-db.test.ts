@@ -1,6 +1,6 @@
 /*
  * lexicon-db.test.ts
- * Author:    Iosef Tesla R. [Ignatz-CastroR] and contributors
+ * Author:    Eng. José Ignacio Castro de R. and contributors
  * Date:      2026/10/11
  * Purpose:   Prove the database rules: roles, review workflow, automatic
  *            base forms, senses and their translations, soft deletion,

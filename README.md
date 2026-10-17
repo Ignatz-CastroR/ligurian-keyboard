@@ -576,6 +576,7 @@ Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought 
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.5.1, 2026/10/17:** the copyright holder's name made uniform, inside the Keyman packages too.
 * **0.5.0, 2026/10/17: the Android keyboard.** A Keyman keyboard with an Italian layout and every Ligurian letter on long press, and a dictionary package whose suggestions use the engine's own search keys; both rebuilt every day, offered on an install page under `/tastiera/`, and attached to every release.
 * **0.4.1, 2026/10/17:** singular and plural in the web editor's dictionary status.
 * **0.4.0, 2026/10/17: the web editor.** The front page of the site: type plain letters and get grafîa ofiçiâ, with the candidate menu, undo, filters, copy and download, on computers and phones, offline after one visit. A daily snapshot of the dictionary; the lexicon manager moves to `/admin/`.

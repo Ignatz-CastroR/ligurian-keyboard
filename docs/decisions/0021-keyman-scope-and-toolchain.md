@@ -2,7 +2,7 @@
 
 * **Status:** accepted
 * **Date:** 2026/10/17
-* **Decided by:** Iosef Tesla R. [Ignatz-CastroR]
+* **Decided by:** Eng. José Ignacio Castro de R.
 * **Refined by:** [0022](0022-keyman-keyboard-design.md), on point 3 and on the design of the keyboard and dictionary
 * **Refines:** [0001](0001-input-method-not-editor.md) and [0007](0007-technology-stack.md), on what Keyman can do on each system
 

@@ -16,6 +16,25 @@ versions.
 * Version 0.6.0: real frequencies, counted from a freely licensed body
   of text, so suggestions come in a sensible order.
 
+## [0.5.1] 2026/10/17
+
+The copyright holder's name made uniform across the project.
+
+### Changed
+* The name of the copyright holder and maintainer is now
+  "Eng. José Ignacio Castro de R." everywhere, as in `LICENSE`:
+  * the Keyman keyboard: `&COPYRIGHT` in the `.kmn`, the `.kps`, its
+    `readme.htm` and its `LICENSE.md`; keyboard version 0.5.1, so
+    installed copies are replaced by a newer package;
+  * the Keyman dictionary: its `.model.kps` and its `LICENSE.md`;
+  * the "Decided by" line of decision records 0001 to 0022;
+  * the "Author" header of the engine and database test sources.
+
+### Fixed
+* `LICENSE` ends with a newline again.
+* CHANGELOG, 0.5.0: the `.gitignore` entry described a pattern the
+  repository does not use.
+
 ## [0.5.0] 2026/10/17
 
 The Android keyboard: type plain letters in any app and get grafîa
@@ -89,8 +108,9 @@ ofiçiâ from the suggestion bar.
   works.
 * Decision records 0008 and 0021: wording made impersonal; no
   decision changed.
-* `.gitignore`: the local commit script is ignored in all its numbered
-  versions; the local folders section renamed.
+* `.gitignore`: shorter comment on the local commit script,
+  `COMMIT-PUSH-SCRIPT.bat`; the local folders section renamed.
+* `LICENSE`: the copyright holder is Eng. José Ignacio Castro de R.
 
 ## [0.4.1] 2026/10/17
 
@@ -296,7 +316,8 @@ The conversion engine: plain letters in, grafîa ofiçiâ out.
   `editor/`, `export/` and `keyman/`.
 * After the tag, in a separate commit: this `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.3.0...v0.4.0

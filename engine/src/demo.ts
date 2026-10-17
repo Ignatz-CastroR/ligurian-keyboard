@@ -1,6 +1,6 @@
 /*
  * demo.ts
- * Author:   Iosef Tesla R. [Ignatz-CastroR] and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/10
  * Purpose:  Terminal demo of the input method. Type a line of plain ASCII
  *           Ligurian; each ambiguous word opens a numbered menu, the way

@@ -12,7 +12,7 @@ Attribution: "ligurian-keyboard contributors", <https://github.com/Ignatz-Castro
 
 The model definition, including its search key function, is licensed under the MIT License.
 
-Copyright (c) 2026 Iosef Tesla R. [Ignatz-CastroR] and contributors
+Copyright (c) 2026 Eng. José Ignacio Castro de R. and contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,6 +1,6 @@
 /*
  * harness.ts
- * Author:    Iosef Tesla R. [Ignatz-CastroR] and contributors
+ * Author:    Eng. José Ignacio Castro de R. and contributors
  * Date:      2026/10/10
  * Purpose:   Build a fresh in-memory PostgreSQL [PGlite] with the Supabase
  *            shim and every migration, and switch between identities

@@ -1,6 +1,6 @@
 /*
  * lexicon.ts
- * Author:   Iosef Tesla R. [Ignatz-CastroR] and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/10
  * Purpose:  Load the published wordform list and index it by skeleton.
  * Format:   TSV with header: form, freq, variety, orthography, status

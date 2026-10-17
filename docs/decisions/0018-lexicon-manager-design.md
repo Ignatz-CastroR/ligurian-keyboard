@@ -2,7 +2,7 @@
 
 * **Status:** accepted
 * **Date:** 2026/10/11
-* **Decided by:** Iosef Tesla R. [Ignatz-CastroR]
+* **Decided by:** Eng. José Ignacio Castro de R.
 
 ## Context
 

@@ -1,6 +1,6 @@
 /*
  * skeleton.ts
- * Author:   Iosef Tesla R. [Ignatz-CastroR] and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/10
  * Purpose:  Fold a Ligurian word written in grafîa ofiçiâ into its plain
  *           ASCII "skeleton", the key a user types on any keyboard.

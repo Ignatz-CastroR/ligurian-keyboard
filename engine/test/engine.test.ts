@@ -1,6 +1,6 @@
 /*
  * engine.test.ts
- * Author:   Iosef Tesla R. [Ignatz-CastroR] and contributors
+ * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/10
  * Purpose:  Unit tests for skeleton folding, lexicon loading and token
  *           conversion. Expected spellings come from the Académia

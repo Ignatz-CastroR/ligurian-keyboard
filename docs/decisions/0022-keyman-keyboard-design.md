@@ -4,6 +4,7 @@
 * **Date:** 2026/10/17
 * **Decided by:** Eng. José Ignacio Castro de R.
 * **Refines:** [0021](0021-keyman-scope-and-toolchain.md), point 3: the key function is a hand-written copy guarded by tests, not generated from the engine's source
+* **Refined by:** [0023](0023-lexicon-manager-spanish-history-csv.md), on the languages of the install page; [0024](0024-letter-enye.md), on the long press of n
 
 ## Context
 
@@ -18,6 +19,7 @@ Decision [0021](0021-keyman-scope-and-toolchain.md) fixed what version 0.5.0 del
   * `a`: à á â ä æ
   * `e`: è é ê ë; `i`: ì í î ï; `o`: ò ó ô ö; `u`: ù ú û ü
   * `c`: ç
+  * `n`: ñ, since 0.6.0 [decision [0024](0024-letter-enye.md)]
 
   These are exactly the non-ASCII letters `skeleton()` folds; a test keeps the two sets identical in both directions, in lower case and in capitals. A dot on the key shows that it has a long press.
 * **An apostrophe key on the main layer,** because Ligurian elides constantly [`l'`, `d'`, `ch'`]; typographic quotes on its long press.
@@ -44,7 +46,7 @@ Decision [0021](0021-keyman-scope-and-toolchain.md) fixed what version 0.5.0 del
 
 ### Distribution
 
-* **The site:** `/tastiera/` holds an install page in Italian and English and both packages, rebuilt with the site every day. The editor's header links to it.
+* **The site:** `/tastiera/` holds an install page in Italian, English and Spanish [Spanish since 0.6.0] and both packages, rebuilt with the site every day. The editor's header links to it.
 * **Releases:** `release-assets.yml` attaches both packages to every release as soon as it is published.
 
 ## Consequences

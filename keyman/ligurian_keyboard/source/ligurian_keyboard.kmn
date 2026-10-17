@@ -1,11 +1,12 @@
 ﻿c ligurian_keyboard.kmn
 c Author:   Ignatz-CastroR and contributors
 c Date:     2026/10/17, 04:01:36, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+c Updated:  2026/10/17, 07:50:33: ñ on a long press of n.
 c Purpose:  Keyman keyboard for Ligurian on phones and tablets. The user
 c           types plain letters; the Ligurian lexical model
 c           [ignatzcastror.lij.ligurian_keyboard] suggests the spelling in
-c           grafîa ofiçiâ. Long press on a vowel or on c gives every
-c           Ligurian letter directly.
+c           grafîa ofiçiâ. Long press on a vowel, on c or on n gives
+c           every Ligurian letter directly.
 c Contract: The keys need no rules: each one has a U_XXXX id and types
 c           that character [see keyman/src/touch-layout.ts, which writes
 c           ligurian_keyboard.keyman-touch-layout]. The groups below only
@@ -21,7 +22,7 @@ c Decision: docs/decisions/0022-keyman-keyboard-design.md
 store(&VERSION) '17.0'
 store(&NAME) 'Ligure [grafîa ofiçiâ]'
 store(&COPYRIGHT) '© 2026 Eng. José Ignacio Castro de R. and contributors'
-store(&KEYBOARDVERSION) '0.5.1'
+store(&KEYBOARDVERSION) '0.6.0'
 store(&TARGETS) 'mobile tablet'
 store(&LAYOUTFILE) 'ligurian_keyboard.keyman-touch-layout'
 

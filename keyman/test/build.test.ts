@@ -2,6 +2,8 @@
  * build.test.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/17, 04:05:05, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 07:50:33: ñ, Ñ and a decomposed ñ among the
+ *           pieces of the pseudo-random strings.
  * Purpose:  Tests of the Keyman build on the test fixture: the packages
  *           kmc produces, and above all the compiled dictionary, which
  *           must find every word exactly as the engine does.
@@ -96,8 +98,9 @@ function loadCompiledModel(code: string): CapturedModel {
 // knows, a space, decomposed accents, and characters that change length
 // or need two UTF-16 units when lower-cased or stored.
 const PIECES: readonly string[] = [
-  ..."aeioucnzAEIOUCNZ", ..."àáâäèéêëìíîïòóôöùúûüæçÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜÆÇ",
+  ..."aeioucnzAEIOUCNZ", ..."àáâäèéêëìíîïòóôöùúûüæçñÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜÆÇÑ",
   "-", "\u2010", "\u2011", "'", "\u2018", "\u2019", "\u02BC", " ", "e\u0302", "a\u0300", "c\u0327",
+  "n\u0303",
   "ß", "İ", "\uFB01", "\u{1F600}", "\u0000",
 ];
 const RANDOM_STRINGS: number = 5000;
@@ -183,7 +186,7 @@ test("the pseudo-random strings really cover every piece and every length", () =
   const lengths: Set<number> = new Set(mixes.map((m) => m.length));
   assert.equal(used.size, PIECES.length, "every piece is drawn");
   assert.equal(lengths.size, MAX_RANDOM_LENGTH, "every length from 1 to 12 occurs");
-  // Strings of one or two pieces repeat by necessity [76 and 5,776
+  // Strings of one or two pieces repeat by necessity [79 and 6,241
   // possibilities]; longer ones must all differ.
   const longer: string[] = mixes.filter((m) => m.length >= 3).map((m) => m.pieces.join(","));
   assert.equal(new Set(longer).size, longer.length, "no long string repeats");

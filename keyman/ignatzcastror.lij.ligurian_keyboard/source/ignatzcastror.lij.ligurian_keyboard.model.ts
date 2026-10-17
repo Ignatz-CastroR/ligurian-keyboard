@@ -2,6 +2,7 @@
  * ignatzcastror.lij.ligurian_keyboard.model.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/17, 04:05:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 07:50:33: ñ folds to n [decision 0024].
  * Purpose:  Keyman lexical model source for Ligurian: the dictionary
  *           behind the suggestions of the Keyman keyboard. Compiled by
  *           kmc into ignatzcastror.lij.ligurian_keyboard.model.js.
@@ -53,8 +54,9 @@ const source: LigurianModelSource = {
   languageUsesCasing: true,
 
   // A copy of skeleton[]: same steps, same table, same order. Accented
-  // vowels lose the mark; æ becomes "ae"; ç becomes "c"; typographic
-  // apostrophes become the ASCII apostrophe; hyphens are dropped.
+  // vowels lose the mark; æ becomes "ae"; ç becomes "c"; ñ becomes "n";
+  // typographic apostrophes become the ASCII apostrophe; hyphens are
+  // dropped.
   searchTermToKey: function (term: string): string {
     const lowered: string = term.normalize("NFC").toLowerCase();
     let key: string = "";
@@ -81,6 +83,9 @@ const source: LigurianModelSource = {
           break;
         case "ç":
           key += "c";
+          break;
+        case "ñ":
+          key += "n";
           break;
         case "\u2019": case "\u2018": case "\u02BC":
           key += "'";

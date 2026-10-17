@@ -2,13 +2,27 @@
  * messages.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/11, 20:15:15, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 07:28:09: Spanish; texts for the latest
+ *           additions, the CSV download and the language menu.
  * Purpose:  Every text the lexicon manager shows, in Italian [default,
- *           for the Genoese contributors] and English.
- * Contract: EN has exactly the type of IT, so the compiler refuses a
- *           message present in one language and missing in the other.
+ *           for the Genoese contributors], English and Spanish.
+ * Contract: EN and ES have exactly the type of IT, so the compiler
+ *           refuses a message present in one language and missing in
+ *           another.
  */
 
-export type Lang = "it" | "en";
+export type Lang = "it" | "en" | "es";
+
+// The languages of the interface, each named in itself, in menu order.
+export const LANGUAGES: readonly { code: Lang; name: string }[] = [
+  { code: "it", name: "Italiano" },
+  { code: "en", name: "English" },
+  { code: "es", name: "Español" },
+];
+
+export function isLang(value: string | null): value is Lang {
+  return LANGUAGES.some((l) => l.code === value);
+}
 
 const IT = {
   appTitle: "Lessico ligure",
@@ -23,7 +37,8 @@ const IT = {
   signIn: "Accedi",
   signOut: "Esci",
   exportTsv: "Scarica TSV",
-  switchLang: "English",
+  exportCsv: "Scarica CSV",
+  langLabel: "Lingua",
 
   save: "Salva",
   cancel: "Annulla",
@@ -90,6 +105,9 @@ const IT = {
   searchHint: "Puoi scrivere senza accenti: la ricerca usa la stessa chiave della tastiera.",
   searchNoResults: "Nessun lemma trovato.",
   searchPublicNote: "Senza accesso vedi solo le voci approvate.",
+  latestTitle: "Ultime aggiunte",
+  latestIntro: "Le 20 voci approvate inserite più di recente.",
+  latestEmpty: "Ancora nessuna voce approvata.",
 
   entryForms: "Forme",
   entrySenses: "Significati",
@@ -167,7 +185,8 @@ const EN: Messages = {
   signIn: "Sign in",
   signOut: "Sign out",
   exportTsv: "Download TSV",
-  switchLang: "Italiano",
+  exportCsv: "Download CSV",
+  langLabel: "Language",
 
   save: "Save",
   cancel: "Cancel",
@@ -234,6 +253,9 @@ const EN: Messages = {
   searchHint: "You can type without accents: the search uses the keyboard's own key.",
   searchNoResults: "No lemma found.",
   searchPublicNote: "Signed out, you see approved entries only.",
+  latestTitle: "Latest additions",
+  latestIntro: "The 20 approved entries added most recently.",
+  latestEmpty: "No approved entries yet.",
 
   entryForms: "Forms",
   entrySenses: "Senses",
@@ -296,6 +318,154 @@ const EN: Messages = {
   errNotConfigured: "Configuration missing: VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are not set. See admin/README.md.",
 };
 
+const ES: Messages = {
+  appTitle: "Léxico ligur",
+  appSubtitle: "Gestor del diccionario compartido",
+
+  navEditor: "Escribir",
+  navSearch: "Buscar",
+  navNew: "Nuevo lema",
+  navReview: "Por revisar",
+  navUsers: "Usuarios",
+  navAccount: "Perfil",
+  signIn: "Iniciar sesión",
+  signOut: "Cerrar sesión",
+  exportTsv: "Descargar TSV",
+  exportCsv: "Descargar CSV",
+  langLabel: "Idioma",
+
+  save: "Guardar",
+  cancel: "Cancelar",
+  edit: "Editar",
+  approve: "Aprobar",
+  reject: "Rechazar",
+  remove: "Eliminar",
+  restore: "Restaurar",
+  history: "Historial",
+  hideHistory: "Ocultar historial",
+  add: "Añadir",
+  loading: "Cargando…",
+  nothing: "Nada que mostrar.",
+  open: "Abrir",
+
+  statusPending: "pendiente",
+  statusApproved: "aprobado",
+  statusRejected: "rechazado",
+  statusDeleted: "eliminado",
+
+  roleMember: "miembro",
+  roleContributor: "colaborador",
+  roleReviewer: "revisor",
+  roleAdmin: "administrador",
+
+  posNoun: "sustantivo",
+  posVerb: "verbo",
+  posAdjective: "adjetivo",
+  posAdverb: "adverbio",
+  posPronoun: "pronombre",
+  posArticle: "artículo",
+  posPreposition: "preposición",
+  posConjunction: "conjunción",
+  posInterjection: "interjección",
+  posNumeral: "numeral",
+  posProperNoun: "nombre propio",
+  posOther: "otro",
+  posNone: "[no indicada]",
+
+  fieldHeadword: "Lema",
+  fieldForm: "Forma",
+  fieldPos: "Categoría gramatical",
+  fieldVariety: "Variedad",
+  fieldOrthography: "Ortografía",
+  fieldNote: "Nota",
+  fieldFreq: "Frecuencia",
+  fieldTag: "Etiqueta gramatical",
+  fieldDefinition: "Definición en italiano [opcional]",
+  fieldLanguage: "Idioma",
+  fieldGloss: "Traducción",
+  fieldDisplayName: "Nombre visible",
+  fieldRole: "Rol",
+  fieldEmail: "Correo electrónico",
+  fieldPassword: "Contraseña",
+  fieldAuthor: "Autor",
+  fieldDate: "Fecha",
+  fieldKind: "Tipo",
+  fieldText: "Texto",
+  fieldUserId: "ID de usuario",
+  approveNow: "Aprobar de inmediato [solo revisores y administradores]",
+
+  searchPlaceholder: "Escribe en ASCII simple: zena, citae, penna…",
+  searchKey: (key: string): string => `Clave ASCII: ${key}`,
+  searchHint: "Puedes escribir sin tildes: la búsqueda usa la misma clave que el teclado.",
+  searchNoResults: "No se encontró ningún lema.",
+  searchPublicNote: "Sin iniciar sesión solo ves las entradas aprobadas.",
+  latestTitle: "Últimas incorporaciones",
+  latestIntro: "Las 20 entradas aprobadas añadidas más recientemente.",
+  latestEmpty: "Todavía no hay entradas aprobadas.",
+
+  entryForms: "Formas",
+  entrySenses: "Acepciones",
+  entryBase: "forma base",
+  entryAddForm: "Añadir una forma flexionada",
+  entryAddSense: "Añadir una acepción",
+  entryAddGloss: "Añadir una traducción",
+  entryNoSenses: "Todavía no hay acepciones: la entrada vale solo para la ortografía.",
+  entryNoGlosses: "No hay traducciones.",
+  entryVersion: (v: number): string => `versión ${v}`,
+  entryBaseNote: "La forma base sigue al lema: para corregirla, edita el lema.",
+  entryPublishedNote: "Una entrada dependiente solo es pública cuando su lema también está aprobado.",
+
+  newTitle: "Proponer un nuevo lema",
+  newIntro: "Escribe el lema en grafîa ofiçiâ. Usa los botones para las letras especiales.",
+  newSimilar: "Lemas existentes con la misma clave ASCII:",
+  newCreated: "Lema creado.",
+  palette: "Letras especiales",
+
+  reviewTitle: "Entradas pendientes de revisión",
+  reviewIntro: "Las más antiguas primero. Aprueba primero el lema, luego sus formas y acepciones.",
+  reviewOwnIntro: "Tus propuestas todavía pendientes.",
+  kindLemma: "lema",
+  kindWordform: "forma",
+  kindSense: "acepción",
+  kindGloss: "traducción",
+
+  usersTitle: "Usuarios",
+  usersIntro: "Las cuentas nuevas las crea un administrador en el panel de Supabase y empiezan como miembros.",
+  usersYou: "[tú]",
+  accountTitle: "Mi perfil",
+  accountRole: (role: string): string => `Tu rol: ${role}`,
+  accountSaved: "Perfil guardado.",
+
+  signInTitle: "Iniciar sesión",
+  signInIntro: "Las cuentas las crean los administradores. Pide una a alguno de ellos si no tienes.",
+  signInFailed: "No se pudo iniciar sesión: revisa el correo y la contraseña.",
+
+  historyInsert: "creado",
+  historyUpdate: "editado",
+  historySoftDelete: "eliminado",
+  historyRestore: "restaurado",
+  historyChanged: (fields: string): string => `campos: ${fields}`,
+
+  saved: "Guardado.",
+  confirmDelete: "¿Eliminar esta entrada? Un administrador podrá restaurarla.",
+
+  errFormEmpty: "El campo está vacío.",
+  errFormTooLong: "Como máximo 64 caracteres.",
+  errFormInvalid: (bad: string): string => `Caracteres no permitidos: ${bad}`,
+  errTextTooLong: (max: number): string => `Texto demasiado largo: como máximo ${max} caracteres.`,
+  errFreq: "La frecuencia debe ser un número entero desde 0.",
+  errConflict: "Alguien más modificó esta entrada mientras tanto. Se ha recargado la versión actual.",
+  errPermission: "No tienes permiso para esta operación.",
+  errDuplicate: "Ya existe una entrada igual.",
+  errParentMissing: "La entrada superior ya no existe o fue eliminada.",
+  errInvalidValue: "La base de datos rechazó un valor no válido.",
+  errNotFound: "Entrada no encontrada, o no visible para ti.",
+  errGeneric: (msg: string): string => `Error: ${msg}`,
+  errNotConfigured: "Falta la configuración: VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY no están definidas. Consulta admin/README.md.",
+};
+
+const TABLES: Readonly<Record<Lang, Messages>> = { it: IT, en: EN, es: ES };
+
 export function messagesFor(lang: Lang): Messages {
-  return lang === "en" ? EN : IT;
+  return TABLES[lang];
 }

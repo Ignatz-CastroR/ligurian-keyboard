@@ -3,6 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/10
 * **Decided by:** Eng. José Ignacio Castro de R.
+* **Refined by:** [0024](0024-letter-enye.md), on the letters a spelling may contain
 
 ## Context
 

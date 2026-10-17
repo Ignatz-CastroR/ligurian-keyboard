@@ -2,21 +2,36 @@
  * messages.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/17, 02:12:54, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 08:23:03: Spanish, and a language menu with the
+ *           same entries as the lexicon manager's [decision 0023].
  * Purpose:  Every text the web editor shows, in Italian [default, for
- *           Genoese readers] and English.
- * Contract: EN has exactly the type of IT, so the compiler refuses a
- *           message present in one language and missing in the other.
- *           The language choice is shared with the lexicon manager.
+ *           Genoese readers], English and Spanish.
+ * Contract: EN and ES have exactly the type of IT, so the compiler
+ *           refuses a message present in one language and missing in
+ *           another. The language choice is shared with the lexicon
+ *           manager, and LANGUAGES lists the same languages in the same
+ *           order; a test compares the two.
  */
 
-export type Lang = "it" | "en";
+export type Lang = "it" | "en" | "es";
+
+// The language menu: each language named in itself.
+export const LANGUAGES: readonly { code: Lang; name: string }[] = [
+  { code: "it", name: "Italiano" },
+  { code: "en", name: "English" },
+  { code: "es", name: "Español" },
+];
+
+export function isLang(value: string | null): value is Lang {
+  return LANGUAGES.some((l) => l.code === value);
+}
 
 const IT = {
   appTitle: "Scrivi in ligure",
   appSubtitle: "In grafîa ofiçiâ, da qualsiasi tastiera",
   navKeyboard: "Tastiera Android",
   navDictionary: "Dizionario",
-  switchLang: "English",
+  langLabel: "Lingua dell'interfaccia",
 
   textLabel: "Testo",
   placeholder: "Scrivi qui senza accenti, per esempio: a zena",
@@ -52,7 +67,7 @@ const EN: Messages = {
   appSubtitle: "In grafîa ofiçiâ, from any keyboard",
   navKeyboard: "Android keyboard",
   navDictionary: "Dictionary",
-  switchLang: "Italiano",
+  langLabel: "Interface language",
 
   textLabel: "Text",
   placeholder: "Type here in plain letters, for example: a zena",
@@ -81,6 +96,42 @@ const EN: Messages = {
   unavailable: "Dictionary unavailable: you can type, but words are not converted.",
 };
 
+const ES: Messages = {
+  appTitle: "Escribir en ligur",
+  appSubtitle: "En grafîa ofiçiâ, desde cualquier teclado",
+  navKeyboard: "Teclado Android",
+  navDictionary: "Diccionario",
+  langLabel: "Idioma de la interfaz",
+
+  textLabel: "Texto",
+  placeholder: "Escribe aquí sin acentos, por ejemplo: a zena",
+  help: "Escribe las palabras sin acentos y pulsa la barra espaciadora: se convierten en grafîa ofiçiâ. "
+    + "Si hay varias grafías posibles, elige con los números, con las flechas e Intro, o tocándola. "
+    + "Esc deja la palabra tal como la escribiste. Retroceso justo después de una conversión la deshace.",
+
+  varietyLabel: "Variedad",
+  orthographyLabel: "Ortografía",
+  allOptions: "todas",
+
+  copy: "Copiar",
+  copied: "Texto copiado.",
+  copyFailed: "No se pudo copiar: selecciona el texto y cópialo a mano.",
+  download: "Descargar .txt",
+  downloadName: "texto-ligur.txt",
+  clear: "Vaciar",
+  confirmClear: "¿Borrar todo el texto?",
+
+  keepTyped: "dejar como está",
+  menuLabel: "Grafías posibles",
+
+  loading: "Cargando el diccionario…",
+  ready: (forms: number, takenAt: string | null): string =>
+    `Diccionario: ${forms} ${forms === 1 ? "forma" : "formas"}${takenAt === null ? "" : `, actualizado el ${takenAt}`}.`,
+  unavailable: "Diccionario no disponible: puedes escribir, pero las palabras no se convierten.",
+};
+
+const TABLES: Record<Lang, Messages> = { it: IT, en: EN, es: ES };
+
 export function messagesFor(lang: Lang): Messages {
-  return lang === "en" ? EN : IT;
+  return TABLES[lang];
 }

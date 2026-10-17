@@ -2,6 +2,8 @@
  * main.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/11, 20:19:30, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 07:28:26: language menu [Italian, English,
+ *           Spanish]; CSV download next to the TSV one.
  * Purpose:  Start the lexicon manager: connect to Supabase, follow the
  *           session, draw the header and send each address to its view.
  * Routes:   #/search/<query>   search [everyone]
@@ -16,9 +18,10 @@ import "./style.css";
 import type { Session } from "@supabase/supabase-js";
 import type { Context, View } from "./context.ts";
 import type { Lang } from "./messages.ts";
-import { messagesFor } from "./messages.ts";
+import { isLang, LANGUAGES, messagesFor } from "./messages.ts";
 import type { Profile, ReferenceData } from "./types.ts";
 import { connect, currentSession, exportTsv, myProfile, onSessionChange, referenceData, signOut } from "./db.ts";
+import { tsvToCsv } from "./export.ts";
 import { canPropose } from "./permissions.ts";
 import { attachMessageBar, clear, describeError, h, hideMessage, roleLabel, runAction, showError, showInfo } from "./ui.ts";
 import { renderSearch } from "./views/search.ts";
@@ -52,11 +55,14 @@ const main: HTMLElement = document.querySelector("#main") ?? document.body;
 const messageBar: HTMLElement | null = document.querySelector("#message");
 
 /* Browser storage can be missing or throw [private windows, blocked
-   site data]; the language then simply falls back to Italian. */
+   site data]; the language then simply falls back to Italian. The key
+   is shared with the web editor, which knows only Italian and English
+   and reads "es" as Italian. */
 function loadLang(): Lang {
   let lang: Lang = "it";
   try {
-    lang = window.localStorage.getItem(LANG_KEY) === "en" ? "en" : "it";
+    const stored: string | null = window.localStorage.getItem(LANG_KEY);
+    lang = isLang(stored) ? stored : "it";
   } catch {
     lang = "it";
   }
@@ -112,18 +118,29 @@ function drawHeader(state: State): void {
   const { t } = ctx;
   const link = (href: string, label: string): HTMLElement => h("a", { href, class: "nav-link" }, label);
 
-  const exportButton: HTMLButtonElement = h("button", { type: "button", class: "small" }, t.exportTsv);
-  exportButton.addEventListener("click", () => void runAction(t, exportButton, async () => {
-    downloadText("ligurian-lexicon.tsv", await exportTsv());
+  const tsvButton: HTMLButtonElement = h("button", { type: "button", class: "small" }, t.exportTsv);
+  tsvButton.addEventListener("click", () => void runAction(t, tsvButton, async () => {
+    downloadText("ligurian-lexicon.tsv", await exportTsv(), "text/tab-separated-values;charset=utf-8");
   }));
 
-  const langButton: HTMLButtonElement = h("button", { type: "button", class: "small" }, t.switchLang);
-  langButton.addEventListener("click", () => {
-    state.lang = state.lang === "it" ? "en" : "it";
-    saveLang(state.lang);
-    document.documentElement.lang = state.lang;
-    drawHeader(state);
-    void render(state);
+  const csvButton: HTMLButtonElement = h("button", { type: "button", class: "small" }, t.exportCsv);
+  csvButton.addEventListener("click", () => void runAction(t, csvButton, async () => {
+    downloadText("ligurian-lexicon.csv", tsvToCsv(await exportTsv()), "text/csv;charset=utf-8");
+  }));
+
+  const langMenu: HTMLSelectElement = h("select", { class: "small", "aria-label": t.langLabel, title: t.langLabel });
+  for (const language of LANGUAGES) {
+    langMenu.append(h("option", { value: language.code, lang: language.code, selected: language.code === state.lang },
+      language.name));
+  }
+  langMenu.addEventListener("change", () => {
+    if (isLang(langMenu.value)) {
+      state.lang = langMenu.value;
+      saveLang(state.lang);
+      document.documentElement.lang = state.lang;
+      drawHeader(state);
+      void render(state);
+    }
   });
 
   let account: HTMLElement;
@@ -151,12 +168,12 @@ function drawHeader(state: State): void {
       ctx.userId !== null && link("#/review", t.navReview),
       ctx.userId !== null && link("#/users", ctx.role === "reviewer" || ctx.role === "admin" ? t.navUsers : t.navAccount),
     ),
-    h("div", { class: "tools" }, exportButton, langButton, account),
+    h("div", { class: "tools" }, tsvButton, csvButton, langMenu, account),
   );
 }
 
-function downloadText(fileName: string, text: string): void {
-  const url: string = URL.createObjectURL(new Blob([text], { type: "text/tab-separated-values;charset=utf-8" }));
+function downloadText(fileName: string, text: string, mimeType: string): void {
+  const url: string = URL.createObjectURL(new Blob([text], { type: mimeType }));
   const anchor: HTMLAnchorElement = h("a", { href: url, download: fileName });
   document.body.append(anchor);
   anchor.click();

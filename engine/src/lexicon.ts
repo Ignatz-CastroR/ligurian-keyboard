@@ -2,6 +2,7 @@
  * lexicon.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/10
+ * Updated:  2026/10/17, 07:50:33: the letter ñ [decision 0024].
  * Purpose:  Load the published wordform list and index it by skeleton.
  * Format:   TSV with header: form, freq, variety, orthography, status
  *           See docs/lexicon-format.md.
@@ -32,7 +33,7 @@ export interface LookupFilter {
 const REQUIRED_COLUMNS: readonly string[] = ["form", "freq", "variety", "orthography", "status"];
 
 // Letters a Ligurian wordform may contain, plus apostrophe and hyphen.
-const VALID_FORM: RegExp = /^[a-zàáâäèéêëìíîïòóôöùúûüæç'-]+$/iu;
+const VALID_FORM: RegExp = /^[a-zàáâäèéêëìíîïòóôöùúûüæçñ'-]+$/iu;
 
 export class Lexicon {
   private readonly index: Map<string, LexiconEntry[]> = new Map();

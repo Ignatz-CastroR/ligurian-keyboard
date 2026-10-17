@@ -3,9 +3,12 @@
   tastiera/index.html
   Author:   Ignatz-CastroR and contributors
   Date:     2026/10/17, 04:06:26, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+  Updated:  2026/10/17, 07:50:33: ñ on a long press of n.
+  Updated:  2026/10/17, 08:23:03: Spanish, below English.
   Purpose:  How to install the Ligurian keyboard and dictionary on an
             Android phone, with the two packages to download. Italian
-            first, English below.
+            first, then English and Spanish, reached from links at the
+            top.
   Contract: Static page, copied as it is by Vite [editor/public/]; the
             site build puts ligurian_keyboard.kmp,
             ignatzcastror.lij.ligurian_keyboard.model.kmp and
@@ -17,7 +20,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Tastiera ligure per Android, con suggerimenti in grafîa ofiçiâ. Ligurian keyboard for Android.">
+  <meta name="description" content="Tastiera ligure per Android, con suggerimenti in grafîa ofiçiâ. Ligurian keyboard for Android. Teclado ligur para Android.">
   <title>Tastiera ligure</title>
   <style>
     :root {
@@ -70,6 +73,7 @@
     a { color: var(--accent); }
     code { font-size: 0.92em; overflow-wrap: anywhere; }
     .back { display: inline-block; margin-bottom: 16px; }
+    .languages { margin: 0 0 16px; color: var(--muted); }
     .note { border-left: 3px solid var(--line); padding-left: 12px; color: var(--muted); }
     hr { border: 0; border-top: 1px solid var(--line); margin: 40px 0 0; }
     footer { color: var(--muted); font-size: 0.9rem; margin-top: 24px; }
@@ -78,6 +82,8 @@
 <body>
 <main>
   <a class="back" href="../">← Scrivi in ligure</a>
+
+  <p class="languages"><a href="#en" lang="en">English</a> · <a href="#es" lang="es">Español</a></p>
 
   <h1>Tastiera ligure per Android</h1>
   <p class="lead">Scrivi senza accenti in qualsiasi app: WhatsApp, Gmail, Facebook. La barra dei suggerimenti propone la parola in grafîa ofiçiâ.</p>
@@ -106,14 +112,14 @@
   <h2>Come si usa</h2>
   <ol>
     <li>Scrivi <i>zena</i>: la barra propone <i>Zêna</i>; tocca il suggerimento.</li>
-    <li>Tieni premuta una vocale per le lettere accentate, la <i>a</i> anche per <i>æ</i>, la <i>c</i> per <i>ç</i>.</li>
+    <li>Tieni premuta una vocale per le lettere accentate, la <i>a</i> anche per <i>æ</i>, la <i>c</i> per <i>ç</i>, la <i>n</i> per <i>ñ</i>.</li>
     <li>Due tocchi su Maiusc bloccano le maiuscole.</li>
   </ol>
   <p>Il dizionario cresce ogni giorno: per le parole nuove, scaricalo e installalo di nuovo.</p>
 
   <hr>
 
-  <section lang="en">
+  <section id="en" lang="en">
     <h1>Ligurian keyboard for Android</h1>
     <p class="lead">Type plain letters in any app: WhatsApp, Gmail, Facebook. The suggestion bar offers the word in grafîa ofiçiâ.</p>
 
@@ -129,10 +135,35 @@
     <h2>How to use it</h2>
     <ol>
       <li>Type <i>zena</i>: the bar offers <i>Zêna</i>; tap it.</li>
-      <li>Hold a vowel for the accented letters, <i>a</i> also for <i>æ</i>, <i>c</i> for <i>ç</i>.</li>
+      <li>Hold a vowel for the accented letters, <i>a</i> also for <i>æ</i>, <i>c</i> for <i>ç</i>, <i>n</i> for <i>ñ</i>.</li>
       <li>A double tap on Shift locks capitals.</li>
     </ol>
     <p>The dictionary grows every day: download and install it again to get the new words.</p>
+  </section>
+
+  <hr>
+
+  <section id="es" lang="es">
+    <h1>Teclado ligur para Android</h1>
+    <p class="lead">Escribe sin acentos en cualquier aplicación: WhatsApp, Gmail, Facebook. La barra de sugerencias propone la palabra en grafîa ofiçiâ.</p>
+
+    <h2>Instalación</h2>
+    <ol>
+      <li>Instala la aplicación gratuita <b>Keyman</b> de SIL: <a href="https://keyman.com/android/">keyman.com/android</a>.</li>
+      <li>Descarga los dos paquetes de arriba: el teclado [1] y el diccionario [2]<span data-version="model-es"></span>.</li>
+      <li>En Keyman abre el menú, luego <b>Settings</b>, <b>Install Keyboard or Dictionary</b>, <b>Install from local file</b>. Elige <code>ligurian_keyboard.kmp</code> en la carpeta Download y toca <b>Install</b>.</li>
+      <li>Repite el paso 3 con <code>ignatzcastror.lij.ligurian_keyboard.model.kmp</code>.</li>
+      <li>Para usarlo en todas las aplicaciones: en Keyman, menú, <b>Get Started</b>, <b>Enable Keyman as system-wide keyboard</b>, y activa Keyman. Después, en cualquier aplicación, cambia de teclado con el icono del teclado en la parte inferior.</li>
+    </ol>
+    <p class="note">Si Keyman está en español, los nombres de los menús aparecen traducidos.</p>
+
+    <h2>Cómo se usa</h2>
+    <ol>
+      <li>Escribe <i>zena</i>: la barra propone <i>Zêna</i>; toca la sugerencia.</li>
+      <li>Mantén pulsada una vocal para las letras acentuadas, la <i>a</i> también para <i>æ</i>, la <i>c</i> para <i>ç</i>, la <i>n</i> para <i>ñ</i>.</li>
+      <li>Dos toques en Mayús bloquean las mayúsculas.</li>
+    </ol>
+    <p>El diccionario crece cada día: para tener las palabras nuevas, descárgalo e instálalo de nuevo.</p>
   </section>
 
   <footer>
@@ -161,6 +192,7 @@
       if (words !== null) {
         put("model-it", " · " + words + (words === 1 ? " parola" : " parole") + (date !== "" ? ", dizionario del " + date : ""));
         put("model-en", " [" + words + (words === 1 ? " word" : " words") + (date !== "" ? ", dictionary of " + date : "") + "]");
+        put("model-es", " [" + words + (words === 1 ? " palabra" : " palabras") + (date !== "" ? ", diccionario del " + date : "") + "]");
       }
     })
     .catch(function () { /* the static page is enough */ });

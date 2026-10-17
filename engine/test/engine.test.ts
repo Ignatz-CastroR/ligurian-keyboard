@@ -2,6 +2,7 @@
  * engine.test.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/10
+ * Updated:  2026/10/17, 07:50:33: the letter ñ [decision 0024].
  * Purpose:  Unit tests for skeleton folding, lexicon loading and token
  *           conversion. Expected spellings come from the Académia
  *           Ligùstica do Brénno alphabet page.
@@ -15,8 +16,11 @@ import { skeleton, isPlainAscii, Lexicon, convertToken, renderChoice } from "../
 
 const fixture: Lexicon = Lexicon.fromTsv(readFileSync("data/fixtures/test-lexicon.tsv", "utf8"));
 
-test("skeleton strips every accent and folds æ and ç", () => {
+test("skeleton strips every accent and folds æ, ç and ñ", () => {
   assert.equal(skeleton("zenéize"), "zeneize");
+  assert.equal(skeleton("tañu"), "tanu");
+  assert.equal(skeleton("Ñaro"), "naro");
+  assert.equal(skeleton("n\u0303"), "n", "a decomposed ñ is composed first");
   assert.equal(skeleton("çitæ"), "citae");
   assert.equal(skeleton("resciöo"), "rescioo");
   assert.equal(skeleton("crêuzo"), "creuzo");

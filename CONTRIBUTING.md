@@ -7,7 +7,7 @@ Contributions in English, Italian or Ligurian are welcome.
 Words are proposed in the **lexicon manager** [`admin/`, see `admin/README.md`]. Ask a maintainer for an account; every proposal waits as `pending` until a reviewer approves it.
 
 * Enter every **wordform** you know: plural, feminine, every verb form. The base form is created automatically with the lemma.
-* Spell in grafîa ofiçiâ as published by the Académia Ligùstica do Brénno; the manager has buttons for the special letters.
+* Spell in grafîa ofiçiâ as published by the Académia Ligùstica do Brénno; the manager has buttons for the special letters. A word written in another spelling system, for example with `ñ`, is entered with that system chosen.
 * Contribute only words from your own knowledge, or from sources whose license allows it. **Do not copy entries from copyrighted dictionaries.**
 
 Without an account, a word can still be proposed by issue, as a TSV row [see `docs/lexicon-format.md`].

@@ -3,6 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/11
 * **Decided by:** Eng. José Ignacio Castro de R.
+* **Refined by:** [0023](0023-lexicon-manager-spanish-history-csv.md), on the interface languages and the downloads
 
 ## Context
 

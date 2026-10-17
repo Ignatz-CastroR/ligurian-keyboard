@@ -2,6 +2,7 @@
  * editor.test.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/17, 02:15:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 08:23:03: Spanish; the same languages as the manager.
  * Purpose:  Tests of the web editor's decisions [ime.ts] and of the
  *           dictionary snapshot [snapshot.ts], on the test fixture,
  *           whose spellings are copied from the Académia's alphabet page.
@@ -17,7 +18,8 @@ import {
   applyEdit, choose, menuLength, moveHighlight, planConversion, planRevert,
   wordBeforeSeparator, type Applied, type Edit, type Plan,
 } from "../src/ime.ts";
-import { messagesFor } from "../src/messages.ts";
+import { isLang, LANGUAGES, messagesFor, type Messages } from "../src/messages.ts";
+import { LANGUAGES as MANAGER_LANGUAGES } from "../../admin/src/messages.ts";
 import { checkSnapshot, formatUtc, readSnapshot, stampSnapshot, type Snapshot } from "../src/snapshot.ts";
 
 const FIXTURE: string = readFileSync(new URL("../../data/fixtures/test-lexicon.tsv", import.meta.url), "utf8");
@@ -165,9 +167,42 @@ test("a broken or empty snapshot is refused", () => {
   assert.equal(checkSnapshot("nonsense").length, 2, "missing columns, and nothing approved");
 });
 
-test("the dictionary status agrees in number in both languages", () => {
+test("the dictionary status agrees in number in every language", () => {
   assert.equal(messagesFor("it").ready(1, null), "Dizionario: 1 forma.");
   assert.equal(messagesFor("it").ready(2, null), "Dizionario: 2 forme.");
   assert.equal(messagesFor("en").ready(1, "2026/10/17 08:05:09 UTC"), "Dictionary: 1 form, updated 2026/10/17 08:05:09 UTC.");
   assert.equal(messagesFor("en").ready(0, null), "Dictionary: 0 forms.");
+  assert.equal(messagesFor("es").ready(1, null), "Diccionario: 1 forma.");
+  assert.equal(messagesFor("es").ready(2, "2026/10/17 08:05:09 UTC"), "Diccionario: 2 formas, actualizado el 2026/10/17 08:05:09 UTC.");
+});
+
+test("the editor offers exactly the lexicon manager's languages, in the same order", () => {
+  assert.deepEqual(LANGUAGES, MANAGER_LANGUAGES);
+  for (const { code } of LANGUAGES) {
+    assert.ok(isLang(code));
+  }
+  for (const other of ["fr", "", "ES", null]) {
+    assert.equal(isLang(other), false, String(other));
+  }
+});
+
+// Every message as text, the status called with sample arguments.
+function texts(m: Messages): Map<string, string> {
+  const result: Map<string, string> = new Map();
+  for (const [key, value] of Object.entries(m) as [string, unknown][]) {
+    result.set(key, typeof value === "function" ? String((value as (n: number, s: string) => string)(7, "§T§")) : String(value));
+  }
+  return result;
+}
+
+test("Spanish is complete and really translated", () => {
+  const es: Map<string, string> = texts(messagesFor("es"));
+  const it: Map<string, string> = texts(messagesFor("it"));
+  const en: Map<string, string> = texts(messagesFor("en"));
+  for (const [key, text] of es) {
+    assert.ok(text.trim() !== "", `es.${key} is empty`);
+  }
+  assert.ok(es.get("ready")?.includes("7") && es.get("ready")?.includes("§T§"), "the status keeps both arguments");
+  const copies: string[] = [...es].filter(([key, text]) => text === it.get(key) || text === en.get(key)).map(([key]) => key);
+  assert.deepEqual(copies, []);
 });

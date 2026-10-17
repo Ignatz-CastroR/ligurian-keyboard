@@ -2,6 +2,8 @@
  * search-keys.test.ts
  * Author:    Ignatz-CastroR and contributors
  * Date:      2026/10/11, 20:11:58, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:   2026/10/17, 07:50:33: the alphabet is read from the
+ *            database itself; the letter ñ [decision 0024].
  * Purpose:   Prove that the database's private.skeleton[] folds exactly
  *            like the engine's skeleton[], and that the generated search
  *            keys follow every change of spelling.
@@ -15,7 +17,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { skeleton } from "../../engine/src/skeleton.ts";
-import { createDatabase, createSeededDatabase, rowsAs, USERS, asUser } from "./harness.ts";
+import { Lexicon } from "../../engine/src/lexicon.ts";
+import { createDatabase, createSeededDatabase, domainLetters, rowsAs, USERS, asUser } from "./harness.ts";
 
 interface KeyRow { key: string }
 
@@ -39,16 +42,42 @@ function fixtureForms(): string[] {
   return forms;
 }
 
-/* Every letter the ligurian_form domain accepts, in both cases, plus
-   the punctuation the engine folds. Built from the domain itself so a
-   new letter added there is tested automatically. */
-const ALPHABET: string[] = [
-  ..."abcdefghijklmnopqrstuvwxyz",
-  ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-  ..."àáâäèéêëìíîïòóôöùúûüæç",
-  ..."ÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜÆÇ",
-  "'", "-", "’", "‘", "ʼ", "‐", "‑",
-];
+/* Every character the ligurian_form domain accepts, read from the
+   database itself after every migration, so a letter added by a new
+   migration is tested automatically. The class is "a-zA-Z" followed by
+   single characters. */
+async function domainAlphabet(): Promise<string[]> {
+  const letterClass: string = await domainLetters(await createDatabase());
+  assert.ok(letterClass.startsWith("a-zA-Z"), letterClass);
+  return [
+    ..."abcdefghijklmnopqrstuvwxyz",
+    ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    ...letterClass.slice("a-zA-Z".length),
+  ];
+}
+
+/* The domain's characters plus the punctuation the engine folds but
+   the domain refuses: typographic apostrophes and hyphens. */
+async function foldAlphabet(): Promise<string[]> {
+  return [...await domainAlphabet(), "’", "‘", "ʼ", "‐", "‑"];
+}
+
+test("the alphabet read from the database is the expected one", async () => {
+  assert.deepEqual((await domainAlphabet()).join(""),
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    + "àáâäèéêëìíîïòóôöùúûüæçñÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜÆÇÑ'-");
+});
+
+test("the engine loads a word holding any character the database accepts", async () => {
+  const rejected: string[] = [];
+  for (const ch of await domainAlphabet()) {
+    const lexicon: Lexicon = Lexicon.fromTsv(`form\tfreq\tvariety\torthography\tstatus\na${ch}a\t1\tzeneize\tofiçiâ\tapproved\n`);
+    if (lexicon.errors.length > 0 || lexicon.size !== 1) {
+      rejected.push(ch);
+    }
+  }
+  assert.deepEqual(rejected, [], "the published dictionary would lose these words");
+});
 
 test("private.skeleton matches the engine on every fixture form", async () => {
   const db = await createDatabase();
@@ -62,7 +91,7 @@ test("private.skeleton matches the engine on every fixture form", async () => {
 
 test("private.skeleton matches the engine on every single letter", async () => {
   const db = await createDatabase();
-  for (const letter of ALPHABET) {
+  for (const letter of await foldAlphabet()) {
     const rows = (await db.query<KeyRow>("select private.skeleton($1) as key", [letter])).rows;
     assert.equal(rows[0]?.key, skeleton(letter), `mismatch on "${letter}" [U+${letter.codePointAt(0)?.toString(16)}]`);
   }
@@ -114,4 +143,29 @@ test("an ASCII search finds accented headwords through the key", async () => {
     db, "anon", "select headword from lemmas where headword_key = $1", [skeleton("canpanna")],
   );
   assert.deepEqual(hyphen.map((r) => r.headword), ["canpànn-a"]);
+});
+
+test("a spelling with ñ is accepted, in both cases, and found by typing n", async () => {
+  const db = await createSeededDatabase();
+  // Test strings, not Ligurian words.
+  await db.query(`insert into lemmas (headword, orthography, status)
+                  values ('tañu', 'unitäia', 'approved'), ('Ñaro', 'unitäia', 'approved')`);
+  const rows = await rowsAs<{ headword: string; headword_key: string }>(
+    db, "anon", "select headword, headword_key from lemmas order by headword_key",
+  );
+  assert.deepEqual(rows, [
+    { headword: "Ñaro", headword_key: "naro" },
+    { headword: "tañu", headword_key: "tanu" },
+  ]);
+  const forms = await rowsAs<{ form: string }>(
+    db, "anon", "select form from wordforms where form_key = $1", [skeleton("tanu")],
+  );
+  assert.deepEqual(forms.map((r) => r.form), ["tañu"]);
+});
+
+test("the domain still refuses what it refused before ñ", async () => {
+  const db = await createDatabase();
+  for (const bad of ["ã", "õ", "ñ", "ß", "a b", "x".repeat(65)]) {
+    await assert.rejects(db.query("select $1::public.ligurian_form", [bad]), /ligurian_form/, JSON.stringify(bad));
+  }
 });

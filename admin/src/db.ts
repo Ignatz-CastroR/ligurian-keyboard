@@ -2,6 +2,7 @@
  * db.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/11, 20:15:56, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 07:28:44: latestLemmas[], the latest additions.
  * Purpose:  Every conversation between the lexicon manager and the
  *           database. Views never call Supabase directly; they call
  *           these functions, so the queries live in one place.
@@ -161,6 +162,28 @@ export async function searchLemmas(query: string): Promise<Lemma[]> {
     }
   }
   return lemmas;
+}
+
+/* ====================================================================
+   Latest additions: the approved lemmas created most recently
+   ==================================================================== */
+
+export const LATEST_COUNT: number = 20;
+
+/* Approved and not deleted, newest first by creation time, for every
+   viewer alike: staff do not see pending lemmas here, so the list means
+   the same thing to everyone. A lemma proposed long ago and approved
+   today is placed by its creation date; the database records no
+   approval time. */
+export async function latestLemmas(): Promise<Lemma[]> {
+  const { data, error } = await db().from("lemmas").select("*")
+    .eq("status", "approved").is("deleted_at", null)
+    .order("created_at", { ascending: false }).order("id", { ascending: false })
+    .limit(LATEST_COUNT);
+  if (error !== null) {
+    throw toAppError(error);
+  }
+  return (data ?? []) as Lemma[];
 }
 
 /* ====================================================================

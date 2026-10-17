@@ -2,6 +2,8 @@
  * harness.ts
  * Author:    Eng. José Ignacio Castro de R. and contributors
  * Date:      2026/10/10
+ * Updated:   2026/10/17, 07:50:33: domainLetters[], the letters the
+ *            database really accepts after every migration.
  * Purpose:   Build a fresh in-memory PostgreSQL [PGlite] with the Supabase
  *            shim and every migration, and switch between identities
  *            the way Supabase does for each API request.
@@ -100,4 +102,25 @@ export async function affectedAs(db: PGlite, who: Identity, sql: string, params:
 
 export function asUser(id: string): Identity {
   return { user: id };
+}
+
+/* The character class of the ligurian_form domain, exactly as the
+   database holds it after every migration: "a-zA-Zà...'-". Tests
+   compare their own letter lists with this, so a migration that
+   changes the letters cannot be missed. */
+export async function domainLetters(db: PGlite): Promise<string> {
+  const rows = (await db.query<{ def: string }>(
+    `select pg_get_constraintdef(c.oid) as def
+       from pg_constraint as c
+      where c.contypid = 'public.ligurian_form'::regtype and c.contype = 'c'`,
+  )).rows;
+  if (rows.length !== 1) {
+    throw new Error(`expected one check on ligurian_form, found ${rows.length}`);
+  }
+  const match: RegExpMatchArray | null = /value ~ '\^\[([^\]]+)\]\+\$'/i.exec(rows[0]?.def ?? "");
+  if (match === null || match[1] === undefined) {
+    throw new Error(`no letter class in the check of ligurian_form: ${rows[0]?.def}`);
+  }
+  // Inside a SQL string literal the apostrophe is written twice.
+  return match[1].replace(/''/g, "'");
 }

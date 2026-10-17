@@ -30,12 +30,12 @@ The editor never talks to the database. When the site is built, `tools/fetch-lex
 | `src/ime.ts` | Every decision of the input method, as pure functions: which word was finished, replace or menu, choose, undo |
 | `src/snapshot.ts` | Reading, stamping and checking the dictionary snapshot; shared with the build tools |
 | `src/main.ts` | The page: events, the menu, filters, copy, download, draft |
-| `src/messages.ts` | Every text, Italian and English |
+| `src/messages.ts` | Every text, in Italian, English and Spanish; the language menu's entries |
 | `src/dom.ts` | The page building helper; never `innerHTML` |
 | `src/style.css` | Light and dark look, phone layout |
 | `public/sw.js` | Offline copy of the page and the dictionary |
 | `public/tastiera/index.html` | Install page of the Android keyboard; the site build puts the two Keyman packages next to it |
-| `test/editor.test.ts` | 15 tests of `ime.ts`, `snapshot.ts` and the messages |
+| `test/editor.test.ts` | 17 tests of `ime.ts`, `snapshot.ts` and the messages, including the three languages |
 | `vite.config.ts` | Build settings |
 
 ## Running it on your computer

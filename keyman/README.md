@@ -40,5 +40,5 @@ The tests cannot run Keyman's prediction engine, which is not published as a pac
 
 1. Build with the 93 test words: `npm run lexicon:fixture`, then `npm run keyman:build`. The real dictionary may not hold the words below yet.
 2. Copy both files from `keyman/dist/` to the phone and install them as the install page explains.
-3. Check: `zena` suggests `Zêna`; `citae` suggests `çitæ`; note whether `çitæ` typed with the long press letters also suggests `çitæ`, and how high [decision 0022, Consequences, expects it may not]; `canpanna` suggests `canpànn-a`; `penna` offers `pénna` and `pénn-a`; a capital comes at the start of a sentence; long press on every vowel and on `c`; a double tap on Shift locks capitals.
+3. Check: `zena` suggests `Zêna`; `citae` suggests `çitæ`; note whether `çitæ` typed with the long press letters also suggests `çitæ`, and how high [decision 0022, Consequences, expects it may not]; `canpanna` suggests `canpànn-a`; `penna` offers `pénna` and `pénn-a`; a capital comes at the start of a sentence; long press on every vowel, on `c` and on `n`; a double tap on Shift locks capitals.
 4. Afterwards, install the dictionary from the site again, to go back to the real words. Both carry the same day's date as their version; if Keyman refuses to replace one with the other, remove the test dictionary first [Keyman help: "Removing Dictionaries"].

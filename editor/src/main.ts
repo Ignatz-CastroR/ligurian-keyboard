@@ -2,6 +2,7 @@
  * main.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/17, 02:16:09, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 08:23:03: the language menu, with Spanish.
  * Purpose:  The web editor in the browser: load the dictionary snapshot,
  *           watch the text area, apply the decisions of ime.ts, draw the
  *           candidate menu, and offer copy, download and clear.
@@ -22,7 +23,7 @@ import {
   choose, isKeepEntry, menuLength, moveHighlight, planConversion, planRevert,
   type Applied, type Edit, type Pending, type Plan,
 } from "./ime.ts";
-import { messagesFor, type Lang, type Messages } from "./messages.ts";
+import { isLang, LANGUAGES, messagesFor, type Lang, type Messages } from "./messages.ts";
 import { readSnapshot, type Snapshot } from "./snapshot.ts";
 
 // Same key as the lexicon manager: one language choice for the site.
@@ -65,10 +66,16 @@ function writeStored(key: string, value: string): void {
   }
 }
 
+// The stored language when it is one the editor knows; Italian otherwise.
+function storedLang(): Lang {
+  const stored: string | null = readStored(LANG_KEY);
+  return isLang(stored) ? stored : "it";
+}
+
 /* ---------- page skeleton ---------- */
 
 const state: State = {
-  lang: readStored(LANG_KEY) === "en" ? "en" : "it",
+  lang: storedLang(),
   t: messagesFor("it"),
   snapshot: null,
   failed: false,
@@ -479,13 +486,19 @@ function drawPage(): void {
   document.documentElement.lang = state.lang;
   document.title = t.appTitle;
 
-  const langButton: HTMLButtonElement = h("button", { type: "button", class: "small" }, t.switchLang);
-  langButton.addEventListener("click", () => {
-    state.lang = state.lang === "it" ? "en" : "it";
-    state.t = messagesFor(state.lang);
-    writeStored(LANG_KEY, state.lang);
-    closeMenu();
-    drawPage();
+  const langMenu: HTMLSelectElement = h("select", { class: "small", "aria-label": t.langLabel, title: t.langLabel });
+  for (const language of LANGUAGES) {
+    langMenu.append(h("option", { value: language.code, lang: language.code, selected: language.code === state.lang },
+      language.name));
+  }
+  langMenu.addEventListener("change", () => {
+    if (isLang(langMenu.value)) {
+      state.lang = langMenu.value;
+      state.t = messagesFor(state.lang);
+      writeStored(LANG_KEY, state.lang);
+      closeMenu();
+      drawPage();
+    }
   });
 
   header.replaceChildren(
@@ -495,7 +508,7 @@ function drawPage(): void {
     h("nav", {},
       h("a", { href: "./tastiera/", class: "nav-link" }, t.navKeyboard),
       h("a", { href: "./admin/", class: "nav-link" }, t.navDictionary)),
-    h("div", { class: "tools" }, langButton),
+    h("div", { class: "tools" }, langMenu),
   );
 
   const copyButton: HTMLButtonElement = h("button", { type: "button" }, t.copy);

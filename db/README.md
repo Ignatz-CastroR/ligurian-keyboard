@@ -10,6 +10,7 @@ The source of truth for every word the keyboard knows and every meaning the dict
 | `migrations/0002_rules_and_history.sql` | Triggers: role rules, automatic base form, sense numbering, versions, audit log, profiles |
 | `migrations/0003_access_and_export.sql` | Privileges, row level security, views, TSV export |
 | `migrations/0004_search_keys.sql` | ASCII search keys: `private.skeleton()` and the generated columns `headword_key`, `form_key` |
+| `migrations/0005_letter_enye.sql` | The letter `ñ`: accepted in spellings, folded to `n` in the search keys [decision [0024](../docs/decisions/0024-letter-enye.md)] |
 | `test/supabase-shim.sql` | **Tests only:** the parts of Supabase the migrations need |
 | `test/harness.ts` | A fresh in-memory database per test; switching between users |
 | `test/lexicon-db.test.ts` | 21 tests; each rule is tested from the side that must not break it |
@@ -113,8 +114,9 @@ Every lexicon table [`lemmas`, `wordforms`, `senses`, `glosses`] also has `statu
 Why PostgreSQL, Supabase and the Frankfurt region: [decision [0007](../docs/decisions/0007-technology-stack.md)].
 
 1. Create a project at supabase.com [free plan], region **Central EU [Frankfurt]**, the closest to Genoa. Save the database password in a password manager.
-2. In **SQL Editor**, open a new query, paste `migrations/0001_lexicon_schema.sql` and press **Run**. Repeat with `0002`, `0003` and `0004`, in that order. **Never** run `test/supabase-shim.sql` there.
+2. In **SQL Editor**, open a new query, paste `migrations/0001_lexicon_schema.sql` and press **Run**. Repeat with `0002`, `0003`, `0004` and `0005`, in that order. **Never** run `test/supabase-shim.sql` there.
    * Supabase warns about "destructive operations" for files that merely mention `delete` or `drop`, as `0002` does to forbid deletion. On a new, empty project it is safe to confirm.
+   * `0005` also gets the warning, because it drops the letter check of `ligurian_form` and adds the wider one back in the same run; no data is touched. It is safe to confirm on the live database too.
    * Each migration runs **once**. Later migrations are run alone, in order, on a database that already has the earlier ones.
 3. In **Authentication → Users**, create your own user with your email and a password.
 4. Make yourself the first admin, in the SQL Editor:

@@ -2,6 +2,7 @@
  * touch-layout.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/17, 04:04:24, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 07:50:33: ñ on a long press of n [decision 0024].
  * Purpose:  The on-screen layout of the Ligurian Keyman keyboard, built
  *           from a short description instead of written by hand: an
  *           Italian QWERTY phone keyboard whose vowels and c hold every
@@ -84,6 +85,7 @@ export const LONG_PRESS: Readonly<Record<string, readonly string[]>> = {
   o: ["ò", "ó", "ô", "ö"],
   u: ["ù", "ú", "û", "ü"],
   c: ["ç"],
+  n: ["ñ"],
 };
 
 const LETTER_ROWS: readonly string[] = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];

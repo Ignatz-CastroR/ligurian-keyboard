@@ -2,27 +2,28 @@
  * forms.test.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/11, 20:20:45, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 07:50:33: the letters are compared with a real
+ *           database built from every migration, not with file 0001.
  * Purpose:  The checks the lexicon manager runs before sending anything,
  *           and their agreement with the database's own rules.
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { createDatabase, domainLetters } from "../../db/test/harness.ts";
 import {
   LIGURIAN_LETTERS, SPECIAL_LETTERS, changedFields, checkForm, checkFreq,
   cleanForm, cleanOptionalText, formatDateTime, searchKeyFilter,
 } from "../src/forms.ts";
 
-const SCHEMA: string = join(import.meta.dirname, "..", "..", "db", "migrations", "0001_lexicon_schema.sql");
+test("the letters accepted here are exactly the database domain's", async () => {
+  assert.equal(LIGURIAN_LETTERS, await domainLetters(await createDatabase()));
+});
 
-test("the letters accepted here are exactly the database domain's", () => {
-  const sql: string = readFileSync(SCHEMA, "utf8");
-  const match: RegExpMatchArray | null = /value ~ '\^\[([^\]]+)\]\+\$'/.exec(sql);
-  assert.ok(match !== null, "domain ligurian_form not found in 0001");
-  // In SQL the apostrophe is written twice inside a string literal.
-  assert.equal(match[1]?.replace(/''/g, "'"), LIGURIAN_LETTERS);
+test("the palette offers ñ, last, and every letter only once", () => {
+  assert.equal(SPECIAL_LETTERS.at(-1), "ñ");
+  assert.equal(new Set(SPECIAL_LETTERS).size, SPECIAL_LETTERS.length);
+  assert.deepEqual(checkForm("Ñ"), { ok: true, value: "Ñ" });
 });
 
 test("every palette letter is a valid Ligurian letter in both cases", () => {
@@ -40,7 +41,8 @@ test("checkForm accepts official spellings and cleans them", () => {
 });
 
 test("checkForm names the characters it refuses", () => {
-  assert.deepEqual(checkForm("ñoño 1"), { ok: false, reason: "invalid_chars", bad: ["ñ", " ", "1"] });
+  assert.deepEqual(checkForm("ãoão 1"), { ok: false, reason: "invalid_chars", bad: ["ã", " ", "1"] });
+  assert.deepEqual(checkForm("ñoño"), { ok: true, value: "ñoño" }, "ñ is accepted since decision 0024");
   assert.deepEqual(checkForm("   "), { ok: false, reason: "empty", bad: [] });
   assert.deepEqual(checkForm("a".repeat(65)), { ok: false, reason: "too_long", bad: [] });
   assert.ok(checkForm("æ".repeat(64)).ok, "64 letters is the limit, counted as characters");

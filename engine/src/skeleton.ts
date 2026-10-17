@@ -2,6 +2,7 @@
  * skeleton.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/10
+ * Updated:  2026/10/17, 07:50:33: ñ folds to n [decision 0024].
  * Purpose:  Fold a Ligurian word written in grafîa ofiçiâ into its plain
  *           ASCII "skeleton", the key a user types on any keyboard.
  * Contract: skeleton[] is deterministic, total and idempotent:
@@ -17,7 +18,8 @@
 // Single characters that fold to a different ASCII string.
 // Vowels with grave, acute, circumflex or diaeresis lose the mark;
 // æ folds to "ae", the digraph the Académia itself allows when æ is
-// unavailable; ç folds to "c".
+// unavailable; ç folds to "c"; ñ, written by spelling systems other
+// than the grafîa ofiçiâ, folds to "n" [decision 0024].
 const FOLD_TABLE: ReadonlyMap<string, string> = new Map<string, string>([
   ["à", "a"], ["á", "a"], ["â", "a"], ["ä", "a"],
   ["è", "e"], ["é", "e"], ["ê", "e"], ["ë", "e"],
@@ -26,6 +28,7 @@ const FOLD_TABLE: ReadonlyMap<string, string> = new Map<string, string>([
   ["ù", "u"], ["ú", "u"], ["û", "u"], ["ü", "u"],
   ["æ", "ae"],
   ["ç", "c"],
+  ["ñ", "n"],
   // Typographic apostrophes become the ASCII apostrophe.
   ["’", "'"], ["‘", "'"], ["ʼ", "'"],
 ]);

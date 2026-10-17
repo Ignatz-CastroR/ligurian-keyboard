@@ -5,22 +5,26 @@
  * Purpose:  Check and clean what people type before it is sent, and
  *           format what the database returns. Pure functions, no DOM,
  *           so they are tested in Node [admin/test/].
+ * Updated:  2026/10/17, 07:50:33: the letter ñ [decision 0024].
  * Contract: LIGURIAN_LETTERS must equal the character class of the
- *           ligurian_form domain in db/migrations/0001; a test compares
- *           the two. The database still checks everything again.
+ *           ligurian_form domain, as the migrations leave it [last
+ *           changed in db/migrations/0005]; a test compares the two on
+ *           a real database. The database still checks everything again.
  */
 
-export const LIGURIAN_LETTERS: string = "a-zA-ZàáâäèéêëìíîïòóôöùúûüæçÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜÆÇ'-";
+export const LIGURIAN_LETTERS: string = "a-zA-ZàáâäèéêëìíîïòóôöùúûüæçñÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜÆÇÑ'-";
 export const MAX_FORM_LENGTH: number = 64;
 
 const VALID_FORM: RegExp = new RegExp(`^[${LIGURIAN_LETTERS}]+$`, "u");
 const ONE_LETTER: RegExp = new RegExp(`^[${LIGURIAN_LETTERS}]$`, "u");
 
 // The letters of the grafîa ofiçiâ that Italian, Spanish and English
-// keyboards lack or hide; the manager offers them as buttons.
+// keyboards lack or hide, then ñ, which other Ligurian spelling systems
+// write and Italian and English keyboards lack; the manager offers them
+// as buttons, in this order.
 export const SPECIAL_LETTERS: readonly string[] = [
   "à", "â", "ä", "è", "é", "ê", "ë", "ì", "î", "ï",
-  "ò", "ó", "ô", "ö", "ù", "û", "ü", "æ", "ç",
+  "ò", "ó", "ô", "ö", "ù", "û", "ü", "æ", "ç", "ñ",
 ];
 
 export type FormCheck =

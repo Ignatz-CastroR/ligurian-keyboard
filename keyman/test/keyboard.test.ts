@@ -2,6 +2,7 @@
  * keyboard.test.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/17, 04:03:48, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 07:50:33: ñ on a long press of n.
  * Purpose:  Tests of the Keyman keyboard's sources: the on-screen layout
  *           [keyman/src/touch-layout.ts and the file it writes], the
  *           .kmn header, and the two package sources.
@@ -76,7 +77,7 @@ function accentedLetters(layer: TouchLayer): string[] {
 
 test("the keyboard offers exactly the letters skeleton[] folds, no more, no fewer", () => {
   const letters: string[] = ligurianLetters();
-  assert.deepEqual(letters, [..."àáâäæçèéêëìíîïòóôöùúûü"], "the letters skeleton[] folds");
+  assert.deepEqual(letters, [..."àáâäæçèéêëìíîïñòóôöùúûü"], "the letters skeleton[] folds");
   assert.deepEqual(accentedLetters(layerById("default")), [...letters].sort());
   const capitals: string[] = letters.map((ch) => ch.toUpperCase()).sort();
   assert.deepEqual(accentedLetters(layerById("shift")), capitals);

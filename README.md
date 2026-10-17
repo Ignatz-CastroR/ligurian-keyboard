@@ -106,8 +106,8 @@ The model is the Japanese input method: nobody in Japan types kanji directly; th
 |---|---|---|---|
 | Keyboard package | <https://ignatz-castror.github.io/ligurian-keyboard/tastiera/ligurian_keyboard.kmp> | The Keyman keyboard: layout and long press letters | with every new version |
 | Dictionary package | <https://ignatz-castror.github.io/ligurian-keyboard/tastiera/ignatzcastror.lij.ligurian_keyboard.model.kmp> | The suggestions: every approved word | every day |
-| Install page | <https://ignatz-castror.github.io/ligurian-keyboard/tastiera/> | Both packages, their versions, step by step instructions in Italian and English | every day |
-| Word list, live | the lexicon manager's "Download TSV" button | The approved dictionary as a TSV file, CC BY-SA 4.0 | live |
+| Install page | <https://ignatz-castror.github.io/ligurian-keyboard/tastiera/> | Both packages, their versions, step by step instructions in Italian, English and Spanish | every day |
+| Word list, live | the lexicon manager's "Download TSV" and "Download CSV" buttons | The approved dictionary as TSV, the engine's format, or as CSV for spreadsheets; CC BY-SA 4.0 | live |
 | Word list, daily | <https://ignatz-castror.github.io/ligurian-keyboard/lexicon.tsv> | The snapshot the editor and the keyboard are built from, with its date in the first line | every day |
 | Your own text | the web editor's download button | What you wrote, as a `.txt` file | live |
 | Source code | <https://github.com/Ignatz-CastroR/ligurian-keyboard/releases> | Every version, as `.zip` and `.tar.gz`; from 0.5.0 on, each release also carries both Keyman packages | per version |
@@ -137,7 +137,7 @@ Every word in the dictionary has an ASCII **skeleton**: the plain letters a pers
 
 1. Normalize the word to Unicode NFC, then make it lowercase.
 2. Remove every accent from the vowels: `à á â ä` become `a`, and so on for `e i o u`.
-3. Turn `æ` into `ae` and `ç` into `c`; the Académia itself allows `ae` when `æ` is unavailable.
+3. Turn `æ` into `ae` and `ç` into `c`; the Académia itself allows `ae` when `æ` is unavailable. Turn `ñ`, which some other Ligurian spelling systems write, into `n`.
 4. Turn typographic apostrophes `’ ‘ ʼ` into the plain `'`.
 5. Drop hyphens, so `canpànn-a` is reached by typing `canpanna`.
 
@@ -169,7 +169,7 @@ Two details make it feel natural:
 
 On Android the project does not replace Android's keyboard system; it runs inside **Keyman**, a free keyboard app by SIL Global that hosts keyboards for thousands of languages. The work is shared:
 
-1. **The keyboard package** draws the keys. Every key types exactly the letter shown; a long press on a vowel or on `c` gives every Ligurian letter. A capital comes by itself at the start of a sentence.
+1. **The keyboard package** draws the keys. Every key types exactly the letter shown; a long press on a vowel, on `c` or on `n` gives every Ligurian letter. A capital comes by itself at the start of a sentence.
 2. **Keyman's predictive text** watches the word being typed. For every letter, it folds the word with our `searchTermToKey`, the keyboard's copy of the skeleton, and searches **the dictionary package**, an index of every approved word built from its skeleton. Keyman also tolerates small typing mistakes.
 3. **The best matches appear in the suggestion bar** above the keys, in the casing the person is typing: `penna` offers `pénna` and `pénn-a`; `Penna`, at the start of a sentence, offers `Pénna`.
 4. **Tapping a suggestion** puts it in the text, followed by a space. In Keyman 18 a suggestion is applied when tapped; Keyman 19, in beta in October 2026, can also apply a very likely suggestion by itself when space is pressed.
@@ -235,10 +235,10 @@ Both lists live in the database, so adding a variety or a spelling system is a s
 |---|---|---|---|
 | Conversion engine | `engine/` | Computes skeletons, loads the word list, converts typed words, builds the menu | working, 17 tests |
 | Terminal demo | `engine/src/demo.ts` | Try the engine from the command line | working |
-| Shared dictionary | `db/` | Words, meanings, translations, roles, review, history | working and deployed, 27 tests |
+| Shared dictionary | `db/` | Words, meanings, translations, roles, review, history | working and deployed, 31 tests |
 | Export | `db/` [`export_lexicon_tsv()`] | Writes the approved words in the engine's format | working |
-| Lexicon manager | `admin/` | Web page to search, propose and review words | working, 14 tests |
-| Web editor | `editor/` | Web page where anyone types Ligurian with the engine and the published dictionary | working, 15 tests |
+| Lexicon manager | `admin/` | Web page to search, propose and review words, in Italian, English and Spanish | working, 25 tests |
+| Web editor | `editor/` | Web page where anyone types Ligurian with the engine and the published dictionary, in Italian, English and Spanish | working, 17 tests |
 | Android keyboard | `keyman/` | Keyman keyboard and dictionary for Android phones and tablets, rebuilt daily | working, 30 tests; to be tested on real phones |
 | Other exports | `export/` | Further formats of the dictionary | planned |
 
@@ -305,7 +305,7 @@ So a word approved today reaches everyone within a day, and at once if a maintai
 * **Filters** by variety and spelling system, `zeneize` and `ofiçiâ` by default, remembered in the browser.
 * **Copy, download as `.txt`, clear;** the text is kept in the browser between visits and never sent anywhere.
 * **Works offline** after the first visit.
-* **Italian interface,** English available.
+* **Interface in Italian, English and Spanish,** chosen from a menu in the header and shared with the lexicon manager.
 
 On a phone, the text must be copied into the app where it is going; typing directly into every app is the job of the Android keyboard.
 
@@ -335,6 +335,7 @@ Keyman pairs the two packages through their language code, `lij`, the ISO 639-3 
   | `o` | ò ó ô ö |
   | `u` | ù ú û ü |
   | `c` | ç |
+  | `n` | ñ |
 
   These are exactly the letters the skeleton folds; a test keeps the two lists identical. A dot on a key shows that it has a long press.
 * **An apostrophe key** sits on the main layer, next to the space bar, because Ligurian elides constantly: `l'`, `d'`, `ch'`.
@@ -351,15 +352,16 @@ Keyman pairs the two packages through their language code, `lij`, the ISO 639-3 
 
 ## The lexicon manager
 
-<https://ignatz-castror.github.io/ligurian-keyboard/admin/> · full reference: [admin/README.md](admin/README.md) · design: decision [0018](docs/decisions/0018-lexicon-manager-design.md)
+<https://ignatz-castror.github.io/ligurian-keyboard/admin/> · full reference: [admin/README.md](admin/README.md) · design: decisions [0018](docs/decisions/0018-lexicon-manager-design.md) and [0023](docs/decisions/0023-lexicon-manager-spanish-history-csv.md)
 
 * **Search by plain letters**, the same way one types: `zena` finds `Zêna`, and an inflected form finds its lemma. Open to everyone.
+* **Latest additions:** while the search field is empty, the 20 approved entries added most recently are listed below it, newest first, with the date and time each was added.
 * **Entry pages** with forms, senses, translations and, for reviewers, the full history of every change.
-* **Proposals** with buttons for the special letters, and a warning when a lemma with the same skeleton already exists.
+* **Proposals** with buttons for the special letters, `ñ` included, and a warning when a lemma with the same skeleton already exists.
 * **A review queue**, oldest proposals first.
 * **Roles and profiles**, managed by admins.
-* **Export** of the approved dictionary in the engine's format.
-* **Italian interface**, the contributors' language, with English available.
+* **Downloads** of the approved dictionary: **TSV**, the engine's format, and **CSV** for spreadsheets [RFC 4180, with a byte order mark so that Excel shows the Ligurian letters; with Excel set to Italian or Spanish, open it through Data, From Text/CSV].
+* **Interface in Italian**, the contributors' language, **English** and **Spanish**, chosen from a menu in the header.
 
 ## Where the words come from
 
@@ -395,7 +397,7 @@ npm install
 npm run check
 ```
 
-`npm run check` type checks the whole project and runs all 103 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
+`npm run check` type checks the whole project and runs all 120 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
 
 Inside this repository, use `npm run typecheck` or `npx tsc`, never a globally installed `tsc`: the project pins its own TypeScript version.
 
@@ -461,19 +463,19 @@ engine/                 the conversion engine
   src/demo.ts             terminal demo
   test/                   17 tests
 db/                     the shared dictionary
-  migrations/             0001 to 0004, run in order on Supabase
-  test/                   27 tests on PGlite; the Supabase stand in is for tests only
+  migrations/             0001 to 0005, run in order on Supabase
+  test/                   31 tests on PGlite; the Supabase stand in is for tests only
   README.md               data model, roles, client rules, deployment
 admin/                  the lexicon manager, published under /admin/
   src/                    TypeScript, one file per page under views/
-  test/                   14 tests
-  README.md               pages, accounts, publishing
+  test/                   25 tests
+  README.md               pages, accounts, downloads, publishing
 editor/                 the web editor, the front page of the site
   src/ime.ts              the input method's decisions, pure functions
   src/main.ts             the page
   public/sw.js            offline copy
   public/tastiera/        the Android install page
-  test/                   15 tests
+  test/                   17 tests
   README.md               use, snapshot, local runs
 keyman/                 the Android keyboard and its dictionary
   ligurian_keyboard/      Keyman keyboard project
@@ -495,12 +497,12 @@ export/                 further dictionary formats, planned
 
 ## Tests
 
-103 tests guard the project, and every one runs on every push to `main` before anything is published:
+120 tests guard the project, and every one runs on every push to `main` before anything is published:
 
 * **Engine [17]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows.
-* **Database [27]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Six of them prove that the database's own folding equals the engine's, on every test word and every letter.
-* **Lexicon manager [14]:** input checks, and a comparison of every button the page shows with what the real database actually accepts, for every role.
-* **Web editor [15]:** finishing a word, replacing, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages.
+* **Database [31]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Ten of them guard the search keys: the database's own folding equals the engine's on every test word and on every letter the database accepts, a list read from the database itself; the engine loads a word holding any of those letters; and `ñ` is accepted and found by typing `n`.
+* **Lexicon manager [25]:** input checks, with a letter list identical to the real database's; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy.
+* **Web editor [17]:** finishing a word, replacing, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages; its three languages, the same as the manager's, with Spanish really translated.
 * **Android keyboard [30]:** a real build with Keyman's compiler; the compiled dictionary loaded and inspected, proving that its search keys equal the engine's on every character up to U+02FF, every test word in four forms and 5,000 pseudo-random strings whose coverage is itself tested; exactly the Ligurian letters on the layout, in both cases; rows of equal width by Keyman's own arithmetic; the layer rules; the contents of both packages; the refusal of a bad snapshot or a failing compiler, keeping earlier packages; error reporting always off.
 
 ## Automation
@@ -540,6 +542,8 @@ Every important decision is recorded in [docs/decisions/](docs/decisions/README.
 | [0020](docs/decisions/0020-web-editor-design.md) | Design of the web editor |
 | [0021](docs/decisions/0021-keyman-scope-and-toolchain.md) | Keyman keyboard: Android first, built with `kmc`, self-distributed |
 | [0022](docs/decisions/0022-keyman-keyboard-design.md) | Design of the Keyman keyboard and dictionary |
+| [0023](docs/decisions/0023-lexicon-manager-spanish-history-csv.md) | Lexicon manager in Spanish, latest additions, CSV download |
+| [0024](docs/decisions/0024-letter-enye.md) | The letter ñ: accepted, folded to `n`, on the keyboard |
 
 ## Open questions
 
@@ -564,10 +568,10 @@ Version 1.0.0 is a promise of stability, given when these criteria are met, not 
 
 | Version | Content |
 |---|---|
-| 0.6 | Real frequencies from a freely licensed body of text |
-| 0.7 | Bulk import with validation |
-| 0.8 | Backups, hardening, contributor documentation |
-| 0.9 | Beta with speakers in Genoa |
+| 0.6 | Done: the lexicon manager in Spanish, its latest additions, the CSV download; the letter `ñ` |
+| 0.7 | Workflows on Node.js 24; real frequencies from a freely licensed body of text |
+| 0.8 | Bulk import with validation |
+| 0.9 | Backups, hardening, contributor documentation; beta with speakers in Genoa |
 | 1.0 | All criteria met |
 
 Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought throughout.
@@ -576,6 +580,7 @@ Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought 
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.6.0, 2026/10/17: the site in Spanish.** A Spanish interface beside Italian and English, in the lexicon manager, the web editor and the install page; the 20 latest additions below the search field; the dictionary downloadable as CSV as well as TSV. The letter `ñ`, written by some other Ligurian spelling systems, is accepted everywhere: a button in the manager, the search key `n`, a long press of `n` on the Android keyboard.
 * **0.5.1, 2026/10/17:** the copyright holder's name made uniform, inside the Keyman packages too.
 * **0.5.0, 2026/10/17: the Android keyboard.** A Keyman keyboard with an Italian layout and every Ligurian letter on long press, and a dictionary package whose suggestions use the engine's own search keys; both rebuilt every day, offered on an install page under `/tastiera/`, and attached to every release.
 * **0.4.1, 2026/10/17:** singular and plural in the web editor's dictionary status.
@@ -628,7 +633,7 @@ Quando le stesse lettere portano a più parole, si sceglie quella giusta da un b
 ### Che cosa si può scaricare
 
 * **La tastiera**, `ligurian_keyboard.kmp`, e **il dizionario**, `ignatzcastror.lij.ligurian_keyboard.model.kmp`, dalla pagina di installazione. Il dizionario viene ricostruito ogni giorno con le parole approvate; la sua versione è la sua data, per esempio `2026.10.17`.
-* **L'elenco delle parole approvate**, in formato TSV: aggiornato al momento, dal pulsante "Scarica TSV" del dizionario; oppure la copia del giorno, da cui sono costruiti l'editor e la tastiera: <https://ignatz-castror.github.io/ligurian-keyboard/lexicon.tsv>.
+* **L'elenco delle parole approvate**, in formato TSV o CSV: aggiornato al momento, dai pulsanti "Scarica TSV" e "Scarica CSV" del dizionario; oppure la copia del giorno, da cui sono costruiti l'editor e la tastiera: <https://ignatz-castror.github.io/ligurian-keyboard/lexicon.tsv>.
 * **Il proprio testo**, come file `.txt`, dall'editor.
 * **Il codice sorgente** di ogni versione, dalla pagina Releases di GitHub; dalla 0.5.0 ogni versione porta con sé anche i due pacchetti per Keyman.
 
@@ -636,13 +641,13 @@ Quando le stesse lettere portano a più parole, si sceglie quella giusta da un b
 
 ### Come funziona
 
-* **Lo scheletro.** Ogni parola del dizionario ha uno "scheletro": le lettere semplici con cui la si scrive. Si calcola togliendo gli accenti alle vocali, trasformando `æ` in `ae` e `ç` in `c`, uniformando gli apostrofi e togliendo i trattini, secondo l'*Arfabêto* dell'Académia. Ciò che si scrive viene ridotto allo stesso modo e cercato nel dizionario.
+* **Lo scheletro.** Ogni parola del dizionario ha uno "scheletro": le lettere semplici con cui la si scrive. Si calcola togliendo gli accenti alle vocali, trasformando `æ` in `ae`, `ç` in `c` e `ñ` in `n`, uniformando gli apostrofi e togliendo i trattini, secondo l'*Arfabêto* dell'Académia. Ciò che si scrive viene ridotto allo stesso modo e cercato nel dizionario.
 * **Nell'editor web**, la parola viene sostituita quando si preme lo spazio: se c'è una sola grafia, subito; se ce ne sono di più, appare un menu; se la parola è sconosciuta, resta com'è. Le maiuscole e la punteggiatura si conservano; Backspace subito dopo annulla la conversione. L'editor funziona anche senza connessione dopo la prima visita, e il testo non lascia mai il browser.
-* **Nella tastiera Android**, che funziona dentro l'app gratuita **Keyman** di SIL Global, le grafie compaiono nella barra dei suggerimenti mentre si scrive: si tocca quella giusta. Tenendo premute le vocali e la `c` si ottengono tutte le lettere liguri; c'è un tasto per l'apostrofo; la maiuscola arriva da sola a inizio frase, e due tocchi su Maiusc bloccano le maiuscole. Sui computer Keyman non offre suggerimenti: lì si usa l'editor web.
+* **Nella tastiera Android**, che funziona dentro l'app gratuita **Keyman** di SIL Global, le grafie compaiono nella barra dei suggerimenti mentre si scrive: si tocca quella giusta. Tenendo premute le vocali, la `c` e la `n` si ottengono tutte le lettere liguri, `ñ` compresa; c'è un tasto per l'apostrofo; la maiuscola arriva da sola a inizio frase, e due tocchi su Maiusc bloccano le maiuscole. Sui computer Keyman non offre suggerimenti: lì si usa l'editor web.
 
 ### Il dizionario
 
-Il dizionario condiviso è un database dove i collaboratori propongono parole, con le loro forme, i significati numerati, le definizioni in italiano e le traduzioni in italiano, spagnolo e inglese. I revisori le approvano; solo le parole approvate arrivano all'editor e alla tastiera, entro un giorno. Nulla viene mai cancellato davvero, ogni modifica resta nella cronologia, e le regole sono imposte dal database stesso. Ogni voce registra la sua varietà, `zeneize` per impostazione predefinita, e il suo sistema di scrittura, `ofiçiâ` per impostazione predefinita. Le parole vengono solo dalla conoscenza dei collaboratori o da fonti con licenza libera: nessun dizionario protetto da diritto d'autore viene copiato. Gli account li crea un amministratore: chi vuole contribuire può chiederne uno.
+Il dizionario condiviso è un database dove i collaboratori propongono parole, con le loro forme, i significati numerati, le definizioni in italiano e le traduzioni in italiano, spagnolo e inglese. I revisori le approvano; solo le parole approvate arrivano all'editor e alla tastiera, entro un giorno. Nulla viene mai cancellato davvero, ogni modifica resta nella cronologia, e le regole sono imposte dal database stesso. Ogni voce registra la sua varietà, `zeneize` per impostazione predefinita, e il suo sistema di scrittura, `ofiçiâ` per impostazione predefinita. Le parole vengono solo dalla conoscenza dei collaboratori o da fonti con licenza libera: nessun dizionario protetto da diritto d'autore viene copiato. Gli account li crea un amministratore: chi vuole contribuire può chiederne uno. Tutto il sito, l'editor, la pagina del dizionario e quella della tastiera, è in italiano, inglese e spagnolo; la pagina del dizionario mostra sotto il campo di ricerca le 20 voci approvate aggiunte più di recente.
 
 ### Limiti attuali
 
@@ -653,7 +658,7 @@ Il dizionario condiviso è un database dove i collaboratori propongono parole, c
 
 ### Verso la versione 1.0.0
 
-La 1.0.0 arriverà quando ci saranno: la tastiera Android provata sul campo, qualche migliaio di forme approvate con frequenze reali, regole e formati congelati, le questioni aperte risolte, alcune settimane d'uso reale a Genova, e copie di sicurezza regolari del database. Il percorso: frequenze reali [0.6], importazione in blocco con verifica [0.7], copie di sicurezza e documentazione [0.8], prova con parlanti genovesi [0.9].
+La 1.0.0 arriverà quando ci saranno: la tastiera Android provata sul campo, qualche migliaio di forme approvate con frequenze reali, regole e formati congelati, le questioni aperte risolte, alcune settimane d'uso reale a Genova, e copie di sicurezza regolari del database. Il percorso: frequenze reali [0.7], importazione in blocco con verifica [0.8], copie di sicurezza, documentazione e prova con parlanti genovesi [0.9].
 
 ### Contribuire
 

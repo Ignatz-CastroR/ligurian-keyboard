@@ -2,13 +2,19 @@
  * search.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/11, 20:21:50, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 07:31:51: the latest additions below the
+ *           search field.
  * Purpose:  Search the dictionary by typing plain ASCII. Open to
  *           everyone: signed out visitors see the published entries.
+ *           While the field is empty, the 20 approved lemmas added most
+ *           recently are listed below it; typing replaces them with the
+ *           results, and emptying the field brings them back.
  */
 
 import type { Context } from "../context.ts";
 import type { Lemma } from "../types.ts";
-import { searchKeyFor, searchLemmas } from "../db.ts";
+import { latestLemmas, searchKeyFor, searchLemmas } from "../db.ts";
+import { formatDateTime } from "../forms.ts";
 import { appendAll, clear, describeError, h, posLabel, statusBadge } from "../ui.ts";
 
 const DEBOUNCE_MS: number = 250;
@@ -22,6 +28,12 @@ export async function renderSearch(ctx: Context, root: HTMLElement, initialQuery
   });
   const keyLine: HTMLElement = h("p", { class: "muted key-line" });
   const results: HTMLElement = h("div", { class: "results" });
+  const latestList: HTMLElement = h("div", {}, h("p", { class: "muted" }, t.loading));
+  const latestSection: HTMLElement = h("section", { class: "latest", "aria-labelledby": "latest-title" },
+    h("h3", { id: "latest-title" }, t.latestTitle),
+    h("p", { class: "muted small-text" }, t.latestIntro),
+    latestList,
+  );
 
   appendAll(root,
     h("h2", {}, t.navSearch),
@@ -30,7 +42,10 @@ export async function renderSearch(ctx: Context, root: HTMLElement, initialQuery
     ctx.userId === null && h("p", { class: "muted" }, t.searchPublicNote),
     keyLine,
     results,
+    latestSection,
   );
+  latestSection.hidden = searchKeyFor(initialQuery) !== "";
+  void loadLatest(ctx, latestList);
 
   // Only the answer to the latest query may be drawn: a slow early
   // answer must not overwrite a fast later one.
@@ -43,6 +58,7 @@ export async function renderSearch(ctx: Context, root: HTMLElement, initialQuery
     const key: string = searchKeyFor(query);
     keyLine.textContent = key === "" ? "" : t.searchKey(key);
     history.replaceState(null, "", `#/search/${encodeURIComponent(query)}`);
+    latestSection.hidden = key !== "";
     if (key === "") {
       clear(results);
     } else {
@@ -67,6 +83,30 @@ export async function renderSearch(ctx: Context, root: HTMLElement, initialQuery
   input.focus();
   if (initialQuery !== "") {
     await runSearch();
+  }
+}
+
+// The latest additions, newest first, each with the date it was added.
+async function loadLatest(ctx: Context, target: HTMLElement): Promise<void> {
+  const { t } = ctx;
+  try {
+    const lemmas: Lemma[] = await latestLemmas();
+    if (lemmas.length === 0) {
+      target.replaceChildren(h("p", { class: "muted" }, t.latestEmpty));
+    } else {
+      const list: HTMLElement = h("ol", { class: "lemma-list latest-list" });
+      for (const lemma of lemmas) {
+        list.append(h("li", {},
+          h("time", { class: "muted small-text nowrap", datetime: lemma.created_at }, formatDateTime(lemma.created_at)),
+          h("span", {},
+            h("a", { href: `#/entry/${lemma.id}`, class: "headword" }, lemma.headword),
+            h("span", { class: "muted" }, ` ${posLabel(t, lemma.part_of_speech)} · ${lemma.variety} · ${lemma.orthography}`)),
+        ));
+      }
+      target.replaceChildren(list);
+    }
+  } catch (error: unknown) {
+    target.replaceChildren(h("p", { class: "error-text" }, describeError(t, error)));
   }
 }
 

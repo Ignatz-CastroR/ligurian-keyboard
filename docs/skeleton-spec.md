@@ -1,6 +1,6 @@
 # Skeleton specification
 
-Version 0.1, 2026/10/10. Normative source: Académia Ligùstica do Brénno, *Arfabêto*, <https://www.zeneize.net/grafia/arfabeto.htm>.
+Version 0.2, 2026/10/17 [0.1, 2026/10/10; 0.2 adds ñ]. Normative source: Académia Ligùstica do Brénno, *Arfabêto*, <https://www.zeneize.net/grafia/arfabeto.htm>.
 
 The **skeleton** of a word is the plain ASCII string a user types to reach it. The engine computes it from the stored spelling; contributors never type keys by hand. Implementation: `engine/src/skeleton.ts`. Any change to one must be mirrored in the other and covered by a test.
 
@@ -20,6 +20,7 @@ The **skeleton** of a word is the plain ASCII string a user types to reach it. T
 | ù ú û ü | u | idem |
 | æ | ae | the Académia itself allows `ae` when æ is unavailable |
 | ç | c | the c of Italian *ce*, *ci* syllables pronounced [s] |
+| ñ | n | not in the *Arfabêto*: written by other Ligurian spelling systems; decision [0024](decisions/0024-letter-enye.md) |
 | ’ ‘ ʼ | ' | typographic apostrophe → ASCII |
 | - | dropped | `canpànn-a` must be reachable by typing `canpanna` |
 
@@ -47,7 +48,7 @@ Kept as is because they are already ASCII: `j`, `x`, the digraph `eu`, the trigr
 
 ## The SQL mirror
 
-The database holds a copy of these rules, `private.skeleton()` in `db/migrations/0004_search_keys.sql`, to compute the search keys of every lemma and wordform [decision [0017](decisions/0017-ascii-search-keys-in-the-database.md)]. `db/test/search-keys.test.ts` fails if the two ever disagree. **Changing a rule here means changing `engine/src/skeleton.ts` and adding a new migration that replaces `private.skeleton()`.**
+The database holds a copy of these rules, `private.skeleton()`, created in `db/migrations/0004_search_keys.sql` and last replaced in `0005_letter_enye.sql`, to compute the search keys of every lemma and wordform [decision [0017](decisions/0017-ascii-search-keys-in-the-database.md)]. `db/test/search-keys.test.ts` fails if the two ever disagree. **Changing a rule here means changing `engine/src/skeleton.ts` and adding a new migration that replaces `private.skeleton()`.**
 
 ## The Keyman mirror
 

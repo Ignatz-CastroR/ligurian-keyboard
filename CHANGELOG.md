@@ -6,8 +6,15 @@ the project is in early development and anything may change.
 
 ## [Unreleased]
 
+### Added
+* Decision record 0021: the Keyman keyboard targets Android first,
+  uses the engine's `skeleton()` as its search key, is built with
+  `kmc` from npm and is distributed through GitHub Releases. Records
+  0001 and 0007 now point to it.
+
 ### Planned
-* Export of the approved lexicon to a Keyman keyboard.
+* Version 0.5.0: Keyman keyboard and lexical model for Android, built
+  from the daily dictionary snapshot.
 
 ## [0.4.1] 2026/10/17
 

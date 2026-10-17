@@ -1,0 +1,99 @@
+# release-assets.yml
+# Author:   Ignatz-CastroR and contributors
+# Date:     2026/10/17, 04:08:05, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+# Updated:  2026/10/17, 05:50:07: build and upload split into two jobs.
+# Purpose:  Attach the two Keyman packages to a GitHub release:
+#             ligurian_keyboard.kmp
+#             ignatzcastror.lij.ligurian_keyboard.model.kmp
+#           built from the release's own tag and from a fresh snapshot
+#           of the published dictionary.
+# When:     as soon as a release is published on the Releases page; and
+#           by hand, Actions, "Keyman packages for a release", Run
+#           workflow, giving the tag, to rebuild the packages of an
+#           existing release [for example with a newer dictionary].
+# Contract: Needs the same two repository VARIABLES as pages.yml:
+#           SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY. Runs every test
+#           first; if anything fails, nothing is attached. Re-running
+#           replaces the release's packages [--clobber]. The packages
+#           served by the site, under /tastiera/, are rebuilt daily by
+#           pages.yml; the ones attached here record each release.
+# Security: Two jobs. "build" runs npm packages and the compiler with a
+#           read-only token that is not even kept in the checkout.
+#           "attach" alone may write to the repository, and it runs no
+#           project code: it only downloads the built files and uploads
+#           them with gh. The tag reaches the shell only as a quoted
+#           environment variable, never inside a script.
+# Decision: docs/decisions/0021-keyman-scope-and-toolchain.md and
+#           docs/decisions/0022-keyman-keyboard-design.md
+
+name: Keyman packages for a release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag of an existing release, for example v0.5.0"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-assets-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run lexicon:snapshot
+      - run: npm run keyman:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: keyman-packages
+          path: |
+            keyman/dist/ligurian_keyboard.kmp
+            keyman/dist/ignatzcastror.lij.ligurian_keyboard.model.kmp
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 1
+
+  attach:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: keyman-packages
+          path: packages
+      - name: Attach the packages to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: >
+          gh release upload "$TAG"
+          packages/ligurian_keyboard.kmp
+          packages/ignatzcastror.lij.ligurian_keyboard.model.kmp
+          --clobber

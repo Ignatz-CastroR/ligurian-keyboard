@@ -492,7 +492,9 @@ function drawPage(): void {
     h("div", { class: "brand" },
       h("span", { class: "brand-title" }, t.appTitle),
       h("span", { class: "muted" }, t.appSubtitle)),
-    h("nav", {}, h("a", { href: "./admin/", class: "nav-link" }, t.navDictionary)),
+    h("nav", {},
+      h("a", { href: "./tastiera/", class: "nav-link" }, t.navKeyboard),
+      h("a", { href: "./admin/", class: "nav-link" }, t.navDictionary)),
     h("div", { class: "tools" }, langButton),
   );
 

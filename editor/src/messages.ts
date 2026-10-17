@@ -14,12 +14,13 @@ export type Lang = "it" | "en";
 const IT = {
   appTitle: "Scrivi in ligure",
   appSubtitle: "In grafîa ofiçiâ, da qualsiasi tastiera",
+  navKeyboard: "Tastiera Android",
   navDictionary: "Dizionario",
   switchLang: "English",
 
   textLabel: "Testo",
-  placeholder: "Scrivi qui in lettere normali, per esempio: a zena",
-  help: "Scrivi le parole in lettere normali e premi lo spazio: diventano grafîa ofiçiâ. "
+  placeholder: "Scrivi qui senza accenti, per esempio: a zena",
+  help: "Scrivi le parole senza accenti e premi lo spazio: diventano grafîa ofiçiâ. "
     + "Se più grafie sono possibili, scegli con i numeri, con le frecce e Invio, oppure toccandola. "
     + "Esc lascia la parola come l'hai scritta. Backspace subito dopo una conversione la annulla.",
 
@@ -49,6 +50,7 @@ export type Messages = typeof IT;
 const EN: Messages = {
   appTitle: "Write in Ligurian",
   appSubtitle: "In grafîa ofiçiâ, from any keyboard",
+  navKeyboard: "Android keyboard",
   navDictionary: "Dictionary",
   switchLang: "Italiano",
 

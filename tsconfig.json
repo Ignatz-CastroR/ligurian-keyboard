@@ -19,12 +19,15 @@
     "db/**/*.ts",
     "admin/**/*.ts",
     "editor/**/*.ts",
-    "tools/**/*.ts"
+    "tools/**/*.ts",
+    "keyman/**/*.ts"
   ],
   "exclude": [
     "admin/dist",
     "editor/dist",
     "_site",
-    "node_modules"
+    "node_modules",
+    "keyman/build",
+    "keyman/dist"
   ]
 }

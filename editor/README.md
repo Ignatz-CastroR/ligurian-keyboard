@@ -14,7 +14,7 @@
 | Backspace right after a conversion | Undo it: the typed word comes back |
 | Ctrl+Z | The browser's own undo, conversions included |
 
-On a phone the menu is a bar above the keyboard; tap a spelling. The text must then be copied into the app where it is going: typing straight into other apps is the job of the Keyman keyboards, still planned.
+On a phone the menu is a bar above the keyboard; tap a spelling. The text must then be copied into the app where it is going: typing straight into other apps is the job of the Android keyboard, installed from the page `/tastiera/` [see [keyman/README.md](../keyman/README.md)].
 
 The text stays in the browser between visits and is never sent anywhere. After one visit the page also works without a connection.
 
@@ -34,6 +34,7 @@ The editor never talks to the database. When the site is built, `tools/fetch-lex
 | `src/dom.ts` | The page building helper; never `innerHTML` |
 | `src/style.css` | Light and dark look, phone layout |
 | `public/sw.js` | Offline copy of the page and the dictionary |
+| `public/tastiera/index.html` | Install page of the Android keyboard; the site build puts the two Keyman packages next to it |
 | `test/editor.test.ts` | 15 tests of `ime.ts`, `snapshot.ts` and the messages |
 | `vite.config.ts` | Build settings |
 

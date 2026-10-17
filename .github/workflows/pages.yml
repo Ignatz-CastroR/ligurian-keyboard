@@ -1,15 +1,19 @@
 # pages.yml
 # Author:   Ignatz-CastroR and contributors
 # Date:     2026/10/17, 02:16:42, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+# Updated:  2026/10/17, 04:07:53: the Keyman packages, under /tastiera/.
 # Purpose:  Check the project, take a fresh snapshot of the published
-#           dictionary, build the web editor and the lexicon manager,
-#           and publish both on GitHub Pages:
-#             /         the web editor
-#             /admin/   the lexicon manager
+#           dictionary, build the Keyman packages, the web editor and
+#           the lexicon manager, and publish them on GitHub Pages:
+#             /            the web editor
+#             /admin/      the lexicon manager
+#             /tastiera/   the Android install page and the Keyman
+#                          keyboard and dictionary packages
 # When:     on every push to main; every day at 03:17 UTC [21:17 in
-#           Costa Rica], so newly approved words reach the editor within
-#           a day; and by hand, Actions, "Site on GitHub Pages", Run
-#           workflow, to publish new words at once.
+#           Costa Rica], so newly approved words reach the editor and
+#           the dictionary package within a day; and by hand, Actions,
+#           "Site on GitHub Pages", Run workflow, to publish new words
+#           at once.
 # Contract: Needs two repository VARIABLES [not secrets: both values are
 #           public by design]: SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.
 #           Settings, Pages, Source must be set to "GitHub Actions".
@@ -18,7 +22,8 @@
 #           GitHub disables scheduled runs in a repository with no
 #           activity for 60 days; Actions then shows a button to enable
 #           the workflow again. Replaces admin-pages.yml [0.3.0].
-#           Decision: docs/decisions/0019-editor-dictionary-snapshot.md
+#           Decisions: docs/decisions/0019-editor-dictionary-snapshot.md
+#           and docs/decisions/0022-keyman-keyboard-design.md
 
 name: Site on GitHub Pages
 

@@ -27,6 +27,7 @@ A decision is never edited away. If it changes, a new record replaces it, and th
 | [0019](0019-editor-dictionary-snapshot.md) | The web editor reads a daily snapshot of the dictionary | 2026/10/17 | accepted |
 | [0020](0020-web-editor-design.md) | Design of the web editor | 2026/10/17 | accepted |
 | [0021](0021-keyman-scope-and-toolchain.md) | Keyman keyboard: Android first, built with `kmc`, self-distributed | 2026/10/17 | accepted |
+| [0022](0022-keyman-keyboard-design.md) | Design of the Keyman keyboard and dictionary | 2026/10/17 | accepted |
 
 ## Still open
 
@@ -35,4 +36,5 @@ These questions are not decided yet. Each will get its own record once it is.
 * **ç written as s:** should typing `se` also offer `çê`? To be answered by native contributors. See `docs/skeleton-spec.md`.
 * **Grafia unitäia:** which extra folding rules it needs, if any.
 * **Realtime updates in the lexicon manager:** whether reviewers should see each other's changes live. See [0018](0018-lexicon-manager-design.md).
+* **Elided forms:** should `l'ægua` be split at the apostrophe, in the engine and in the keyboard together, or must the dictionary hold each elided form? See [0022](0022-keyman-keyboard-design.md).
 * **When to add Ligurian definitions:** a judgment call by the maintainers, once the input method is mature. See [0015](0015-definitions-in-italian.md).

@@ -3,6 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/17
 * **Decided by:** Iosef Tesla R. [Ignatz-CastroR]
+* **Refined by:** [0022](0022-keyman-keyboard-design.md), on point 3 and on the design of the keyboard and dictionary
 * **Refines:** [0001](0001-input-method-not-editor.md) and [0007](0007-technology-stack.md), on what Keyman can do on each system
 
 ## Context
@@ -31,5 +32,5 @@ Decision [0001](0001-input-method-not-editor.md) makes the input method the prod
 * **Criterion 1 for version 1.0.0** becomes: Keyman on Android, with iOS when a tester exists; desktop served by the web editor. The earlier wording, "at least Android and Windows", is withdrawn.
 * **The keyboard cannot copy the editor's behavior exactly.** The editor's rule "one candidate replaces the word on space" depends on Keyman's autocorrect, which only exists from version 19 and follows Keyman's thresholds; the editor's menu becomes Keyman's suggestion banner, which shows only a few suggestions. Whether this is good enough is decided by testing on a real phone, not assumed.
 * **A second copy of the folding exists,** in the model's key function. It is kept identical to `skeleton()` by a test, and the same check now guards three places: engine, database and keyboard.
-* **Testing needs a real Android phone with the free Keyman app;** Claude cannot do it. Until the friends in Genoa test it, the maintainer is the only tester.
+* **Testing needs a real Android phone with the free Keyman app;** automated tests cannot run Keyman's prediction engine. Until native speakers in Genoa test it, the maintainer is the only tester.
 * **Installation is a two step process for users:** install Keyman from the Play Store, then open our package. Instructions are written in Italian.

@@ -8,8 +8,7 @@
 # Local commit and push tooling: not part of the project
 # ======================================================================
 
-# Local, non project specific commit and push automation helper: never
-# committed to any repository it sits inside.
+# Local, non project specific commit and push automation helper.
 COMMIT-PUSH-SCRIPT.bat
 
 
@@ -108,9 +107,9 @@ Desktop.ini
 *.swp
 
 # ======================================================================
-# Personal working folders: never intended for this public project
+# Local working folders: never part of this public project
 # ======================================================================
 
-# Personal working folders: never intended for this public project.
+# Local notes and archives kept next to the code, never published.
 HISTORICAL/
 INSTRUCTIONS/

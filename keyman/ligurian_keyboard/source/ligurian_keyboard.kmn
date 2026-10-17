@@ -1,0 +1,59 @@
+﻿c ligurian_keyboard.kmn
+c Author:   Ignatz-CastroR and contributors
+c Date:     2026/10/17, 04:01:36, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+c Purpose:  Keyman keyboard for Ligurian on phones and tablets. The user
+c           types plain letters; the Ligurian lexical model
+c           [ignatzcastror.lij.ligurian_keyboard] suggests the spelling in
+c           grafîa ofiçiâ. Long press on a vowel or on c gives every
+c           Ligurian letter directly.
+c Contract: The keys need no rules: each one has a U_XXXX id and types
+c           that character [see keyman/src/touch-layout.ts, which writes
+c           ligurian_keyboard.keyman-touch-layout]. The groups below only
+c           choose the layer: a capital at the start of a sentence, then
+c           lower case again; capitals stay locked on the caps layer;
+c           digits stay on the numeric layer. The same logic as SIL's
+c           EuroLatin keyboard.
+c Version:  &VERSION 17.0 is the oldest Keyman that supports the double
+c           tap on Shift [multitap]. &KEYBOARDVERSION must equal "version"
+c           in package.json; a test checks it.
+c Decision: docs/decisions/0022-keyman-keyboard-design.md
+
+store(&VERSION) '17.0'
+store(&NAME) 'Ligure [grafîa ofiçiâ]'
+store(&COPYRIGHT) '© 2026 Iosef Tesla R. [Ignatz-CastroR] and contributors'
+store(&KEYBOARDVERSION) '0.5.0'
+store(&TARGETS) 'mobile tablet'
+store(&LAYOUTFILE) 'ligurian_keyboard.keyman-touch-layout'
+
+begin Unicode > use(main)
+begin NewContext > use(newContext)
+begin PostKeystroke > use(postKeystroke)
+
+group(main) using keys
+c Intentionally empty: every key types its own character.
+
+store(digit) '0123456789'
+store(sentenceEnd) '.!?…'
+store(whitespace) ' ' U+00A0 U+000A U+000D U+0009
+
+group(newContext) readonly
+c A new text field, a tap elsewhere in the text, a moved cursor.
+platform('touch') > use(chooseLayer)
+
+group(postKeystroke) readonly
+c After every key and every accepted suggestion.
+c Typing digits keeps the numeric layer.
+platform('touch') if(&newLayer = "") if(&layer = 'numeric') any(digit) > context
+c Locked capitals stay locked until Shift is tapped.
+platform('touch') if(&layer = 'caps') > context
+c Otherwise choose the layer, unless the key itself just chose one.
+platform('touch') if(&newLayer = "") > use(chooseLayer)
+
+group(chooseLayer) readonly
+c Start of the text: a capital.
+nul > layer('shift')
+c After the end of a sentence and one or two spaces: a capital.
+any(sentenceEnd) any(whitespace) > layer('shift')
+any(sentenceEnd) any(whitespace) any(whitespace) > layer('shift')
+c Anywhere else: lower case.
+nomatch > layer('default')

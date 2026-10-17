@@ -7,8 +7,11 @@
  *           dictionary come fresh from the site; a copy of each answer
  *           is kept, and served only when the network fails.
  * Contract: Plain JavaScript, copied as it is by Vite [public/]. Never
- *           touches the lexicon manager [/admin/], other sites, or any
+ *           touches the lexicon manager [/admin/], the Android install
+ *           page and its packages [/tastiera/], other sites, or any
  *           request that is not a GET.
+ * Updated:  2026/10/17, 05:51:21: /tastiera/ excluded; installing the
+ *           keyboard needs a connection anyway.
  */
 
 const CACHE = "ligurian-keyboard-editor-v1";
@@ -30,7 +33,8 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   const ours = request.method === "GET"
     && url.origin === self.location.origin
-    && !url.pathname.includes("/admin/");
+    && !url.pathname.includes("/admin/")
+    && !url.pathname.includes("/tastiera/");
 
   if (ours) {
     event.respondWith(

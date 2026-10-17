@@ -1,0 +1,169 @@
+<!doctype html>
+<!--
+  tastiera/index.html
+  Author:   Ignatz-CastroR and contributors
+  Date:     2026/10/17, 04:06:26, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+  Purpose:  How to install the Ligurian keyboard and dictionary on an
+            Android phone, with the two packages to download. Italian
+            first, English below.
+  Contract: Static page, copied as it is by Vite [editor/public/]; the
+            site build puts ligurian_keyboard.kmp,
+            ignatzcastror.lij.ligurian_keyboard.model.kmp and
+            packages.json next to it [tools/assemble-site.ts]. The
+            script only fills in versions from packages.json; without
+            it the page still works.
+-->
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Tastiera ligure per Android, con suggerimenti in grafîa ofiçiâ. Ligurian keyboard for Android.">
+  <title>Tastiera ligure</title>
+  <style>
+    :root {
+      --bg: #fbfaf7;
+      --fg: #1d1d1b;
+      --muted: #5b5b57;
+      --card: #ffffff;
+      --line: #dcd8cf;
+      --accent: #0b5d8c;
+      --accent-fg: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #161615;
+        --fg: #ecebe6;
+        --muted: #a7a59e;
+        --card: #1f1f1d;
+        --line: #3a3934;
+        --accent: #6cb6e8;
+        --accent-fg: #0d1b24;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    main { max-width: 40rem; margin: 0 auto; padding: 24px 16px 40px; }
+    h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 4px; }
+    h2 { font-size: 1.15rem; margin: 32px 0 8px; }
+    p { margin: 8px 0; }
+    .lead { color: var(--muted); margin-bottom: 20px; }
+    ol { padding-left: 1.4rem; }
+    li { margin: 0 0 12px; }
+    .downloads { display: grid; gap: 12px; margin: 20px 0; }
+    .download {
+      display: block;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--card);
+      color: inherit;
+      text-decoration: none;
+    }
+    .download strong { display: block; color: var(--accent); }
+    .download span { color: var(--muted); font-size: 0.92rem; }
+    .download:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    a { color: var(--accent); }
+    code { font-size: 0.92em; overflow-wrap: anywhere; }
+    .back { display: inline-block; margin-bottom: 16px; }
+    .note { border-left: 3px solid var(--line); padding-left: 12px; color: var(--muted); }
+    hr { border: 0; border-top: 1px solid var(--line); margin: 40px 0 0; }
+    footer { color: var(--muted); font-size: 0.9rem; margin-top: 24px; }
+  </style>
+</head>
+<body>
+<main>
+  <a class="back" href="../">← Scrivi in ligure</a>
+
+  <h1>Tastiera ligure per Android</h1>
+  <p class="lead">Scrivi senza accenti in qualsiasi app: WhatsApp, Gmail, Facebook. La barra dei suggerimenti propone la parola in grafîa ofiçiâ.</p>
+
+  <div class="downloads">
+    <a class="download" href="ligurian_keyboard.kmp" download>
+      <strong>1. Tastiera</strong>
+      <span>ligurian_keyboard.kmp<span data-version="keyboard"></span></span>
+    </a>
+    <a class="download" href="ignatzcastror.lij.ligurian_keyboard.model.kmp" download>
+      <strong>2. Dizionario</strong>
+      <span>ignatzcastror.lij.ligurian_keyboard.model.kmp<span data-version="model-it"></span></span>
+    </a>
+  </div>
+
+  <h2>Installazione</h2>
+  <ol>
+    <li>Installa l'app gratuita <b>Keyman</b> di SIL: <a href="https://keyman.com/android/">keyman.com/android</a>.</li>
+    <li>Scarica i due pacchetti qui sopra, la tastiera e il dizionario.</li>
+    <li>In Keyman apri il menu, poi <b>Settings</b>, <b>Install Keyboard or Dictionary</b>, <b>Install from local file</b>. Scegli <code>ligurian_keyboard.kmp</code> nella cartella Download e tocca <b>Install</b>.</li>
+    <li>Ripeti il punto 3 con <code>ignatzcastror.lij.ligurian_keyboard.model.kmp</code>.</li>
+    <li>Per usarla in tutte le app: in Keyman, menu, <b>Get Started</b>, <b>Enable Keyman as system-wide keyboard</b>, e attiva Keyman. Poi, in qualsiasi app, cambia tastiera con l'icona della tastiera in basso.</li>
+  </ol>
+  <p class="note">Se Keyman è in italiano, le voci dei menu sono tradotte.</p>
+
+  <h2>Come si usa</h2>
+  <ol>
+    <li>Scrivi <i>zena</i>: la barra propone <i>Zêna</i>; tocca il suggerimento.</li>
+    <li>Tieni premuta una vocale per le lettere accentate, la <i>a</i> anche per <i>æ</i>, la <i>c</i> per <i>ç</i>.</li>
+    <li>Due tocchi su Maiusc bloccano le maiuscole.</li>
+  </ol>
+  <p>Il dizionario cresce ogni giorno: per le parole nuove, scaricalo e installalo di nuovo.</p>
+
+  <hr>
+
+  <section lang="en">
+    <h1>Ligurian keyboard for Android</h1>
+    <p class="lead">Type plain letters in any app: WhatsApp, Gmail, Facebook. The suggestion bar offers the word in grafîa ofiçiâ.</p>
+
+    <h2>Installation</h2>
+    <ol>
+      <li>Install the free <b>Keyman</b> app by SIL: <a href="https://keyman.com/android/">keyman.com/android</a>.</li>
+      <li>Download the two packages above: the keyboard [1] and the dictionary [2]<span data-version="model-en"></span>.</li>
+      <li>In Keyman, open the menu, then <b>Settings</b>, <b>Install Keyboard or Dictionary</b>, <b>Install from local file</b>. Pick <code>ligurian_keyboard.kmp</code> in the Download folder and tap <b>Install</b>.</li>
+      <li>Repeat step 3 with <code>ignatzcastror.lij.ligurian_keyboard.model.kmp</code>.</li>
+      <li>To use it in every app: in Keyman, menu, <b>Get Started</b>, <b>Enable Keyman as system-wide keyboard</b>, and turn Keyman on. Then switch keyboards in any app with the keyboard icon at the bottom.</li>
+    </ol>
+
+    <h2>How to use it</h2>
+    <ol>
+      <li>Type <i>zena</i>: the bar offers <i>Zêna</i>; tap it.</li>
+      <li>Hold a vowel for the accented letters, <i>a</i> also for <i>æ</i>, <i>c</i> for <i>ç</i>.</li>
+      <li>A double tap on Shift locks capitals.</li>
+    </ol>
+    <p>The dictionary grows every day: download and install it again to get the new words.</p>
+  </section>
+
+  <footer>
+    <a href="https://github.com/Ignatz-CastroR/ligurian-keyboard">ligurian-keyboard</a>
+    · codice MIT · dati CC BY-SA 4.0 · Keyman © SIL Global
+  </footer>
+</main>
+<script>
+  // Fill in what was built, from packages.json. Any failure leaves the
+  // page as it is: the download links work without it.
+  fetch("packages.json", { cache: "no-cache" })
+    .then(function (response) { return response.ok ? response.json() : null; })
+    .then(function (manifest) {
+      if (manifest === null || typeof manifest !== "object") { return; }
+      var keyboard = manifest.keyboard || {};
+      var model = manifest.model || {};
+      var date = typeof model.snapshot === "string" ? model.snapshot.slice(0, 10) : "";
+      var words = typeof model.words === "number" ? model.words : null;
+      var put = function (name, text) {
+        var node = document.querySelector('[data-version="' + name + '"]');
+        if (node !== null && text !== "") { node.textContent = text; }
+      };
+      if (typeof keyboard.version === "string") {
+        put("keyboard", " · versione " + keyboard.version);
+      }
+      if (words !== null) {
+        put("model-it", " · " + words + (words === 1 ? " parola" : " parole") + (date !== "" ? ", dizionario del " + date : ""));
+        put("model-en", " [" + words + (words === 1 ? " word" : " words") + (date !== "" ? ", dictionary of " + date : "") + "]");
+      }
+    })
+    .catch(function () { /* the static page is enough */ });
+</script>
+</body>
+</html>

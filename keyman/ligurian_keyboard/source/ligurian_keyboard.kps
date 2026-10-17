@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ligurian_keyboard.kps
+  Author:   Ignatz-CastroR and contributors
+  Date:     2026/10/17, 04:01:36, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+  Purpose:  Keyman package of the Ligurian keyboard. Its version follows
+            the keyboard's own [&KEYBOARDVERSION in the .kmn file].
+  Contract: Built by tools/build-keyman.ts with kmc into
+            ligurian_keyboard.kmp. The dictionary is a separate package,
+            ignatzcastror.lij.ligurian_keyboard.model.kmp; Keyman joins
+            the two through their shared language code, lij.
+-->
+<Package>
+  <System>
+    <KeymanDeveloperVersion>18.0.254</KeymanDeveloperVersion>
+    <FileVersion>7.0</FileVersion>
+  </System>
+  <Options>
+    <ReadMeFile>readme.htm</ReadMeFile>
+    <LicenseFile>..\LICENSE.md</LicenseFile>
+    <WelcomeFile>welcome.htm</WelcomeFile>
+    <FollowKeyboardVersion/>
+  </Options>
+  <Info>
+    <Name URL="">Ligure [grafîa ofiçiâ]</Name>
+    <Copyright URL="">© 2026 Iosef Tesla R. [Ignatz-CastroR] and contributors</Copyright>
+    <Author URL="">Ignatz-CastroR</Author>
+    <WebSite URL="https://ignatz-castror.github.io/ligurian-keyboard/">ignatz-castror.github.io/ligurian-keyboard</WebSite>
+    <Description>Tastiera per scrivere in ligure in grafîa ofiçiâ. Keyboard for writing Ligurian in grafîa ofiçiâ.</Description>
+  </Info>
+  <Files>
+    <File>
+      <Name>..\build\ligurian_keyboard.js</Name>
+    </File>
+    <File>
+      <Name>readme.htm</Name>
+    </File>
+    <File>
+      <Name>welcome.htm</Name>
+    </File>
+    <File>
+      <Name>..\LICENSE.md</Name>
+    </File>
+  </Files>
+  <Keyboards>
+    <Keyboard>
+      <Name>Ligure [grafîa ofiçiâ]</Name>
+      <ID>ligurian_keyboard</ID>
+      <Languages>
+        <Language ID="lij">Ligure</Language>
+      </Languages>
+    </Keyboard>
+  </Keyboards>
+</Package>

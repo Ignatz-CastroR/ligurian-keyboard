@@ -9,7 +9,9 @@
  * Source:   Académia Ligùstica do Brénno, "Arfabêto",
  *           https://www.zeneize.net/grafia/arfabeto.htm
  *           The full rule table lives in docs/skeleton-spec.md; any change
- *           here must be mirrored there.
+ *           here must be mirrored there, in the database's copy and in
+ *           the keyboard's copy: see "The SQL mirror" and "The Keyman
+ *           mirror" in that file.
  */
 
 // Single characters that fold to a different ASCII string.

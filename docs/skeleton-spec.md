@@ -48,3 +48,7 @@ Kept as is because they are already ASCII: `j`, `x`, the digraph `eu`, the trigr
 ## The SQL mirror
 
 The database holds a copy of these rules, `private.skeleton()` in `db/migrations/0004_search_keys.sql`, to compute the search keys of every lemma and wordform [decision [0017](decisions/0017-ascii-search-keys-in-the-database.md)]. `db/test/search-keys.test.ts` fails if the two ever disagree. **Changing a rule here means changing `engine/src/skeleton.ts` and adding a new migration that replaces `private.skeleton()`.**
+
+## The Keyman mirror
+
+The keyboard's dictionary holds a second copy, `searchTermToKey` in `keyman/ignatzcastror.lij.ligurian_keyboard/source/ignatzcastror.lij.ligurian_keyboard.model.ts` [decision [0022](decisions/0022-keyman-keyboard-design.md)]. Keyman compiles it into the model as text, so it cannot import the engine and must stay self-contained and ES3 compatible. `keyman/test/build.test.ts` fails if it ever disagrees with `skeleton()`, checked both in the source and inside the compiled model. `keyman/test/keyboard.test.ts` also fails if a letter folded here cannot be typed on the keyboard. **Changing a rule here therefore means changing four places: this page, `engine/src/skeleton.ts`, a new migration for `private.skeleton()`, and the model's `searchTermToKey`, plus `LONG_PRESS` in `keyman/src/touch-layout.ts` when a letter is added.**

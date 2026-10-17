@@ -6,7 +6,7 @@
 
 ## Context
 
-The project needs a name readable by two audiences: Genoese Italian speakers and associations, and the wider developer community, recruiters included. It also needs a home: a personal account, or a neutral organization that associations could co-own.
+The project needs a name readable by two audiences: Genoese Italian speakers and associations, and the wider developer community. It also needs a home: a personal account, or a neutral organization that associations could co-own.
 
 ## Decision
 

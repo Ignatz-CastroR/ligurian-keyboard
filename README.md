@@ -234,7 +234,7 @@ Both lists live in the database, so adding a variety or a spelling system is a s
 | Part | Folder | What it does | State |
 |---|---|---|---|
 | Conversion engine | `engine/` | Computes skeletons, loads the word list, converts typed words, builds the menu | working, 17 tests |
-| Word counts | `corpus/` | Counts the words of the Ligurian Wikipedia, so the most used spelling comes first | working, 10 tests |
+| Word counts | `corpus/` | Counts the words of the Ligurian Wikipedia, so the most used spelling comes first | working, 15 tests |
 | Terminal demo | `engine/src/demo.ts` | Try the engine from the command line | working |
 | Shared dictionary | `db/` | Words, meanings, translations, roles, review, history | working and deployed, 31 tests |
 | Export | `db/` [`export_lexicon_tsv()`] | Writes the approved words in the engine's format | working |
@@ -399,7 +399,7 @@ npm install
 npm run check
 ```
 
-`npm run check` type checks the whole project and runs all 137 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
+`npm run check` type checks the whole project and runs all 142 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
 
 Inside this repository, use `npm run typecheck` or `npx tsc`, never a globally installed `tsc`: the project pins its own TypeScript version.
 
@@ -489,8 +489,8 @@ keyman/                 the Android keyboard and its dictionary
   test/                   30 tests
   README.md               build, rules for changes, testing on a phone
 corpus/                 counting the words of the Ligurian Wikipedia
-  src/                    words, the dump and its markup, the frequency list
-  test/                   10 tests
+  src/                    words, the choice of the dump, the dump and its markup, the frequency list
+  test/                   15 tests
   README.md               how a count is made and committed
 tools/                  dictionary snapshot, word counts, Keyman packages, site assembly
 docs/
@@ -508,14 +508,14 @@ export/                 further dictionary formats, planned
 
 ## Tests
 
-137 tests guard the project, and every one runs on every push to `main` before anything is published:
+142 tests guard the project, and every one runs on every push to `main` before anything is published:
 
 * **Engine [17]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows.
 * **Database [31]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Ten of them guard the search keys: the database's own folding equals the engine's on every test word and on every letter the database accepts, a list read from the database itself; the engine loads a word holding any of those letters; and `ñ` is accepted and found by typing `n`.
 * **Lexicon manager [28]:** input checks, with a letter list identical to the real database's; the warning before `ñ` is saved under grafîa ofiçiâ, compared with the database's own spelling system codes; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180 with semicolons, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy.
 * **Web editor [17]:** finishing a word, replacing, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages; its three languages, the same as the manager's, with Spanish really translated.
 * **Android keyboard [30]:** a real build with Keyman's compiler; the compiled dictionary loaded and inspected, proving that its search keys equal the engine's on every character up to U+02FF, every test word in four forms and 5,000 pseudo-random strings whose coverage is itself tested; exactly the Ligurian letters on the layout, in both cases; rows of equal width by Keyman's own arithmetic; the layer rules; the contents of both packages; the refusal of a bad snapshot or a failing compiler, keeping earlier packages; error reporting always off.
-* **Word counts [10]:** what a word is, in capitals, with elision and with foreign letters; markup stripped from written-for-the-test wikitext, unclosed markup included; the dump read in pieces cut anywhere, articles only; the frequency list written, read back, and refused line by line when damaged; and, end to end, the corpus deciding which spelling of `penna` the editor offers first.
+* **Word counts [15]:** the choice of the dump from Wikimedia's own status files, refusing unfinished, unsigned or unreadable runs and any address but Wikimedia's; what a word is, in capitals, with elision and with foreign letters; markup stripped from written-for-the-test wikitext, unclosed markup included; the dump read in pieces cut anywhere, articles only; the frequency list written, read back, and refused line by line when damaged; and, end to end, the corpus deciding which spelling of `penna` the editor offers first.
 * **Decision records [4]:** numbered without gaps; both tables, in `docs/decisions/README.md` and here, name every record exactly as its own title does; and every "Refines" or "Supersedes" is answered by the record it points to.
 
 ## Automation
@@ -524,7 +524,7 @@ export/                 further dictionary formats, planned
 |---|---|---|
 | **Site on GitHub Pages** [`pages.yml`] | every push to `main`; every day at 03:17 UTC; by hand | runs every test on Node.js 24, and again on Node.js 22, the oldest version the project supports; takes a snapshot of the dictionary, builds the Keyman packages, the web editor and the lexicon manager, publishes them. If anything fails, the site keeps its last good version. |
 | **Keyman packages for a release** [`release-assets.yml`] | when a release is published; by hand, for an existing tag | runs every test, takes a snapshot, builds both Keyman packages and attaches them to the release. The build runs with a read only token; a separate step with write access only uploads the two files. |
-| **Frequencies from the Ligurian Wikipedia** [`frequencies.yml`] | by hand only | downloads Wikimedia's latest dump of the Ligurian Wikipedia, checks its SHA-1, counts its words and offers `lijwiki.tsv` as a file to download. It writes nothing: a maintainer reviews the file and commits it. |
+| **Frequencies from the Ligurian Wikipedia** [`frequencies.yml`] | by hand only | finds the newest finished dump of the Ligurian Wikipedia in Wikimedia's own status files, downloads it, checks its SHA-1, counts its words and offers `lijwiki.tsv` as a file to download. It writes nothing: a maintainer reviews the file and commits it. |
 
 All three run on **Ubuntu 26.04**, named explicitly rather than through `ubuntu-latest`, so that GitHub's next change of image cannot alter a build unannounced, and use the Node.js 24 versions of GitHub's actions [decision [0026](docs/decisions/0026-workflow-runtimes.md)]. Both need two repository variables, `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`; both values are public by design. GitHub pauses scheduled runs after 60 days without activity in the repository; the Actions page then offers to enable them again.
 
@@ -599,6 +599,7 @@ Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought 
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.8.1, 2026/10/17:** the frequencies workflow finds the newest finished dump in Wikimedia's own status files; its first run had failed with HTTP 404.
 * **0.8.0, 2026/10/17: real frequencies.** The words of the Ligurian Wikipedia are counted, and the editor's menu and the keyboard's suggestions put the most used spelling first. The lexicon manager warns, and asks, before a word with `ñ` is saved under grafîa ofiçiâ, which does not write that letter.
 * **0.7.0, 2026/10/17: ready for GitHub's new runners.** Both workflows run on Ubuntu 26.04 and on the Node.js 24 versions of GitHub's actions, and the project is built on Node.js 24 and still checked on Node.js 22. The CSV download is separated by semicolons, so Excel set to Italian or Spanish opens it in columns with a double click.
 * **0.6.0, 2026/10/17: the site in Spanish.** A Spanish interface beside Italian and English, in the lexicon manager, the web editor and the install page; the 20 latest additions below the search field; the dictionary downloadable as CSV as well as TSV. The letter `ñ`, written by some other Ligurian spelling systems, is accepted everywhere: a button in the manager, the search key `n`, a long press of `n` on the Android keyboard.

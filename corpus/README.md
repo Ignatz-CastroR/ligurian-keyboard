@@ -6,13 +6,16 @@ Counts the words of the Ligurian Wikipedia, so that spellings sharing one ASCII 
 
 | File | What it does |
 |---|---|
+| `src/dumps.ts` | Chooses the dump: the newest run whose articles job Wikimedia's `dumpstatus.json` reports as done, with its SHA-1 |
 | `src/wikitext.ts` | Splits a MediaWiki XML dump into pages as it arrives, keeps the articles [namespace 0, no redirects], strips the wiki markup |
 | `src/count.ts` | Finds the words of plain text the way the editor sees them, and counts them under their frequency key |
 | `src/frequency-list.ts` | Writes and reads `data/frequencies/lijwiki.tsv`, and adds its counts to a dictionary snapshot |
 | `test/corpus.test.ts` | 10 tests, on wikitext and dumps written for the tests |
+| `test/dumps.test.ts` | 5 tests, on run lists and status files written for the tests |
+| `../tools/find-dump.ts` | The command line that asks dumps.wikimedia.org which run to use, for the workflow |
 | `../tools/count-frequencies.ts` | The command line: a dump in, the frequency list out |
 
-All three source files are pure functions, without files or network, and are tested in Node.
+All four source files are pure functions, without files or network, and are tested in Node.
 
 ## What counts as a word
 
@@ -29,7 +32,7 @@ Comments; references, formulas, code, galleries, timelines and similar elements 
 
 The workflow on GitHub is the usual way [`data/frequencies/README.md`]. By hand:
 
-1. Download `lijwiki-YYYYMMDD-pages-articles.xml.bz2` from <https://dumps.wikimedia.org/lijwiki/> and check it against that run's `sha1sums.txt`.
+1. Run `node tools/find-dump.ts` to learn the newest finished run, its file, its address and its SHA-1; download that file and check it with `sha1sum` or, on Windows, `certutil -hashfile <file> SHA1`.
 2. Uncompress it: `bzip2 -dk` on Linux or macOS, 7-Zip on Windows.
 3. Run, from the repository root:
 

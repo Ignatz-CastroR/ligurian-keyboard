@@ -14,7 +14,7 @@
 
 ## Making a new count
 
-1. On GitHub: **Actions → Frequencies from the Ligurian Wikipedia → Run workflow**. Leave `latest`, or give a dump date as YYYYMMDD.
+1. On GitHub: **Actions → Frequencies from the Ligurian Wikipedia → Run workflow**. Leave `latest` to use the newest finished run, or give a run's date as YYYYMMDD. The step "Find the dump" prints every run it tried and why it took or skipped it.
 2. When the run is green, download the artifact `frequencies-lijwiki-YYYYMMDD` from the run's page and unzip it.
 3. Put `lijwiki.tsv` in this folder, replacing the old one.
 4. Read the change with `git diff --stat` and a look at the first lines: the `# Source:` line must name the new dump, and the number of words should be close to the old one.

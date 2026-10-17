@@ -1,6 +1,9 @@
 # frequencies.yml
 # Author:   Eng. José Ignacio Castro de R. and contributors
 # Date:     2026/10/17, 10:41:26, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+# Updated:  2026/10/17, 11:09:12: the dump is chosen from Wikimedia's
+#           dumpstatus.json, not guessed from an RSS file; the first
+#           run failed with HTTP 404 on the download.
 # Purpose:  Count the words of the Ligurian Wikipedia and offer the
 #           result, data/frequencies/lijwiki.tsv, as a downloadable
 #           artifact of the run.
@@ -12,8 +15,10 @@
 #           no git credentials. A person downloads the artifact, puts
 #           the file at data/frequencies/lijwiki.tsv, reads the diff and
 #           commits it; the next Pages build then ranks the dictionary
-#           with it. The dump is checked against Wikimedia's own SHA-1
-#           list before it is counted. If anything fails, no artifact is
+#           with it. The dump is the newest run whose articles job
+#           Wikimedia's dumpstatus.json reports as done, and it is
+#           checked against the SHA-1 given there before it is counted
+#           [tools/find-dump.ts]. If anything fails, no artifact is
 #           produced and the committed list stays as it was.
 # Decision: docs/decisions/0027-real-frequencies.md
 
@@ -54,30 +59,17 @@ jobs:
         id: dump
         env:
           DUMP_DATE: ${{ inputs.dump_date }}
-        run: |
-          if [ "$DUMP_DATE" = "latest" ]; then
-            DUMP_DATE="$(curl -fsSL --retry 3 -A "$USER_AGENT" \
-              https://dumps.wikimedia.org/lijwiki/latest/lijwiki-latest-pages-articles.xml.bz2-rss.xml \
-              | grep -oE 'lijwiki/[0-9]{8}' | head -n 1 | cut -d / -f 2)"
-          fi
-          if [[ ! "$DUMP_DATE" =~ ^[0-9]{8}$ ]]; then
-            echo "::error::No valid dump date [got '$DUMP_DATE']; give one as YYYYMMDD."
-            exit 1
-          fi
-          echo "date=$DUMP_DATE" >> "$GITHUB_OUTPUT"
-          echo "file=lijwiki-$DUMP_DATE-pages-articles.xml.bz2" >> "$GITHUB_OUTPUT"
+        run: node tools/find-dump.ts --wiki lijwiki --date "$DUMP_DATE"
 
       - name: Download and verify the dump
         env:
-          DUMP_DATE: ${{ steps.dump.outputs.date }}
           DUMP_FILE: ${{ steps.dump.outputs.file }}
+          DUMP_URL: ${{ steps.dump.outputs.url }}
+          DUMP_SHA1: ${{ steps.dump.outputs.sha1 }}
         run: |
-          base="https://dumps.wikimedia.org/lijwiki/$DUMP_DATE"
-          curl -fSL --retry 3 -A "$USER_AGENT" -o "$DUMP_FILE" "$base/$DUMP_FILE"
-          curl -fsSL --retry 3 -A "$USER_AGENT" "$base/lijwiki-$DUMP_DATE-sha1sums.txt" \
-            | grep -E " $DUMP_FILE\$" > dump.sha1
-          test -s dump.sha1
-          sha1sum --check dump.sha1
+          echo "Downloading $DUMP_URL"
+          curl -fSL --retry 3 -A "$USER_AGENT" -o "$DUMP_FILE" "$DUMP_URL"
+          echo "$DUMP_SHA1  $DUMP_FILE" | sha1sum --check
 
       - name: Count the words
         env:

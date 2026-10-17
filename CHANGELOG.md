@@ -20,6 +20,42 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
   beta with native speakers in Genoa.
 - 1.0: when every criterion in the README's roadmap is met.
 
+## [0.8.1] [2026/10/17] [the dump found from Wikimedia's status files]
+
+### Fixed
+- The first run of "Frequencies from the Ligurian Wikipedia" failed:
+  the download of the dump returned HTTP 404. 0.8.0 guessed the run
+  from Wikimedia's RSS file for the latest dump and built the file's
+  address by hand, and that address did not exist. The run's log
+  showed no date, so the exact cause could not be seen. Now
+  `tools/find-dump.ts` reads the list of runs on dumps.wikimedia.org,
+  newest first, and each run's own `dumpstatus.json`; it takes the
+  first run whose articles job is "done" and lists the run's
+  `pages-articles.xml.bz2`, with the SHA-1 given there. Every run
+  tried is printed with the reason it was taken or skipped, so a
+  failure now explains itself. A date typed by hand is checked the
+  same way.
+- The address is always built on dumps.wikimedia.org from the wiki,
+  the date and the file name, never taken from the downloaded JSON.
+  The wiki name and the date are validated before they are used.
+
+### Added
+- `corpus/src/dumps.ts`, the pure part of that choice, with 5 tests in
+  `corpus/test/dumps.test.ts`: the run list, a finished run, an
+  address offered by the JSON and ignored, and eight ways a run is
+  refused. 142 tests in all. The command line was also run against a
+  stand-in server: an unfinished run and a missing status file were
+  skipped, the next finished run was taken, a bad date was refused.
+
+### Changed
+- `frequencies.yml`: the steps "Find the dump" and "Download and
+  verify the dump" use the tool's results; the SHA-1 list file is no
+  longer downloaded.
+- Decision 0027, `README.md`, `corpus/README.md` and
+  `data/frequencies/README.md` describe the new choice of the dump.
+- Keyboard version 0.8.1, following the project's; the keyboard is
+  unchanged.
+
 ## [0.8.0] [2026/10/17] [real frequencies; the ñ warning]
 
 ### Added
@@ -775,7 +811,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.5.1...v0.6.0

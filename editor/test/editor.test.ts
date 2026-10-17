@@ -17,6 +17,7 @@ import {
   applyEdit, choose, menuLength, moveHighlight, planConversion, planRevert,
   wordBeforeSeparator, type Applied, type Edit, type Plan,
 } from "../src/ime.ts";
+import { messagesFor } from "../src/messages.ts";
 import { checkSnapshot, formatUtc, readSnapshot, stampSnapshot, type Snapshot } from "../src/snapshot.ts";
 
 const FIXTURE: string = readFileSync(new URL("../../data/fixtures/test-lexicon.tsv", import.meta.url), "utf8");
@@ -162,4 +163,11 @@ test("a broken or empty snapshot is refused", () => {
   assert.equal(problems.length, 2);
   assert.match(problems[0] ?? "", /^line 2: invalid freq/);
   assert.equal(checkSnapshot("nonsense").length, 2, "missing columns, and nothing approved");
+});
+
+test("the dictionary status agrees in number in both languages", () => {
+  assert.equal(messagesFor("it").ready(1, null), "Dizionario: 1 forma.");
+  assert.equal(messagesFor("it").ready(2, null), "Dizionario: 2 forme.");
+  assert.equal(messagesFor("en").ready(1, "2026/10/17 08:05:09 UTC"), "Dictionary: 1 form, updated 2026/10/17 08:05:09 UTC.");
+  assert.equal(messagesFor("en").ready(0, null), "Dictionary: 0 forms.");
 });

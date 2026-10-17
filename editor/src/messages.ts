@@ -40,7 +40,7 @@ const IT = {
 
   loading: "Caricamento del dizionario…",
   ready: (forms: number, takenAt: string | null): string =>
-    `Dizionario: ${forms} forme${takenAt === null ? "" : `, aggiornato al ${takenAt}`}.`,
+    `Dizionario: ${forms} ${forms === 1 ? "forma" : "forme"}${takenAt === null ? "" : `, aggiornato al ${takenAt}`}.`,
   unavailable: "Dizionario non disponibile: puoi scrivere, ma le parole non vengono convertite.",
 };
 
@@ -75,7 +75,7 @@ const EN: Messages = {
 
   loading: "Loading the dictionary…",
   ready: (forms: number, takenAt: string | null): string =>
-    `Dictionary: ${forms} forms${takenAt === null ? "" : `, updated ${takenAt}`}.`,
+    `Dictionary: ${forms} ${forms === 1 ? "form" : "forms"}${takenAt === null ? "" : `, updated ${takenAt}`}.`,
   unavailable: "Dictionary unavailable: you can type, but words are not converted.",
 };
 

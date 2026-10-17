@@ -34,7 +34,7 @@ The editor never talks to the database. When the site is built, `tools/fetch-lex
 | `src/dom.ts` | The page building helper; never `innerHTML` |
 | `src/style.css` | Light and dark look, phone layout |
 | `public/sw.js` | Offline copy of the page and the dictionary |
-| `test/editor.test.ts` | 14 tests of `ime.ts` and `snapshot.ts` |
+| `test/editor.test.ts` | 15 tests of `ime.ts`, `snapshot.ts` and the messages |
 | `vite.config.ts` | Build settings |
 
 ## Running it on your computer

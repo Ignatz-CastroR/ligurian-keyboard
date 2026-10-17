@@ -170,7 +170,7 @@ Both lists live in the database, so adding a variety or a spelling system is a s
 | Shared dictionary | `db/` | Words, meanings, translations, roles, review, history | working and deployed, 27 tests |
 | Export to TSV | `db/` [`export_lexicon_tsv()`] | Writes the approved words in the engine's format | working |
 | Lexicon manager | `admin/` | Web page to search, propose and review words | working, 14 tests |
-| Web editor | `editor/` | Web page where anyone types Ligurian with the engine and the published dictionary | working, 14 tests |
+| Web editor | `editor/` | Web page where anyone types Ligurian with the engine and the published dictionary | working, 15 tests |
 | Keyboards | `keyman/` | Keyboards for Windows, macOS, Linux, Android, iOS | planned |
 
 **Technology** [decision [0007](docs/decisions/0007-technology-stack.md)]: TypeScript everywhere code must run in a browser or a keyboard, so the folding rules are written once; PostgreSQL hosted by Supabase in Frankfurt, the region closest to Genoa; Keyman, free software by SIL International, for the keyboards on every system.
@@ -266,7 +266,7 @@ npm install
 npm run check
 ```
 
-`npm run check` type checks the whole project and runs all 72 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly, installed by `npm install`.
+`npm run check` type checks the whole project and runs all 73 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly, installed by `npm install`.
 
 ### Run the web editor locally
 
@@ -331,7 +331,7 @@ editor/                 the web editor, the front page of the site
   src/ime.ts              the input method's decisions, pure functions
   src/main.ts             the page
   public/sw.js            offline copy
-  test/                   14 tests
+  test/                   15 tests
   README.md               use, snapshot, local runs
 tools/                  build tools: dictionary snapshot, site assembly
 docs/
@@ -347,12 +347,12 @@ keyman/  export/         planned
 
 ## Tests
 
-72 tests guard the project, and every one runs on every push to `main` before anything is published:
+73 tests guard the project, and every one runs on every push to `main` before anything is published:
 
 * **Engine [17]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows.
 * **Database [27]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Six of them prove that the database's own folding equals the engine's, on every test word and every letter.
 * **Lexicon manager [14]:** input checks, and a comparison of every button the page shows with what the real database actually accepts, for every role.
-* **Web editor [14]:** finishing a word, replacing, the menu, choosing, undoing with Backspace, the filters, and the refusal of a broken or empty dictionary snapshot.
+* **Web editor [15]:** finishing a word, replacing, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages.
 
 ## Design decisions
 

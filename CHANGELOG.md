@@ -9,6 +9,13 @@ the project is in early development and anything may change.
 ### Planned
 * Export of the approved lexicon to a Keyman keyboard.
 
+## [0.4.1] 2026/10/17
+
+### Fixed
+* Web editor: the dictionary status said "1 forme" / "1 forms" for a
+  dictionary of one form; it now agrees in number in both languages.
+  One new test; 73 in all.
+
 ## [0.4.0] 2026/10/17
 
 Web editor: type plain letters, get grafîa ofiçiâ. It is now the front

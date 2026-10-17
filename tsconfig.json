@@ -17,10 +17,14 @@
   "include": [
     "engine/**/*.ts",
     "db/**/*.ts",
-    "admin/**/*.ts"
+    "admin/**/*.ts",
+    "editor/**/*.ts",
+    "tools/**/*.ts"
   ],
   "exclude": [
     "admin/dist",
+    "editor/dist",
+    "_site",
     "node_modules"
   ]
 }

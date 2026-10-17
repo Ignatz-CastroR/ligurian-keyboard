@@ -1,0 +1,69 @@
+# pages.yml
+# Author:   Ignatz-CastroR and contributors
+# Date:     2026/10/17, 02:16:42, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+# Purpose:  Check the project, take a fresh snapshot of the published
+#           dictionary, build the web editor and the lexicon manager,
+#           and publish both on GitHub Pages:
+#             /         the web editor
+#             /admin/   the lexicon manager
+# When:     on every push to main; every day at 03:17 UTC [21:17 in
+#           Costa Rica], so newly approved words reach the editor within
+#           a day; and by hand, Actions, "Site on GitHub Pages", Run
+#           workflow, to publish new words at once.
+# Contract: Needs two repository VARIABLES [not secrets: both values are
+#           public by design]: SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.
+#           Settings, Pages, Source must be set to "GitHub Actions".
+#           If the tests, the snapshot or a build fail, nothing is
+#           deployed and the site keeps its last good version.
+#           GitHub disables scheduled runs in a repository with no
+#           activity for 60 days; Actions then shows a button to enable
+#           the workflow again. Replaces admin-pages.yml [0.3.0].
+#           Decision: docs/decisions/0019-editor-dictionary-snapshot.md
+
+name: Site on GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run lexicon:snapshot
+      - run: npm run site:build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

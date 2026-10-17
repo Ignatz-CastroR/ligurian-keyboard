@@ -24,6 +24,8 @@ A decision is never edited away. If it changes, a new record replaces it, and th
 | [0016](0016-database-first-then-interface.md) | Database first, then the lexicon manager | 2026/10/11 | accepted |
 | [0017](0017-ascii-search-keys-in-the-database.md) | ASCII search keys stored in the database | 2026/10/11 | accepted |
 | [0018](0018-lexicon-manager-design.md) | Design of the lexicon manager | 2026/10/11 | accepted |
+| [0019](0019-editor-dictionary-snapshot.md) | The web editor reads a daily snapshot of the dictionary | 2026/10/17 | accepted |
+| [0020](0020-web-editor-design.md) | Design of the web editor | 2026/10/17 | accepted |
 
 ## Still open
 

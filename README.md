@@ -2,6 +2,8 @@
 
 **Scrivi in ligure, in grafîa ofiçiâ, da qualsiasi tastiera.** Digiti `zeneize`, premi la barra spaziatrice e ottieni `zenéize`. Quando più grafie corrispondono agli stessi tasti, un piccolo menu ti lascia scegliere quella giusta, come nelle tastiere giapponesi.
 
+**Provalo subito:** <https://ignatz-castror.github.io/ligurian-keyboard/>
+
 Il progetto nasce per sostenere la rivitalizzazione della lingua ligure. Codice e dati sono aperti: chiunque voglia contribuire con parole, correzioni o codice è il benvenuto. Le associazioni genovesi interessate possono aprire una *issue* o scrivere al manutentore.
 
 La documentazione completa, qui sotto, è in inglese.
@@ -9,6 +11,8 @@ La documentazione completa, qui sotto, è in inglese.
 ---
 
 **Write Ligurian in grafîa ofiçiâ from any keyboard.** Type plain ASCII, `zeneize`, press space, get `zenéize`. When several spellings share the same keys, a small menu lets you pick, as Japanese input methods do.
+
+**Try it now:** <https://ignatz-castror.github.io/ligurian-keyboard/>
 
 The goal is Ligurian revitalization. Code and data are open; contributions are welcome.
 
@@ -20,18 +24,19 @@ The goal is Ligurian revitalization. Code and data are open; contributions are w
 4. [Spelling systems and varieties](#spelling-systems-and-varieties)
 5. [The parts of the project](#the-parts-of-the-project)
 6. [The shared dictionary](#the-shared-dictionary)
-7. [The lexicon manager](#the-lexicon-manager)
-8. [Where the words come from](#where-the-words-come-from)
-9. [Getting started](#getting-started)
-10. [Repository layout](#repository-layout)
-11. [Tests](#tests)
-12. [Design decisions](#design-decisions)
-13. [Open questions](#open-questions)
-14. [Roadmap](#roadmap)
-15. [What is new in each version](#what-is-new-in-each-version)
-16. [Contributing](#contributing)
-17. [Licenses](#licenses)
-18. [Acknowledgements and independence](#acknowledgements-and-independence)
+7. [The web editor](#the-web-editor)
+8. [The lexicon manager](#the-lexicon-manager)
+9. [Where the words come from](#where-the-words-come-from)
+10. [Getting started](#getting-started)
+11. [Repository layout](#repository-layout)
+12. [Tests](#tests)
+13. [Design decisions](#design-decisions)
+14. [Open questions](#open-questions)
+15. [Roadmap](#roadmap)
+16. [What is new in each version](#what-is-new-in-each-version)
+17. [Contributing](#contributing)
+18. [Licenses](#licenses)
+19. [Acknowledgements and independence](#acknowledgements-and-independence)
 
 ## What this project is
 
@@ -74,7 +79,7 @@ The model is the Japanese input method: nobody in Japan types kanji directly; th
 ### What it is not
 
 * **Not a new spelling.** The project follows the grafîa ofiçiâ as published; it does not invent or reform anything.
-* **Not a separate text editor.** People write in WhatsApp, Facebook, Word and Gmail; the keyboard must work there [decision [0001](docs/decisions/0001-input-method-not-editor.md)]. A web editor is planned only as a demonstration and a tool for long texts.
+* **Not a separate text editor.** People write in WhatsApp, Facebook, Word and Gmail; the keyboard must work there [decision [0001](docs/decisions/0001-input-method-not-editor.md)]. The web editor is a demonstration and a tool for long texts until the keyboards exist.
 * **Not a copy of existing dictionaries.** Every word is contributed freely and lawfully [see [Where the words come from](#where-the-words-come-from)].
 
 ## How typing works
@@ -115,7 +120,7 @@ npm run demo
 A Zêna çitæ a pénn-a
 ```
 
-`zena` and `citae` have one spelling each and are replaced silently; `penna` is ambiguous, so the menu asks.
+`zena` and `citae` have one spelling each and are replaced silently; `penna` is ambiguous, so the menu asks. The [web editor](#the-web-editor) does the same in the browser, with the real dictionary.
 
 ## Spelling systems and varieties
 
@@ -165,7 +170,7 @@ Both lists live in the database, so adding a variety or a spelling system is a s
 | Shared dictionary | `db/` | Words, meanings, translations, roles, review, history | working and deployed, 27 tests |
 | Export to TSV | `db/` [`export_lexicon_tsv()`] | Writes the approved words in the engine's format | working |
 | Lexicon manager | `admin/` | Web page to search, propose and review words | working, 14 tests |
-| Web editor | `editor/` | Web page where anyone types Ligurian with the engine | planned |
+| Web editor | `editor/` | Web page where anyone types Ligurian with the engine and the published dictionary | working, 14 tests |
 | Keyboards | `keyman/` | Keyboards for Windows, macOS, Linux, Android, iOS | planned |
 
 **Technology** [decision [0007](docs/decisions/0007-technology-stack.md)]: TypeScript everywhere code must run in a browser or a keyboard, so the folding rules are written once; PostgreSQL hosted by Supabase in Frankfurt, the region closest to Genoa; Keyman, free software by SIL International, for the keyboards on every system.
@@ -207,9 +212,22 @@ pénna  [noun, zeneize, ofiçiâ]
 * **No lost edits.** If two reviewers change the same entry at once, the second is told and shown the new version instead of silently overwriting the first.
 * **Only approved words are published**, and only published words reach the keyboard.
 
+## The web editor
+
+The web editor is where anyone can write Ligurian today, on a computer or a phone, with nothing to install: <https://ignatz-castror.github.io/ligurian-keyboard/>. Full reference: [editor/README.md](editor/README.md).
+
+* **Type plain letters, press space,** and the word becomes grafîa ofiçiâ; a menu offers the spellings when there are several.
+* **Keyboard or touch:** numbers, arrows, Enter and Escape on a computer; a bar of spellings above the keyboard on a phone.
+* **Backspace right after a conversion undoes it.**
+* **Filters** by variety and spelling system, `zeneize` and `ofiçiâ` by default.
+* **Copy, download, clear;** the text stays in the browser and is never sent anywhere.
+* **Works offline** after the first visit.
+
+It reads a daily snapshot of the published dictionary, so a word approved today appears tomorrow [decision [0019](docs/decisions/0019-editor-dictionary-snapshot.md)]. On a phone, the text must still be copied into the app where it is going; typing directly into every app is the job of the keyboards.
+
 ## The lexicon manager
 
-The lexicon manager is the web page where the team works on the dictionary. It is built and published automatically on GitHub Pages at <https://ignatz-castror.github.io/ligurian-keyboard/>. Full reference: [admin/README.md](admin/README.md).
+The lexicon manager is the web page where the team works on the dictionary. It is built and published automatically on GitHub Pages at <https://ignatz-castror.github.io/ligurian-keyboard/admin/>. Full reference: [admin/README.md](admin/README.md).
 
 * **Search by plain ASCII**, the same way one types: `zena` finds `Zêna`, and an inflected form finds its lemma. Open to everyone.
 * **Entry pages** with forms, senses, translations and, for reviewers, the full history of every change.
@@ -237,7 +255,7 @@ Today the real dictionary is just beginning. The file `data/fixtures/test-lexico
 
 * **Node.js 22.18 or newer**, which runs TypeScript files directly.
 * **Git.**
-* Only for the lexicon manager: the address and publishable key of a Supabase project.
+* Only for the lexicon manager and for snapshots of a real dictionary: the address and publishable key of a Supabase project.
 
 ### Install and check
 
@@ -248,7 +266,16 @@ npm install
 npm run check
 ```
 
-`npm run check` type checks the whole project and runs all 58 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly, installed by `npm install`.
+`npm run check` type checks the whole project and runs all 72 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly, installed by `npm install`.
+
+### Run the web editor locally
+
+```
+npm run lexicon:fixture
+npm run editor:dev
+```
+
+This uses the 93-form test dictionary and needs no database. With a `.env` [below], `npm run lexicon:snapshot` fetches your real dictionary instead.
 
 ### Run the lexicon manager locally
 
@@ -269,10 +296,17 @@ npm run check
 | `npm run test:engine` | Engine tests |
 | `npm run test:db` | Database tests |
 | `npm run test:admin` | Lexicon manager tests |
+| `npm run test:editor` | Web editor tests |
 | `npm run demo` | Terminal demo of the keyboard |
 | `npm run admin:dev` | Lexicon manager on your computer, reloading on every change |
 | `npm run admin:build` | Build the lexicon manager into `admin/dist/` |
 | `npm run admin:preview` | Serve that build locally |
+| `npm run lexicon:fixture` | Give the web editor the test dictionary |
+| `npm run lexicon:snapshot` | Give the web editor a snapshot of the real dictionary [needs `.env`] |
+| `npm run editor:dev` | Web editor on your computer, reloading on every change |
+| `npm run editor:build` | Build the web editor into `editor/dist/` |
+| `npm run site:build` | Build both and join them in `_site/`, as GitHub Pages serves them |
+| `npm run site:preview` | Serve `_site/` locally |
 
 Inside this repository, use `npm run typecheck` or `npx tsc`, never a globally installed `tsc`: the project pins its own TypeScript version.
 
@@ -289,10 +323,17 @@ db/                     the shared dictionary
   migrations/             0001 to 0004, run in order on Supabase
   test/                   27 tests on PGlite; the Supabase stand in is for tests only
   README.md               data model, roles, client rules, deployment
-admin/                  the lexicon manager
+admin/                  the lexicon manager, published under /admin/
   src/                    TypeScript, one file per page under views/
   test/                   14 tests
   README.md               pages, accounts, publishing
+editor/                 the web editor, the front page of the site
+  src/ime.ts              the input method's decisions, pure functions
+  src/main.ts             the page
+  public/sw.js            offline copy
+  test/                   14 tests
+  README.md               use, snapshot, local runs
+tools/                  build tools: dictionary snapshot, site assembly
 docs/
   skeleton-spec.md        the folding rules and their sources
   lexicon-format.md       the word list exchange format
@@ -300,17 +341,18 @@ docs/
 data/
   fixtures/test-lexicon.tsv   93 forms for tests only
   LICENSE.md              CC BY-SA 4.0 for lexicon data
-editor/  keyman/  export/ planned
-.github/workflows/      tests, build and publication of the lexicon manager
+keyman/  export/         planned
+.github/workflows/      tests, daily snapshot, build and publication of the site
 ```
 
 ## Tests
 
-58 tests guard the project, and every one runs on every push to `main` before anything is published:
+72 tests guard the project, and every one runs on every push to `main` before anything is published:
 
 * **Engine [17]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows.
 * **Database [27]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Six of them prove that the database's own folding equals the engine's, on every test word and every letter.
 * **Lexicon manager [14]:** input checks, and a comparison of every button the page shows with what the real database actually accepts, for every role.
+* **Web editor [14]:** finishing a word, replacing, the menu, choosing, undoing with Backspace, the filters, and the refusal of a broken or empty dictionary snapshot.
 
 ## Design decisions
 
@@ -336,6 +378,8 @@ Every important decision is recorded in [docs/decisions/](docs/decisions/README.
 | [0016](docs/decisions/0016-database-first-then-interface.md) | Database first, then the lexicon manager |
 | [0017](docs/decisions/0017-ascii-search-keys-in-the-database.md) | ASCII search keys stored in the database |
 | [0018](docs/decisions/0018-lexicon-manager-design.md) | Design of the lexicon manager |
+| [0019](docs/decisions/0019-editor-dictionary-snapshot.md) | The web editor reads a daily snapshot of the dictionary |
+| [0020](docs/decisions/0020-web-editor-design.md) | Design of the web editor |
 
 ## Open questions
 
@@ -348,16 +392,16 @@ These need the judgment of native speakers, and contributions are especially wel
 
 ## Roadmap
 
-1. **Now:** the first real words, entered by the first contributors.
-2. **Web editor** [`editor/`]: a page where anyone types Ligurian with the engine and the published dictionary.
-3. **Keyboards** [`keyman/`]: the engine and the dictionary packaged for every operating system and phone.
-4. **Real frequencies**, counted from a freely licensed body of text.
-5. **Partnerships** with the Académia Ligùstica do Brénno and A Compagna.
+1. **Now:** the first real words, entered by the first contributors, and the first texts written in the web editor.
+2. **Keyboards** [`keyman/`]: the engine and the dictionary packaged for every operating system and phone.
+3. **Real frequencies**, counted from a freely licensed body of text.
+4. **Partnerships** with the Académia Ligùstica do Brénno and A Compagna.
 
 ## What is new in each version
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.4.0, 2026/10/17: the web editor.** The front page of the site: type plain letters and get grafîa ofiçiâ, with the candidate menu, undo, filters, copy and download, on computers and phones, offline after one visit. A daily snapshot of the dictionary; the lexicon manager moves to `/admin/`.
 * **0.3.0, 2026/10/11: the lexicon manager.** The web page to search, propose and review words; search by plain ASCII through keys computed by the database; publication on GitHub Pages. The database is deployed on Supabase.
 * **0.2.0, 2026/10/11: the shared dictionary.** The PostgreSQL database with lemmas, forms, numbered senses and translations; roles and review enforced by the database; history; export to the engine's format; the first design decision records.
 * **0.1.0, 2026/10/10: the conversion engine.** ASCII folding based on the Académia's alphabet, the word list loader, conversion with the candidate menu, the terminal demo.

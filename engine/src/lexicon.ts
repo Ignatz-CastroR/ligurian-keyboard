@@ -59,6 +59,16 @@ export class Lexicon {
     }
   }
 
+  // Every indexed entry. The web editor uses it to list the varieties
+  // and spelling systems present in a dictionary snapshot.
+  public entries(): LexiconEntry[] {
+    const all: LexiconEntry[] = [];
+    for (const bucket of this.index.values()) {
+      all.push(...bucket);
+    }
+    return all;
+  }
+
   // Candidates for a typed key, best first. Empty array when unknown.
   public lookup(typed: string, filter: LookupFilter = {}): LexiconEntry[] {
     const bucket: LexiconEntry[] = this.index.get(skeleton(typed)) ?? [];

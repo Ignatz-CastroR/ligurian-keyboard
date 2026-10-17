@@ -7,8 +7,52 @@ the project is in early development and anything may change.
 ## [Unreleased]
 
 ### Planned
-* Web editor [`editor/`].
 * Export of the approved lexicon to a Keyman keyboard.
+
+## [0.4.0] 2026/10/17
+
+Web editor: type plain letters, get grafîa ofiçiâ. It is now the front
+page of the site; the lexicon manager moves to `/admin/`.
+
+### Added
+* `editor/`: the web editor [TypeScript, Vite, no framework].
+  * Conversion when a space or a new line finishes a word, read from
+    the `input` event so that phone keyboards work; nothing happens
+    while a phone keyboard is composing, and pasted text is never
+    converted.
+  * Candidate menu: numbers, arrows, Enter, Tab, Escape, touch; a last
+    entry to keep the word as typed. Under the word with a mouse, a
+    bar above the on-screen keyboard on touch screens.
+  * Typing on with the menu open accepts the highlighted spelling.
+  * Backspace right after a conversion undoes it; Ctrl+Z also works.
+  * Filters by variety and spelling system, `zeneize` and `ofiçiâ` by
+    default.
+  * Copy, download as `.txt`, clear; the draft is kept in the browser.
+  * Offline use after the first visit, through a service worker.
+  * Interface in Italian and English, sharing the language choice
+    with the lexicon manager.
+  * `src/ime.ts`: every decision as a pure function; 14 tests in
+    `test/editor.test.ts`.
+* `tools/fetch-lexicon.ts`: daily dictionary snapshot from
+  `export_lexicon_tsv()`, checked and stamped; a broken or empty
+  snapshot stops the build.
+* `tools/use-fixture-lexicon.ts`: the test fixture as a local
+  dictionary, no database needed.
+* `tools/assemble-site.ts`: joins the editor and the manager into
+  `_site/`.
+* `Lexicon.entries()` in the engine: every indexed entry.
+* npm scripts `test:editor`, `editor:dev`, `editor:build`,
+  `lexicon:snapshot`, `lexicon:fixture`, `site:build`, `site:preview`.
+* Decisions 0019 [daily dictionary snapshot] and 0020 [design of the
+  web editor].
+
+### Changed
+* `.github/workflows/admin-pages.yml` replaced by `pages.yml`: it also
+  takes the snapshot, builds the editor, publishes the editor at the
+  root and the manager under `/admin/`, and runs every day at 03:17 UTC.
+* The lexicon manager links to the editor in its header.
+* Root README, `admin/README.md` and `editor/README.md` updated.
+* `.gitignore`: `_site/` and `editor/public/lexicon.tsv`.
 
 ## [0.3.0] 2026/10/11
 

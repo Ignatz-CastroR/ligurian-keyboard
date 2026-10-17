@@ -145,6 +145,7 @@ function drawHeader(state: State): void {
       h("a", { href: "#/search/", class: "brand-title" }, t.appTitle),
       h("span", { class: "muted" }, t.appSubtitle)),
     h("nav", {},
+      link("../", t.navEditor),
       link("#/search/", t.navSearch),
       canPropose(ctx.role) && link("#/new", t.navNew),
       ctx.userId !== null && link("#/review", t.navReview),

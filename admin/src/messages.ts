@@ -14,6 +14,7 @@ const IT = {
   appTitle: "Lessico ligure",
   appSubtitle: "Gestore del dizionario condiviso",
 
+  navEditor: "Scrivi",
   navSearch: "Cerca",
   navNew: "Nuovo lemma",
   navReview: "Da revisionare",
@@ -157,6 +158,7 @@ const EN: Messages = {
   appTitle: "Ligurian lexicon",
   appSubtitle: "Manager of the shared dictionary",
 
+  navEditor: "Write",
   navSearch: "Search",
   navNew: "New lemma",
   navReview: "To review",

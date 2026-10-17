@@ -79,5 +79,7 @@ There is no sign up page. To add a person:
 
    Use **Variables**, not Secrets: both values are public by design, and variables stay readable for checking.
 2. **Settings → Pages → Build and deployment → Source:** GitHub Actions.
-3. Push to `main`. The workflow `.github/workflows/admin-pages.yml` runs every test, builds the manager and publishes it at `https://<user>.github.io/ligurian-keyboard/`.
-4. In Supabase → **Authentication → URL Configuration**, set the **Site URL** to that address.
+3. Push to `main`. The workflow `.github/workflows/pages.yml` runs every test, takes a snapshot of the dictionary, builds the web editor and the manager, and publishes them together: the editor at `https://<user>.github.io/ligurian-keyboard/`, the manager at `https://<user>.github.io/ligurian-keyboard/admin/` [since 0.4.0; until then the manager was at the root].
+4. In Supabase → **Authentication → URL Configuration**, set the **Site URL** to the manager's address, ending in `/admin/`, and add it to the **Redirect URLs**.
+
+When the manager runs locally [`npm run admin:dev`], its "Scrivi" link leads nowhere useful: the editor is a separate local server [`npm run editor:dev`, see [editor/README.md](../editor/README.md)].

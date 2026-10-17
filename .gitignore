@@ -44,6 +44,15 @@ node_modules/
 dist/
 build/
 
+# The assembled Pages site [editor at the root, manager under admin/],
+# rebuilt by npm run site:build and by the workflow.
+_site/
+
+# The web editor's dictionary snapshot: taken from the database at
+# build time [npm run lexicon:snapshot] or copied from the test fixture
+# [npm run lexicon:fixture]. Generated, never committed.
+editor/public/lexicon.tsv
+
 # Incremental compilation cache written by the TypeScript compiler.
 *.tsbuildinfo
 

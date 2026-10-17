@@ -4,6 +4,7 @@
 * **Date:** 2026/10/17
 * **Decided by:** Eng. José Ignacio Castro de R.
 * **Refines:** [0018](0018-lexicon-manager-design.md), on the interface languages and the downloads; [0020](0020-web-editor-design.md) and [0022](0022-keyman-keyboard-design.md), on the languages of the web editor and of the install page
+* **Superseded in part by:** [0025](0025-csv-semicolon.md), on the CSV separator
 
 ## Context
 
@@ -32,7 +33,7 @@ The lexicon manager [decision [0018](0018-lexicon-manager-design.md)] was in Ita
 * **RFC 4180:** comma separated; fields quoted only when needed; double quotes doubled; every line ending with CRLF.
 * **A UTF-8 byte order mark at the start,** without which Excel misreads `â ê ô æ ç`.
 * **The TSV's comment lines are dropped,** since CSV has no comments. The license, CC BY-SA 4.0, is stated on every page of the site and in the repository.
-* **Comma, not semicolon.** Excel set to Italian or Spanish expects semicolons and, when the file is opened with a double click, shows each row in one column; importing it through Excel's Data menu, or opening it in LibreOffice, Google Sheets or Numbers, works. The standard separator was preferred over one tuned to one program's regional setting.
+* **Comma, not semicolon** [superseded by [0025](0025-csv-semicolon.md): semicolon since 0.7.0]. Excel set to Italian or Spanish expects semicolons and, when the file is opened with a double click, shows each row in one column; importing it through Excel's Data menu, or opening it in LibreOffice, Google Sheets or Numbers, works. The standard separator was preferred over one tuned to one program's regional setting.
 
 ## Consequences
 

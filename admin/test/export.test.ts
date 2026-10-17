@@ -2,20 +2,23 @@
  * export.test.ts
  * Author:   Ignatz-CastroR and contributors
  * Date:     2026/10/17, 07:30:01, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/17, 08:50:12: semicolon separated [decision 0025].
  * Purpose:  Tests of the TSV to CSV conversion [admin/src/export.ts]:
- *           RFC 4180 quoting, line endings, the byte order mark, and a
- *           round trip back to the original rows.
+ *           RFC 4180 quoting with a semicolon as the separator, line
+ *           endings, the byte order mark, and a round trip back to the
+ *           original rows.
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CSV_BOM, csvField, tsvToCsv } from "../src/export.ts";
+import { CSV_BOM, CSV_SEPARATOR, csvField, tsvToCsv } from "../src/export.ts";
 
 const FIXTURE: string = readFileSync(new URL("../../data/fixtures/test-lexicon.tsv", import.meta.url), "utf8");
 
-// A strict RFC 4180 reader, written independently of the code under test.
-function parseCsv(csv: string): string[][] {
+// A strict RFC 4180 reader, written independently of the code under
+// test; the separator is a parameter, a semicolon unless told otherwise.
+function parseCsv(csv: string, separator: string = ";"): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field: string = "";
@@ -37,7 +40,7 @@ function parseCsv(csv: string): string[][] {
     } else if (ch === "\"") {
       quoted = true;
       i += 1;
-    } else if (ch === ",") {
+    } else if (ch === separator) {
       row.push(field);
       field = "";
       i += 1;
@@ -61,11 +64,16 @@ function dataLines(tsv: string): string[][] {
   return tsv.split(/\r?\n/).filter((l) => l.trim() !== "" && !l.startsWith("#")).map((l) => l.split("\t"));
 }
 
-test("quotes a field only when RFC 4180 requires it", () => {
+test("the separator is the semicolon", () => {
+  assert.equal(CSV_SEPARATOR, ";");
+});
+
+test("quotes a field only when it has to", () => {
   assert.equal(csvField("Zêna"), "Zêna");
   assert.equal(csvField("l'ægua"), "l'ægua", "the apostrophe needs no quotes");
   assert.equal(csvField("canpànn-a"), "canpànn-a");
-  assert.equal(csvField("a,b"), "\"a,b\"");
+  assert.equal(csvField("a;b"), "\"a;b\"", "the separator itself");
+  assert.equal(csvField("a,b"), "a,b", "a comma is ordinary text now");
   assert.equal(csvField("say \"hi\""), "\"say \"\"hi\"\"\"");
   assert.equal(csvField("two\nlines"), "\"two\nlines\"");
   assert.equal(csvField(" padded "), "\" padded \"", "surrounding spaces survive spreadsheets");
@@ -75,7 +83,7 @@ test("quotes a field only when RFC 4180 requires it", () => {
 test("starts with a byte order mark and ends every line with CRLF", () => {
   const csv: string = tsvToCsv("form\tfreq\nZêna\t1\n");
   assert.ok(csv.startsWith(CSV_BOM));
-  assert.equal(csv, `${CSV_BOM}form,freq\r\nZêna,1\r\n`);
+  assert.equal(csv, `${CSV_BOM}form;freq\r\nZêna;1\r\n`);
 });
 
 test("drops comment and blank lines, keeps the header and every row in order", () => {
@@ -92,8 +100,8 @@ test("drops comment and blank lines, keeps the header and every row in order", (
 });
 
 test("a byte order mark in the TSV is not carried into the first field", () => {
-  const csv: string = tsvToCsv("﻿form\tfreq\nanâ\t1\n");
-  assert.equal(csv.indexOf("﻿", 1), -1, "only the CSV's own mark, at the start");
+  const csv: string = tsvToCsv("\uFEFFform\tfreq\nanâ\t1\n");
+  assert.equal(csv.indexOf("\uFEFF", 1), -1, "only the CSV's own mark, at the start");
   assert.deepEqual(parseCsv(csv.slice(CSV_BOM.length))[0], ["form", "freq"]);
 });
 
@@ -104,7 +112,8 @@ test("round trip: the CSV of the 93 test forms reads back to exactly the TSV row
 });
 
 test("hard fields survive the round trip", () => {
-  const fields: string[] = ["a,b", "say \"hi\"", " x ", "l'ægua", "Ç,Æ\""];
-  const rows: string[][] = parseCsv(tsvToCsv(`h1\th2\th3\th4\th5\n${fields.join("\t")}\n`).slice(CSV_BOM.length));
-  assert.deepEqual(rows[1], fields);
+  const fields: string[] = ["a,b", "say \"hi\"", " x ", "l'ægua", "Ç,Æ\"", "x;y", ";"];
+  const csv: string = tsvToCsv(`h1\th2\th3\th4\th5\th6\th7\n${fields.join("\t")}\n`).slice(CSV_BOM.length);
+  assert.deepEqual(parseCsv(csv)[1], fields);
 });
+

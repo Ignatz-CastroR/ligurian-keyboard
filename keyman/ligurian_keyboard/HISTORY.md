@@ -1,5 +1,9 @@
 # Ligure [grafîa ofiçiâ]: keyboard history
 
+## 0.7.0 2026/10/17
+
+* No change to the keyboard; its version follows the project's.
+
 ## 0.6.0 2026/10/17
 
 * `ñ` on a long press of `n`, `Ñ` with Shift or caps lock: the letter some Ligurian spelling systems write, now accepted by the dictionary.

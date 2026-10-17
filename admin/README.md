@@ -32,7 +32,7 @@ The database enforces all of this [db/README.md](../db/README.md); the page only
 Both buttons in the header download the published dictionary, from the same export:
 
 * **TSV:** the engine's own format [`docs/lexicon-format.md`], with comment lines stating the license.
-* **CSV:** the same rows for spreadsheets, RFC 4180: comma separated, CRLF line endings, a UTF-8 byte order mark so that Excel shows the Ligurian letters correctly. Excel set to Italian or Spanish expects semicolons: open the file through **Data → From Text/CSV** instead of a double click, or use LibreOffice, Google Sheets or Numbers.
+* **CSV:** the same rows for spreadsheets, separated by **semicolons**, as Excel set to Italian or Spanish expects, so a double click opens the file in columns; otherwise RFC 4180: fields quoted only when they hold a semicolon, a double quote, a line break or surrounding spaces, CRLF line endings, and a UTF-8 byte order mark so that Excel shows the Ligurian letters correctly [decision [0025](../docs/decisions/0025-csv-semicolon.md)]. Excel set to English expects commas: open the file there through **Data → From Text/CSV**; LibreOffice asks for the separator when it opens the file, and Google Sheets detects it when importing.
 
 Every field for a Ligurian spelling has buttons for the special letters `à â ä è é ê ë ì î ï ò ó ô ö ù û ü æ ç`, then `ñ`, which some other Ligurian spelling systems write [decision [0024](../docs/decisions/0024-letter-enye.md)]; hold Shift for the upper case letter. A word with `ñ` is entered under its own spelling system, not `ofiçiâ`.
 
@@ -53,7 +53,7 @@ Every field for a Ligurian spelling has buttons for the special letters `à â �
 | `src/style.css` | Light and dark look |
 | `test/forms.test.ts` | Input checks, including agreement with the database's letter list |
 | `test/permissions.test.ts` | Every button rule checked against the real database rules |
-| `test/export.test.ts` | The CSV conversion, against RFC 4180 and in a round trip |
+| `test/export.test.ts` | The CSV conversion, against RFC 4180 with semicolons, and in a round trip |
 | `test/messages.test.ts` | The three languages: no empty text, no lost placeholder, no untranslated copy |
 | `vite.config.ts` | Build settings |
 

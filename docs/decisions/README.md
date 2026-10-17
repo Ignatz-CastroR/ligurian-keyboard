@@ -30,6 +30,8 @@ A decision is never edited away. If it changes, a new record replaces it, and th
 | [0022](0022-keyman-keyboard-design.md) | Design of the Keyman keyboard and dictionary | 2026/10/17 | accepted |
 | [0023](0023-lexicon-manager-spanish-history-csv.md) | Lexicon manager in Spanish, latest additions, CSV download | 2026/10/17 | accepted |
 | [0024](0024-letter-enye.md) | The letter ñ | 2026/10/17 | accepted |
+| [0025](0025-csv-semicolon.md) | The CSV download is separated by semicolons | 2026/10/17 | accepted |
+| [0026](0026-workflow-runtimes.md) | Workflow runners and runtimes | 2026/10/17 | accepted |
 
 ## Still open
 

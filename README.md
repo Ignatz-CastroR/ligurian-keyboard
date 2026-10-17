@@ -237,7 +237,7 @@ Both lists live in the database, so adding a variety or a spelling system is a s
 | Terminal demo | `engine/src/demo.ts` | Try the engine from the command line | working |
 | Shared dictionary | `db/` | Words, meanings, translations, roles, review, history | working and deployed, 31 tests |
 | Export | `db/` [`export_lexicon_tsv()`] | Writes the approved words in the engine's format | working |
-| Lexicon manager | `admin/` | Web page to search, propose and review words, in Italian, English and Spanish | working, 25 tests |
+| Lexicon manager | `admin/` | Web page to search, propose and review words, in Italian, English and Spanish | working, 26 tests |
 | Web editor | `editor/` | Web page where anyone types Ligurian with the engine and the published dictionary, in Italian, English and Spanish | working, 17 tests |
 | Android keyboard | `keyman/` | Keyman keyboard and dictionary for Android phones and tablets, rebuilt daily | working, 30 tests; to be tested on real phones |
 | Other exports | `export/` | Further formats of the dictionary | planned |
@@ -360,7 +360,7 @@ Keyman pairs the two packages through their language code, `lij`, the ISO 639-3 
 * **Proposals** with buttons for the special letters, `ñ` included, and a warning when a lemma with the same skeleton already exists.
 * **A review queue**, oldest proposals first.
 * **Roles and profiles**, managed by admins.
-* **Downloads** of the approved dictionary: **TSV**, the engine's format, and **CSV** for spreadsheets [RFC 4180, with a byte order mark so that Excel shows the Ligurian letters; with Excel set to Italian or Spanish, open it through Data, From Text/CSV].
+* **Downloads** of the approved dictionary: **TSV**, the engine's format, and **CSV** for spreadsheets [separated by semicolons, as Excel set to Italian or Spanish expects, so a double click opens it in columns; with a byte order mark so that Excel shows the Ligurian letters; with Excel set to English, open it through Data, From Text/CSV].
 * **Interface in Italian**, the contributors' language, **English** and **Spanish**, chosen from a menu in the header.
 
 ## Where the words come from
@@ -397,7 +397,7 @@ npm install
 npm run check
 ```
 
-`npm run check` type checks the whole project and runs all 120 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
+`npm run check` type checks the whole project and runs all 121 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
 
 Inside this repository, use `npm run typecheck` or `npx tsc`, never a globally installed `tsc`: the project pins its own TypeScript version.
 
@@ -468,7 +468,7 @@ db/                     the shared dictionary
   README.md               data model, roles, client rules, deployment
 admin/                  the lexicon manager, published under /admin/
   src/                    TypeScript, one file per page under views/
-  test/                   25 tests
+  test/                   26 tests
   README.md               pages, accounts, downloads, publishing
 editor/                 the web editor, the front page of the site
   src/ime.ts              the input method's decisions, pure functions
@@ -497,11 +497,11 @@ export/                 further dictionary formats, planned
 
 ## Tests
 
-120 tests guard the project, and every one runs on every push to `main` before anything is published:
+121 tests guard the project, and every one runs on every push to `main` before anything is published:
 
 * **Engine [17]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows.
 * **Database [31]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Ten of them guard the search keys: the database's own folding equals the engine's on every test word and on every letter the database accepts, a list read from the database itself; the engine loads a word holding any of those letters; and `ñ` is accepted and found by typing `n`.
-* **Lexicon manager [25]:** input checks, with a letter list identical to the real database's; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy.
+* **Lexicon manager [26]:** input checks, with a letter list identical to the real database's; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180 with semicolons, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy.
 * **Web editor [17]:** finishing a word, replacing, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages; its three languages, the same as the manager's, with Spanish really translated.
 * **Android keyboard [30]:** a real build with Keyman's compiler; the compiled dictionary loaded and inspected, proving that its search keys equal the engine's on every character up to U+02FF, every test word in four forms and 5,000 pseudo-random strings whose coverage is itself tested; exactly the Ligurian letters on the layout, in both cases; rows of equal width by Keyman's own arithmetic; the layer rules; the contents of both packages; the refusal of a bad snapshot or a failing compiler, keeping earlier packages; error reporting always off.
 
@@ -509,10 +509,10 @@ export/                 further dictionary formats, planned
 
 | Workflow | When | What |
 |---|---|---|
-| **Site on GitHub Pages** [`pages.yml`] | every push to `main`; every day at 03:17 UTC; by hand | runs every test, takes a snapshot of the dictionary, builds the Keyman packages, the web editor and the lexicon manager, publishes them. If anything fails, the site keeps its last good version. |
+| **Site on GitHub Pages** [`pages.yml`] | every push to `main`; every day at 03:17 UTC; by hand | runs every test on Node.js 24, and again on Node.js 22, the oldest version the project supports; takes a snapshot of the dictionary, builds the Keyman packages, the web editor and the lexicon manager, publishes them. If anything fails, the site keeps its last good version. |
 | **Keyman packages for a release** [`release-assets.yml`] | when a release is published; by hand, for an existing tag | runs every test, takes a snapshot, builds both Keyman packages and attaches them to the release. The build runs with a read only token; a separate step with write access only uploads the two files. |
 
-Both need two repository variables, `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`; both values are public by design. GitHub pauses scheduled runs after 60 days without activity in the repository; the Actions page then offers to enable them again.
+Both run on **Ubuntu 26.04**, named explicitly rather than through `ubuntu-latest`, so that GitHub's next change of image cannot alter a build unannounced, and use the Node.js 24 versions of GitHub's actions [decision [0026](docs/decisions/0026-workflow-runtimes.md)]. Both need two repository variables, `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`; both values are public by design. GitHub pauses scheduled runs after 60 days without activity in the repository; the Actions page then offers to enable them again.
 
 ## Design decisions
 
@@ -544,6 +544,8 @@ Every important decision is recorded in [docs/decisions/](docs/decisions/README.
 | [0022](docs/decisions/0022-keyman-keyboard-design.md) | Design of the Keyman keyboard and dictionary |
 | [0023](docs/decisions/0023-lexicon-manager-spanish-history-csv.md) | Lexicon manager in Spanish, latest additions, CSV download |
 | [0024](docs/decisions/0024-letter-enye.md) | The letter ñ: accepted, folded to `n`, on the keyboard |
+| [0025](docs/decisions/0025-csv-semicolon.md) | The CSV download is separated by semicolons |
+| [0026](docs/decisions/0026-workflow-runtimes.md) | Workflows on Ubuntu 26.04, named explicitly; actions on Node.js 24; the project checked on Node.js 24 and 22 |
 
 ## Open questions
 
@@ -569,9 +571,10 @@ Version 1.0.0 is a promise of stability, given when these criteria are met, not 
 | Version | Content |
 |---|---|
 | 0.6 | Done: the lexicon manager in Spanish, its latest additions, the CSV download; the letter `ñ` |
-| 0.7 | Workflows on Node.js 24; real frequencies from a freely licensed body of text |
-| 0.8 | Bulk import with validation |
-| 0.9 | Backups, hardening, contributor documentation; beta with speakers in Genoa |
+| 0.7 | Done: workflows on Ubuntu 26.04 and Node.js 24, also checked on Node.js 22; the CSV download separated by semicolons |
+| 0.8 | Real frequencies from a freely licensed body of text |
+| 0.9 | Bulk import with validation |
+| 0.10 | Backups, hardening, contributor documentation; beta with speakers in Genoa |
 | 1.0 | All criteria met |
 
 Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought throughout.
@@ -580,6 +583,7 @@ Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought 
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.7.0, 2026/10/17: ready for GitHub's new runners.** Both workflows run on Ubuntu 26.04 and on the Node.js 24 versions of GitHub's actions, and the project is built on Node.js 24 and still checked on Node.js 22. The CSV download is separated by semicolons, so Excel set to Italian or Spanish opens it in columns with a double click.
 * **0.6.0, 2026/10/17: the site in Spanish.** A Spanish interface beside Italian and English, in the lexicon manager, the web editor and the install page; the 20 latest additions below the search field; the dictionary downloadable as CSV as well as TSV. The letter `ñ`, written by some other Ligurian spelling systems, is accepted everywhere: a button in the manager, the search key `n`, a long press of `n` on the Android keyboard.
 * **0.5.1, 2026/10/17:** the copyright holder's name made uniform, inside the Keyman packages too.
 * **0.5.0, 2026/10/17: the Android keyboard.** A Keyman keyboard with an Italian layout and every Ligurian letter on long press, and a dictionary package whose suggestions use the engine's own search keys; both rebuilt every day, offered on an install page under `/tastiera/`, and attached to every release.
@@ -658,7 +662,7 @@ Il dizionario condiviso è un database dove i collaboratori propongono parole, c
 
 ### Verso la versione 1.0.0
 
-La 1.0.0 arriverà quando ci saranno: la tastiera Android provata sul campo, qualche migliaio di forme approvate con frequenze reali, regole e formati congelati, le questioni aperte risolte, alcune settimane d'uso reale a Genova, e copie di sicurezza regolari del database. Il percorso: frequenze reali [0.7], importazione in blocco con verifica [0.8], copie di sicurezza, documentazione e prova con parlanti genovesi [0.9].
+La 1.0.0 arriverà quando ci saranno: la tastiera Android provata sul campo, qualche migliaio di forme approvate con frequenze reali, regole e formati congelati, le questioni aperte risolte, alcune settimane d'uso reale a Genova, e copie di sicurezza regolari del database. Il percorso: frequenze reali [0.8], importazione in blocco con verifica [0.9], copie di sicurezza, documentazione e prova con parlanti genovesi [0.10].
 
 ### Contribuire
 

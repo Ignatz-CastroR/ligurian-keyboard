@@ -14,12 +14,74 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- Workflows: the GitHub actions moved to their Node.js 24 versions,
-  since GitHub is retiring the Node.js 20 ones, and checked on GitHub's
-  new Ubuntu 26 image, which `ubuntu-latest` becomes from 2026/10/19.
-- Real frequencies, counted from a freely licensed body of text, so
-  that the editor's menu and the keyboard's suggestion bar put the
+- 0.8: real frequencies, counted from a freely licensed body of text,
+  so that the editor's menu and the keyboard's suggestion bar put the
   common spelling first instead of the alphabetical one.
+
+## [0.7.0] [2026/10/17] [new runners; CSV with semicolons]
+
+### Changed
+- Both workflows run on `ubuntu-26.04`, named explicitly, instead of
+  `ubuntu-latest`. GitHub moves `ubuntu-latest` from Ubuntu 24.04 to
+  26.04 gradually between 2026/10/19 and 2026/11/19, and warns that
+  builds may break; naming the image makes the move now, in a commit
+  of its own, and keeps the next change of `ubuntu-latest` from
+  altering a build unannounced. The image was checked first: it holds
+  the GitHub CLI 2.102.0 that the release job uses to attach the
+  packages, and `setup-node` installs Node.js itself. NOTE: if a first
+  run fails, nothing is published and the site keeps its last good
+  version; going back is one line per job, to `ubuntu-24.04`.
+- GitHub's actions at their current major versions, every one on
+  Node.js 24: `checkout` v4 → v7, `setup-node` v4 → v7,
+  `upload-artifact` v4 → v7, `download-artifact` v4 → v8,
+  `upload-pages-artifact` v3 → v5, `deploy-pages` v4 → v5. Since
+  2026/09/23 GitHub runs every JavaScript action on Node.js 24
+  whatever it declares, so the old versions kept working, but on a
+  runtime they were not written for and with deprecation notices on
+  every run. Each new version's `action.yml` was read to confirm
+  `node24`, and its breaking changes were read: none touches these
+  workflows. Both workflows pass `actionlint`, apart from the
+  `ubuntu-26.04` label itself, which that linter's release does not
+  know yet.
+- The project is built on Node.js 24, the current long term support
+  version, instead of 22. `pages.yml` gains a job, `minimum-node`,
+  that runs every test again on Node.js 22, the oldest version
+  `package.json` promises [22.18 or newer]; nothing is deployed unless
+  both pass. Verified here first: 121 of 121 tests pass on Node.js
+  24.22.0 and on 22.22.0.
+- The checkout keeps no credentials in the Pages workflow either
+  [`persist-credentials: false`, already so in the release workflow]:
+  no job pushes to the repository.
+- The CSV download is separated by semicolons instead of commas.
+  Excel set to Italian or Spanish, the languages of the project's
+  readers, uses the comma as its decimal mark and expects semicolons:
+  with commas, a double click showed every row in one column. A field
+  is now quoted when it holds a semicolon; a comma is ordinary text.
+  Everything else is unchanged: double quotes doubled, CRLF line
+  endings, the UTF-8 byte order mark. No `sep=;` first line, which is
+  not standard and shows up as a row of data outside Excel. NOTE:
+  Excel set to English now needs Data, From Text/CSV, the trade made
+  on purpose. `admin/src/export.ts`, with `CSV_SEPARATOR`.
+- `admin/test/export.test.ts`: the independent RFC 4180 reader takes
+  the separator as a parameter; new cases for the semicolon, alone and
+  inside a field; the comma case now proves that a comma is not
+  quoted. 7 tests, 121 in all.
+- Decision records 0025 [the semicolon; it supersedes the point
+  "Comma, not semicolon" of 0023] and 0026 [runners and runtimes;
+  records 0019 and 0021 point to it].
+- `README.md`: automation, downloads, test counts, decisions; the
+  roadmap moves real frequencies to 0.8, bulk import to 0.9, and
+  backups and the beta to 0.10, in English and in the Italian
+  summary. `admin/README.md`: the CSV format.
+- Keyboard version 0.7.0, following the project's; the keyboard and
+  the dictionary are unchanged.
+
+### Fixed
+- `admin/src/export.ts` and `admin/test/export.test.ts` held the byte
+  order mark as the invisible character itself, against the project's
+  rule of writing invisible characters as escapes, where a reader
+  cannot see them and an editor may silently drop them. Both now write
+  `\uFEFF`.
 
 ## [0.6.0] [2026/10/17] [the site in Spanish; the letter ñ]
 
@@ -572,7 +634,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.4.1...v0.5.0

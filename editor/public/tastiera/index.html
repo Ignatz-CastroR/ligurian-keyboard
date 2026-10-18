@@ -12,6 +12,9 @@
             the dictionary, in the language being read: the section
             named by the address [#it, #en, #es], else the language chosen
             elsewhere on the site, else Italian.
+  Updated:  2026/10/18, 16:02:41: the two links and the language links
+            stay at the top of the screen while the page scrolls, so
+            they are in view in every section.
   Purpose:  How to install the Ligurian keyboard and dictionary on an
             Android phone, with the two packages to download. Italian
             first, then English and Spanish, reached from links at the
@@ -79,8 +82,23 @@
     .download:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
     a { color: var(--accent); }
     code { font-size: 0.92em; overflow-wrap: anywhere; }
-    .back { margin-bottom: 16px; }
-    .languages { margin: 0 0 16px; color: var(--muted); }
+    /* The links stay in view while the page scrolls; anchors stop
+       below them, not under them. */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 4px 16px;
+      margin: -24px -16px 16px;
+      padding: 10px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+    }
+    .languages { margin: 0; color: var(--muted); }
+    h1[id], section[id] { scroll-margin-top: 6rem; }
     .note { border-left: 3px solid var(--line); padding-left: 12px; color: var(--muted); }
     hr { border: 0; border-top: 1px solid var(--line); margin: 40px 0 0; }
     footer { color: var(--muted); font-size: 0.9rem; margin-top: 24px; }
@@ -88,11 +106,12 @@
 </head>
 <body>
 <main>
-  <nav class="back" id="site-links" aria-label="Lessico ligure">
-    <a href="../" data-link="editor">← Scrivi in ligure</a> · <a href="../admin/" data-link="dictionary">Dizionario</a>
-  </nav>
-
-  <p class="languages"><a href="#it" lang="it">Italiano</a> · <a href="#en" lang="en">English</a> · <a href="#es" lang="es">Español</a></p>
+  <div class="topbar">
+    <nav id="site-links" aria-label="Lessico ligure">
+      <a href="../" data-link="editor">← Scrivi in ligure</a> · <a href="../admin/" data-link="dictionary">Dizionario</a>
+    </nav>
+    <p class="languages"><a href="#it" lang="it">Italiano</a> · <a href="#en" lang="en">English</a> · <a href="#es" lang="es">Español</a></p>
+  </div>
 
   <h1 id="it">Tastiera ligure per Android</h1>
   <p class="lead">Scrivi senza accenti in qualsiasi app: WhatsApp, Gmail, Facebook. La barra dei suggerimenti propone la parola in grafîa ofiçiâ.</p>

@@ -37,7 +37,7 @@ The editor never talks to the database. When the site is built, `tools/fetch-lex
 | `public/sw.js` | Offline copy of the page and the dictionary |
 | `public/tastiera/index.html` | Install page of the Android keyboard, with links to the editor and the dictionary in the language being read; the site build puts the two Keyman packages next to it |
 | `test/editor.test.ts` | 18 tests of `ime.ts`, `snapshot.ts` and the messages, including the three languages |
-| `test/install-page.test.ts` | 5 tests of the install page: its links, and its own script translating them into the language being read |
+| `test/install-page.test.ts` | 6 tests of the install page: its links, kept in view at the top of the screen, and its own script translating them into the language being read |
 | `vite.config.ts` | Build settings |
 
 ## Running it on your computer

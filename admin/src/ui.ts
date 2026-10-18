@@ -5,6 +5,8 @@
  * Updated:  2026/10/18, 09:08:41: the message for a restore refused
  *           because the dictionary is not empty [decision 0031];
  *           downloadText[], moved here from main.ts.
+ * Updated:  2026/10/18, 16:24:30: the message for a statement stopped
+ *           at the database's time limit.
  * Purpose:  Small helpers to build the page without a framework.
  * Contract: Text is always inserted with textContent, never innerHTML,
  *           so a word or a note typed by anyone can never inject markup
@@ -107,6 +109,7 @@ export function describeError(t: Messages, error: unknown): string {
       invalid: t.errInvalidValue,
       notfound: t.errNotFound,
       notempty: t.errNotEmpty,
+      timeout: t.errTimeout,
     };
     text = known[error.kind] ?? t.errGeneric(error.message);
   } else if (error instanceof Error) {

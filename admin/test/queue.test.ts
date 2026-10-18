@@ -8,6 +8,8 @@
  *           items a batch sends. The last test runs the page's logic on
  *           a real queue read from the database and approves it with
  *           review_batch[].
+ * Updated:  2026/10/18, 16:24:30: a statement stopped at the time limit
+ *           is reported as a timeout [migration 0008].
  * Decision: docs/decisions/0033-batch-review.md
  */
 
@@ -154,6 +156,7 @@ test("each failure reason becomes the kind of message a person reads", () => {
   assert.equal(failureKind({ ...base, sqlstate: "42501" }), "permission");
   assert.equal(failureKind({ ...base, sqlstate: "23505" }), "duplicate");
   assert.equal(failureKind({ ...base, sqlstate: "99999" }), "generic");
+  assert.equal(failureKind({ ...base, sqlstate: "57014" }), "timeout");
 });
 
 test("on a real queue, selecting a whole entry and approving it approves every part in one call", async () => {

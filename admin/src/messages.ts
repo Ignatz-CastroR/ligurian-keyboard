@@ -14,6 +14,8 @@
  * Updated:  2026/10/18, 13:20:16: the review queue grouped by entry,
  *           batch selection, and labels for senses and translations
  *           [decision 0033].
+ * Updated:  2026/10/18, 16:24:30: the message for an operation stopped
+ *           at the database's time limit.
  * Purpose:  Every text the lexicon manager shows, in Italian [default,
  *           for the Genoese contributors], English and Spanish.
  * Contract: EN and ES have exactly the type of IT, so the compiler
@@ -230,6 +232,7 @@ const IT = {
   errInvalidValue: "Il database ha rifiutato un valore non valido.",
   errNotFound: "Voce non trovata, o non visibile per te.",
   errNotEmpty: "Il dizionario non è vuoto: una copia si ripristina solo in un dizionario appena creato.",
+  errTimeout: "Il database ha interrotto l'operazione perché durava troppo. Per una copia di sicurezza molto grande, usa l'editor SQL di Supabase, come spiega db/README.md.",
   errGeneric: (msg: string): string => `Errore: ${msg}`,
   errNotConfigured: "Configurazione mancante: VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY non sono impostate. Vedi admin/README.md.",
 };
@@ -432,6 +435,7 @@ const EN: Messages = {
   errInvalidValue: "The database refused an invalid value.",
   errNotFound: "Entry not found, or not visible to you.",
   errNotEmpty: "The dictionary is not empty: a backup is restored only into a newly created dictionary.",
+  errTimeout: "The database stopped the operation because it took too long. For a very large backup, use the Supabase SQL Editor, as db/README.md explains.",
   errGeneric: (msg: string): string => `Error: ${msg}`,
   errNotConfigured: "Configuration missing: VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are not set. See admin/README.md.",
 };
@@ -632,6 +636,7 @@ const ES: Messages = {
   errInvalidValue: "La base de datos rechazó un valor no válido.",
   errNotFound: "Entrada no encontrada, o no visible para ti.",
   errNotEmpty: "El diccionario no está vacío: una copia solo se restaura en un diccionario recién creado.",
+  errTimeout: "La base de datos interrumpió la operación porque tardaba demasiado. Para una copia de seguridad muy grande, usa el editor SQL de Supabase, como explica db/README.md.",
   errGeneric: (msg: string): string => `Error: ${msg}`,
   errNotConfigured: "Falta la configuración: VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY no están definidas. Consulta admin/README.md.",
 };

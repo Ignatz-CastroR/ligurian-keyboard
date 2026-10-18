@@ -6,6 +6,8 @@
  *           its two links at the top, the editor and the dictionary,
  *           follow the language being read. The page's own script runs
  *           here against a minimal stand-in for the browser.
+ * Updated:  2026/10/18, 16:04:10: the links stay in view while the
+ *           page scrolls.
  * Method:   The inline script is taken from the page as it is published
  *           and run with node:vm; only the parts of document and window
  *           it touches are imitated.
@@ -97,6 +99,16 @@ test("the page links both the editor and the dictionary, and reads in Italian wi
     assert.match(PAGE, new RegExp(`<a href="#${code}" lang="${code}">`, "u"), code);
   }
   assert.notEqual(SCRIPT, "");
+});
+
+test("the links and the language links stay at the top of the screen in every section", () => {
+  const topbar: string = PAGE.match(/<div class="topbar">([\s\S]*?)<\/div>/u)?.[1] ?? "";
+  assert.match(topbar, /id="site-links"/u);
+  assert.match(topbar, /<a href="#es" lang="es">/u);
+  const rule: string = PAGE.match(/\.topbar \{([^}]*)\}/u)?.[1] ?? "";
+  assert.match(rule, /position: sticky;/u);
+  assert.match(rule, /top: 0;/u);
+  assert.match(PAGE, /h1\[id\], section\[id\] \{ scroll-margin-top: [\d.]+rem; \}/u);
 });
 
 test("the links follow the section the address names, then the site's language, then Italian", () => {

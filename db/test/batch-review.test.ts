@@ -10,6 +10,8 @@
  *           staff may call it, and a malformed request changes nothing.
  * Contract: Every test builds its own database. A rule is tested from
  *           the side of the person who must NOT be able to break it.
+ * Updated:  2026/10/18, 16:18:52: 0007 is found right after 0006, no
+ *           longer as the last migration, now that 0008 follows it.
  * Decision: docs/decisions/0033-batch-review.md
  */
 
@@ -95,8 +97,7 @@ async function rejectsWith(promise: Promise<unknown>, code: string): Promise<voi
 
 test("migration 0007 exists and runs after 0006", () => {
   const names: string[] = migrationNames();
-  assert.equal(names.at(-1), "0007_batch_review.sql");
-  assert.equal(names.at(-2), "0006_public_ids_and_backups.sql");
+  assert.equal(names[names.indexOf("0006_public_ids_and_backups.sql") + 1], "0007_batch_review.sql");
 });
 
 test("the queue carries each row's version, its lemma, and its sense, so nothing is labelled by guesswork", async () => {

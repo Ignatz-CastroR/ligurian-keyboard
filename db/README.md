@@ -13,8 +13,10 @@ The source of truth for every word the keyboard knows and every meaning the dict
 | `migrations/0005_letter_enye.sql` | The letter `ñ`: accepted in spellings, folded to `n` in the search keys [decision [0024](../docs/decisions/0024-letter-enye.md)] |
 | `migrations/0006_public_ids_and_backups.sql` | Public identifiers such as `LIJ-7K3Q9MDXK` for lemmas and wordforms [decision [0030](../docs/decisions/0030-public-identifiers.md)]; `export_backup()` and `restore_backup()` [decision [0031](../docs/decisions/0031-backups.md)] |
 | `migrations/0007_batch_review.sql` | `review_queue` gains each row's version, its lemma and its sense; `review_batch()` approves or rejects many queue rows in one call [decision [0033](../docs/decisions/0033-batch-review.md)] |
+| `migrations/0008_backup_time_limit.sql` | A time limit of 60 seconds for `export_backup()` and `restore_backup()` through the API, above the 8 seconds Supabase gives signed-in users [decision [0031](../docs/decisions/0031-backups.md)] |
 | `test/supabase-shim.sql` | **Tests only:** the parts of Supabase the migrations need |
 | `test/harness.ts` | A fresh in-memory database per test; switching between users |
+| `test/backup-time-limit.test.ts` | 3 tests; 0008 runs after 0007; `export_backup()` and `restore_backup()` gain a limit of 60 seconds and keep every other setting; the limit is the functions' own and leaves a session's limit unchanged |
 | `test/batch-review.test.ts` | 16 tests; 0007 applied to a database with pending rows keeps the queue's original columns row for row; rows of a deleted lemma or sense leave the queue and a batch reports them; only pending rows are changed; a client token without a user is refused; a contributor sees their translation on another's sense under the right lemma; the queue carries each row's version, lemma and sense; a whole entry approved in one call, with one line of history per row; a part rejected first stays rejected; rows changed, missing or deleted since the queue was read, or refused by a rule, are reported while the rest go through; even an admin never changes a deleted row; a row named twice is changed once; only staff and the trusted backend may call it; a malformed request changes nothing |
 | `test/lexicon-db.test.ts` | 21 tests; each rule is tested from the side that must not break it |
 | `test/public-ids-backup.test.ts` | 13 tests; every code valid, unique across both tables, out of every client's reach and never reused; the database and the manager compute the same check symbols; entries written before 0006 receive codes with a line of history; only admins back up and restore; a backup restored into a fresh database gives back an identical backup and export; a restore refuses a dictionary that is not empty or an incomplete file, works into the same project after its data was lost, and leaves nothing behind when it fails halfway; codes and the restore flag are out of every client's reach |
@@ -122,11 +124,12 @@ Every lexicon table [`lemmas`, `wordforms`, `senses`, `glosses`] also has `statu
 Why PostgreSQL, Supabase and the Frankfurt region: [decision [0007](../docs/decisions/0007-technology-stack.md)].
 
 1. Create a project at supabase.com [free plan], region **Central EU [Frankfurt]**, the closest to Genoa. Save the database password in a password manager.
-2. In **SQL Editor**, open a new query, paste `migrations/0001_lexicon_schema.sql` and press **Run**. Repeat with `0002`, `0003`, `0004`, `0005`, `0006` and `0007`, in that order. **Never** run `test/supabase-shim.sql` there.
+2. In **SQL Editor**, open a new query, paste `migrations/0001_lexicon_schema.sql` and press **Run**. Repeat with `0002`, `0003`, `0004`, `0005`, `0006`, `0007` and `0008`, in that order. **Never** run `test/supabase-shim.sql` there.
    * Supabase warns about "destructive operations" for files that merely mention `delete` or `drop`, as `0002` does to forbid deletion. On a new, empty project it is safe to confirm.
    * `0005` also gets the warning, because it drops the letter check of `ligurian_form` and adds the wider one back in the same run; no data is touched. It is safe to confirm on the live database too.
    * `0006` gives every existing lemma and wordform its public identifier: one ordinary update each, which raises its version by one and writes a line of history. If Supabase warns about it, it is safe to confirm. Run it **before** pushing the code of 0.10.0, whose lexicon manager reads the new column.
    * `0007` changes no data: it replaces the `review_queue` view with one that has more columns, and adds `review_batch()`. Run it **before** pushing the code of 0.11.0, whose lexicon manager reads those columns and calls that function.
+   * `0008` changes no data: it gives the backup and restore functions a time limit of 60 seconds. It can be run before or after pushing 0.11.1.
    * Each migration runs **once**. Later migrations are run alone, in order, on a database that already has the earlier ones.
 3. In **Authentication → Users**, create your own user with your email and a password.
 4. Make yourself the first admin, in the SQL Editor:
@@ -165,4 +168,17 @@ Design: [decision 0031](../docs/decisions/0031-backups.md).
 
 Every id, public code, version, date and line of history comes back exactly as it was, and new entries continue after the highest id. The same steps restore into the same project after its data was lost, from step 3; there, profiles and authors are matched to the existing accounts, and nobody who is an admin already loses that role.
 
-**Large backups.** Through the API, Supabase stops any statement after a few seconds. If the download or the restore ever fails that way, use the SQL Editor: `select public.export_backup();` gives the document, and `select public.restore_backup($backup$ ... $backup$::jsonb);`, with the file's content between the two markers, restores it.
+**Large backups.** Supabase stops every statement made through its API after 8 seconds for signed-in users. Since migration 0008, `export_backup()` and `restore_backup()` carry a limit of 60 seconds of their own, which Supabase's API applies when the lexicon manager calls them; 60 seconds is the most Supabase allows there, and the Dashboard, the SQL Editor included, is held to the same minute. If the manager reports that the database stopped the operation:
+
+1. **Up to a minute,** use the SQL Editor: `select public.export_backup();` gives the document, and `select public.restore_backup($backup$ ... $backup$::jsonb);`, with the file's content between the two markers, restores it.
+2. **Beyond a minute,** run the backup from your computer with `psql`, PostgreSQL's command line client, over the **Session pooler** connection string from the project's **Connect** button. A session there may lift its own limit:
+
+   ```bash
+   psql "<session pooler connection string>" -At -v ON_ERROR_STOP=1 \
+     -c "set statement_timeout = 0" \
+     -c "select public.export_backup()" > ligurian-backup-$(date +%Y%m%d-%H%M%S).json
+   ```
+
+   Each `-c` runs in the same session, one after the other. The connection is the trusted backend, so the backup is allowed; type the database password when asked and never write it into a file. Check that the file starts with `{"format": "ligurian-keyboard-backup"` before relying on it.
+
+The lasting answer, once even a minute is not enough for the lexicon manager, is a backup assembled by the manager table by table in small pages; it is a known issue of 0.11.1.

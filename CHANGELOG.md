@@ -14,15 +14,61 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- 0.12.0: bulk import of word lists, each one checked by
+- 0.12.0: the dictionary for readers, a public section `/dizionario/`
+  with an index by initial letter and a search by translation in
+  Italian, Spanish and English.
+- 0.13.0: bulk import of word lists, each one checked by
   `validate-lexicon` before it reaches the database, and its entries
   named by their public codes.
-- 0.13.0: hardening, contributor documentation; a beta with native
+- 0.14.0: hardening, contributor documentation; a beta with native
   speakers in Genoa.
 - 1.0.0: when every criterion in the README's roadmap is met.
-- After the beta, without delaying 1.0.0: the dictionary for readers,
-  first public entry pages by public code, then Spanish translations
-  of the most common words, then pronunciation [decision 0032].
+- After the beta, without delaying 1.0.0: public entry pages by
+  public code, Spanish translations of the most common words, and
+  pronunciation [decision 0032].
+
+## [0.11.1] [2026/10/18] [backups on a larger dictionary]
+
+### Fixed
+- The backup button failed with "canceling statement due to statement
+  timeout" once the friends in Genoa had entered their corpus.
+  Supabase stops every statement of a signed-in user after 8 seconds,
+  and `export_backup()` builds the whole dictionary and its history in
+  one statement. Migration 0008 gives `export_backup()` and
+  `restore_backup()` a time limit of 60 seconds of their own, which
+  Supabase's API applies when the lexicon manager calls them; it is
+  the highest Supabase allows there. Verified by 3 database tests
+  [the limit set on both functions, every other setting of theirs
+  unchanged, a session's own limit untouched by a backup]; the limit
+  itself is applied by Supabase's API, which the tests cannot run, so
+  the button must be tried once on the live dictionary after the
+  migration.
+- The lexicon manager reported a statement stopped at the time limit
+  as a raw database error. It now says, in Italian, English and
+  Spanish, that the operation took too long, and where to turn for a
+  very large backup [SQLSTATE 57014, a new kind "timeout" in
+  `admin/src/errors.ts`]. Verified by a manager test.
+- The install page's links to the editor and the dictionary, and its
+  language links, scrolled out of view as soon as a reader chose
+  English or Spanish. They now stay at the top of the screen, in a bar
+  of their own, and the sections stop below it. Verified by an editor
+  test and in a headless browser, on a computer and at phone width.
+
+### Changed
+- `db/README.md`: the routes for a large backup, the SQL Editor up to
+  a minute and, beyond that, `psql` over a session that lifts its own
+  limit; decision 0031 notes the change, keeping its original text.
+- Keyboard version 0.11.1, following the project's; the keys are
+  unchanged.
+
+### Known issues
+- 60 seconds is a ceiling: a dictionary that outgrows it again needs
+  the backup assembled by the manager table by table, in small pages.
+- Migration 0008 changes no data and can be run before or after this
+  version is pushed; until it runs, the button fails as before.
+
+Tests: 219, passing on Node.js 22 and 24 [engine 24, db 63, admin 56,
+editor 24, keyman 32, corpus 15, docs 5].
 
 ## [0.11.0] [2026/10/18] [batch review]
 
@@ -1237,7 +1283,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.3...v0.9.0

@@ -6,12 +6,14 @@
  *           a PostgreSQL error code [SQLSTATE] becomes one of them. Moved
  *           out of db.ts so that the review queue's pure logic can read
  *           a batch failure's SQLSTATE without loading Supabase.
+ * Updated:  2026/10/18, 16:24:30: "timeout", for a statement Supabase
+ *           stopped at its time limit [SQLSTATE 57014].
  * Contract: Every code raised by our migrations has a kind here; any
  *           other code is "generic".
  */
 
 export type AppErrorKind =
-  "conflict" | "permission" | "duplicate" | "parent" | "invalid" | "notfound" | "notempty" | "generic";
+  "conflict" | "permission" | "duplicate" | "parent" | "invalid" | "notfound" | "notempty" | "timeout" | "generic";
 
 export class AppError extends Error {
   public readonly kind: AppErrorKind;
@@ -35,6 +37,8 @@ export function sqlStateKind(code: string): AppErrorKind {
     kind = "invalid";
   } else if (code === "55000") {
     kind = "notempty";
+  } else if (code === "57014") {
+    kind = "timeout";
   }
   return kind;
 }

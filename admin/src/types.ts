@@ -4,6 +4,9 @@
  * Date:     2026/10/11, 20:14:02, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/18, 09:03:30: public_id on lemmas and wordforms
  *           [decision 0030].
+ * Updated:  2026/10/18, 13:10:41: the columns review_queue gains in
+ *           migration 0007, to group and label the queue by entry
+ *           [decision 0033].
  * Purpose:  The shapes of the rows the lexicon manager reads from the
  *           database. They mirror db/migrations/0001, 0004 and 0006
  *           column by column; a column added there must be added here.
@@ -83,13 +86,27 @@ export interface Profile {
   updated_at: string;
 }
 
+export type QueueKind = "lemma" | "wordform" | "sense" | "gloss";
+
 export interface QueueItem {
-  kind: "lemma" | "wordform" | "sense" | "gloss";
+  kind: QueueKind;
   id: number;
   lemma_id: number;
   text: string;
   created_by: string | null;
   created_at: string;
+  // From migration 0007 on.
+  version: number;
+  lemma_headword: string | null;
+  lemma_status: Status | null;
+  lemma_public_id: string | null;
+  // Senses and translations only: the sense, its number and definition.
+  sense_id: number | null;
+  sense_number: number | null;
+  definition_it: string | null;
+  // Translations only.
+  language: string | null;
+  gloss: string | null;
 }
 
 export interface AuditEntry {
@@ -114,10 +131,3 @@ export interface ReferenceData {
   orthographies: RefItem[];
   languages: RefItem[];
 }
-
-export const QUEUE_KIND_TABLE: Readonly<Record<QueueItem["kind"], LexiconTable>> = {
-  lemma: "lemmas",
-  wordform: "wordforms",
-  sense: "senses",
-  gloss: "glosses",
-};

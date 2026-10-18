@@ -11,8 +11,12 @@
  *           db/migrations/0006_public_ids_and_backups.sql; the database
  *           checks every file again and refuses any restore into a
  *           dictionary that is not empty.
+ * Updated:  2026/10/18, 12:33:40: backupFileName[] builds its name with
+ *           stampedFileName[], shared with the TSV and CSV downloads.
  * Decision: docs/decisions/0031-backups.md
  */
+
+import { BACKUP_FILE_STEM, stampedFileName } from "./file-names.ts";
 
 export const BACKUP_FORMAT: string = "ligurian-keyboard-backup";
 export const BACKUP_FORMAT_VERSION: number = 1;
@@ -49,8 +53,6 @@ export interface RestoreReport {
   authors_unknown: number;
 }
 
-const two = (n: number): string => String(n).padStart(2, "0");
-
 /* "12 lemmi · 1 forma · 4 significati · 8 traduzioni · 120 righe di
    cronologia": what a backup holds or a restore loaded. A count the
    record lacks is 0. */
@@ -65,9 +67,7 @@ export function countsSummary(counts: Record<string, number>, labels: CountLabel
 /* ligurian-backup-20261018-085840.json: local date and time, digits
    only, so that the files sort by name in the order they were made. */
 export function backupFileName(when: Date): string {
-  const date: string = `${when.getFullYear()}${two(when.getMonth() + 1)}${two(when.getDate())}`;
-  const time: string = `${two(when.getHours())}${two(when.getMinutes())}${two(when.getSeconds())}`;
-  return `ligurian-backup-${date}-${time}.json`;
+  return stampedFileName(BACKUP_FILE_STEM, "json", when);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -1,6 +1,6 @@
 # admin: the lexicon manager
 
-A web page where people search the shared Ligurian dictionary, propose words, review proposals and manage the team. Plain TypeScript, built with [Vite](https://vite.dev), talking directly to the Supabase database. Design: decisions [0018](../docs/decisions/0018-lexicon-manager-design.md), [0023](../docs/decisions/0023-lexicon-manager-spanish-history-csv.md), [0030](../docs/decisions/0030-public-identifiers.md) and [0031](../docs/decisions/0031-backups.md).
+A web page where people search the shared Ligurian dictionary, propose words, review proposals and manage the team. Plain TypeScript, built with [Vite](https://vite.dev), talking directly to the Supabase database. Design: decisions [0018](../docs/decisions/0018-lexicon-manager-design.md), [0023](../docs/decisions/0023-lexicon-manager-spanish-history-csv.md), [0025](../docs/decisions/0025-csv-semicolon.md), [0030](../docs/decisions/0030-public-identifiers.md), [0031](../docs/decisions/0031-backups.md) and [0033](../docs/decisions/0033-batch-review.md).
 
 The interface is in **Italian**, the default, **English** and **Spanish**; the menu in the header switches between them and the choice is remembered in the browser.
 
@@ -23,13 +23,21 @@ The database enforces all of this [db/README.md](../db/README.md); the page only
 | `#/search/<query>` | Search by ASCII key: typing `zena` finds `Zêna`, typing `penne` finds the lemma `pénna` through its form. A public code such as `LIJ-7K3Q9MDXK` finds its lemma, or the lemma of its form. While the field is empty, the 20 approved lemmas added most recently are listed below it |
 | `#/entry/<id>` | One entry: lemma, forms, numbered senses with translations, history; the public code of the lemma and of every form |
 | `#/new` | Propose a new lemma; lemmas with the same ASCII key are shown while typing, to avoid duplicates |
-| `#/review` | Everything pending, oldest first |
+| `#/review` | Everything pending, oldest first, grouped by entry; for staff, batch approval and rejection [see Reviewing below] |
 | `#/users` | Own profile; for staff, the list of people and their roles; for admins, backups and restore |
 | `#/signin` | Sign in |
 
+## Reviewing
+
+The review queue shows every pending row grouped by entry: each lemma heads its group, with its own row when it is pending, then its pending forms, then each sense followed by its translations. A group also appears when the lemma is already approved and only new parts wait; its heading then says so. A sense is labelled by its number and Italian definition, or as having none, such as "Significato 2, senza definizione".
+
+Reviewers and admins have a box on every row and on every entry, a **Seleziona tutto** box, and **Approva i selezionati** and **Rifiuta i selezionati**; Shift+click selects every row between the last box clicked and this one. Each entry also has **Approva la voce** and **Rifiuta la voce**, which act on all its pending rows; each row keeps its own two buttons. Rejecting more than one row asks first.
+
+Every action goes through one call to `review_batch()` [migration 0007], with each row at the version the page read, at most 200 rows per call. A row someone changed in the meantime is not overwritten: it stays pending and is listed above the queue with the reason, together with any row that was deleted or refused by a rule; every other row is changed all the same. After a batch no row of it stays selected, so a row changed by someone else is never approved by a second click in its new form; the rows that failed are marked in the queue until the next action, and while a batch runs every button of the page waits. A pending row whose lemma or sense was deleted no longer appears in the queue [decision [0033](../docs/decisions/0033-batch-review.md)].
+
 ## Downloads
 
-Both buttons in the header download the published dictionary, from the same export:
+Both buttons in the header download the published dictionary, from the same export. Each file is named by the local date and time of the click, digits only, such as `ligurian-lexicon-20261018-123107.tsv` and `ligurian-lexicon-20261018-123107.csv`, so that a second download never overwrites the first and the files sort by name in the order they were made; backups are named the same way, `ligurian-backup-20261018-123107.json` [`src/file-names.ts`].
 
 * **TSV:** the engine's own format [`docs/lexicon-format.md`], with comment lines stating the license.
 * **CSV:** the same rows for spreadsheets, separated by **semicolons**, as Excel set to Italian or Spanish expects, so a double click opens the file in columns; otherwise RFC 4180: fields quoted only when they hold a semicolon, a double quote, a line break or surrounding spaces, CRLF line endings, and a UTF-8 byte order mark so that Excel shows the Ligurian letters correctly [decision [0025](../docs/decisions/0025-csv-semicolon.md)]. Excel set to English expects commas: open the file there through **Data → From Text/CSV**; LibreOffice asks for the separator when it opens the file, and Google Sheets detects it when importing.
@@ -64,7 +72,10 @@ The **frequency** of a form is a weight, 1 by default. The daily snapshot adds t
 | `src/forms.ts` | Input checks and formatting; pure functions |
 | `src/export.ts` | TSV to CSV conversion; pure functions |
 | `src/public-id.ts` | Public codes: Crockford's base 32, the check symbol, reading a typed code; pure functions |
-| `src/backup.ts` | Backup file names, the check of a file before a restore, summaries of counts; pure functions |
+| `src/backup.ts` | The check of a backup file before a restore, summaries of counts; pure functions |
+| `src/file-names.ts` | Download names stamped with the local date and time, for the TSV, the CSV and backups; pure functions |
+| `src/queue.ts` | The review queue grouped by entry, its labels, the selection and the items of a batch; pure functions |
+| `src/errors.ts` | The kinds of failure, and how a PostgreSQL error code becomes one |
 | `src/messages.ts` | Every text, in Italian, English and Spanish; the language menu's entries |
 | `src/ui.ts` | Page building helpers; never `innerHTML` |
 | `src/types.ts` | Row types, mirroring the database |
@@ -76,6 +87,8 @@ The **frequency** of a form is a weight, 1 by default. The daily snapshot adds t
 | `test/messages.test.ts` | The three languages: no empty text, no lost placeholder, no untranslated copy; the example code in the search hint is valid |
 | `test/public-id.test.ts` | Public codes: both directions of base 32, the check symbol catching every single wrong character and every swap of neighbours, and the forgiving reading of a typed code |
 | `test/backup.test.ts` | Backup file names, summaries, every reason a wrong file is refused, and a real backup written by the database passing the check |
+| `test/file-names.test.ts` | Download names: padded, digits only, sorting in time order; no fixed name left in the page |
+| `test/queue.test.ts` | Grouping by entry, labels in three languages, ranges, entry and "select all" selection, batch items, failure reasons, and a real queue approved whole by the database |
 | `vite.config.ts` | Build settings |
 
 ## Running it on your computer

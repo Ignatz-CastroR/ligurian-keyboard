@@ -6,6 +6,8 @@
  *           Spanish]; CSV download next to the TSV one.
  * Updated:  2026/10/18, 09:20:37: downloadText[] moved to ui.ts, where
  *           the backup download uses it too.
+ * Updated:  2026/10/18, 12:34:52: the TSV and CSV downloads are named by
+ *           the local date and time of the click [decision 0025].
  * Purpose:  Start the lexicon manager: connect to Supabase, follow the
  *           session, draw the header and send each address to its view.
  * Routes:   #/search/<query>   search [everyone]
@@ -24,6 +26,7 @@ import { isLang, LANGUAGES, messagesFor } from "./messages.ts";
 import type { Profile, ReferenceData } from "./types.ts";
 import { connect, currentSession, exportTsv, myProfile, onSessionChange, referenceData, signOut } from "./db.ts";
 import { tsvToCsv } from "./export.ts";
+import { lexiconFileName } from "./file-names.ts";
 import { canPropose } from "./permissions.ts";
 import {
   attachMessageBar, clear, describeError, downloadText, h, hideMessage, roleLabel, runAction, showError, showInfo,
@@ -124,12 +127,12 @@ function drawHeader(state: State): void {
 
   const tsvButton: HTMLButtonElement = h("button", { type: "button", class: "small" }, t.exportTsv);
   tsvButton.addEventListener("click", () => void runAction(t, tsvButton, async () => {
-    downloadText("ligurian-lexicon.tsv", await exportTsv(), "text/tab-separated-values;charset=utf-8");
+    downloadText(lexiconFileName("tsv", new Date()), await exportTsv(), "text/tab-separated-values;charset=utf-8");
   }));
 
   const csvButton: HTMLButtonElement = h("button", { type: "button", class: "small" }, t.exportCsv);
   csvButton.addEventListener("click", () => void runAction(t, csvButton, async () => {
-    downloadText("ligurian-lexicon.csv", tsvToCsv(await exportTsv()), "text/csv;charset=utf-8");
+    downloadText(lexiconFileName("csv", new Date()), tsvToCsv(await exportTsv()), "text/csv;charset=utf-8");
   }));
 
   const langMenu: HTMLSelectElement = h("select", { class: "small", "aria-label": t.langLabel, title: t.langLabel });

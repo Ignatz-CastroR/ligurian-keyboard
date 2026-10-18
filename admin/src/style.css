@@ -210,3 +210,22 @@ table.queue { width: 100%; border-collapse: collapse; }
   .queue tr { display: block; padding: 8px 0; border-bottom: 1px solid var(--line); }
   .queue td { display: block; border: none; padding: 2px 0; }
 }
+
+/* ---------- review queue grouped by entry [decision 0033] ---------- */
+
+.batch-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0 12px; }
+.pick-all { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.queue th.pick, .queue td.pick { width: 2em; user-select: none; }
+.queue .group-head td { padding-top: 14px; border-bottom: 2px solid var(--line); font-size: 1.02rem; }
+.queue tbody.entry-group tr:not(.group-head) td:nth-child(2) { padding-left: 16px; }
+.queue td .actions { margin-left: 0; flex-wrap: nowrap; }
+.queue tr.flagged td { background: var(--rejected-bg); }
+.batch-failures { border-left: 3px solid var(--danger); padding: 4px 12px; margin: 8px 0 12px; }
+.batch-failures ul { margin: 4px 0; padding-left: 18px; }
+
+@media (max-width: 640px) {
+  .queue tr.group-head { padding-top: 14px; border-bottom: 2px solid var(--line); }
+  .queue .group-head td { border-bottom: none; padding-top: 2px; }
+  .queue td.pick, .queue td.pick + td { display: inline-block; width: auto; margin-right: 6px; }
+  .queue tbody.entry-group tr:not(.group-head) td:nth-child(2) { padding-left: 0; }
+}

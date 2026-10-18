@@ -13,7 +13,68 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 
 ## [Unreleased]
 
+### Planned
+- 0.12.0: bulk import of word lists, each one checked by
+  `validate-lexicon` before it reaches the database, and its entries
+  named by their public codes.
+- 0.13.0: hardening, contributor documentation; a beta with native
+  speakers in Genoa.
+- 1.0.0: when every criterion in the README's roadmap is met.
+- After the beta, without delaying 1.0.0: the dictionary for readers,
+  first public entry pages by public code, then Spanish translations
+  of the most common words, then pronunciation [decision 0032].
+
+## [0.11.0] [2026/10/18] [batch review]
+
 ### Added
+- Batch review in the lexicon manager [decision 0033, refining 0011].
+  A contributor's entry is several rows, the lemma, each form, each
+  sense and each translation, and until now each needed its own
+  approval, one round trip each.
+  - The review queue is grouped by entry: each lemma heads its group,
+    with its own row when it is pending, then its pending forms, then
+    each sense followed by the translations of that sense. A group
+    also appears when only new parts of an approved lemma wait; its
+    heading then says so.
+  - A box on every row and on every entry, **Select all**, Shift+click
+    for a range, and **Approve selected** and **Reject selected**.
+    Each entry has its own **Approve entry** and **Reject entry**,
+    which act on all its pending rows; each row keeps its own two
+    buttons. Rejecting more than one row asks first.
+  - Migration 0007: `public.review_batch(items, status)` approves or
+    rejects up to 500 pending rows in one call, each at the version
+    the page read. Each row is changed on its own, in its own
+    subtransaction: a row changed since, missing, deleted, under a
+    deleted lemma or sense, no longer pending or refused by a rule is
+    returned with its reason, and every other row is still changed.
+    It runs as the caller, so row level security, the role rules, the
+    automatic base form and the audit log apply exactly as to a single
+    update; only reviewers, admins and the trusted backend may call
+    it, and a client token without a user is refused before any row
+    is touched; a deleted row is never changed, not even by an admin;
+    a malformed request is refused whole. The page sends at most 200
+    rows per call.
+  - The rows that failed are listed above the queue with their reason
+    and marked in it. No row of a batch stays selected afterwards, so
+    a row someone changed is never approved by a reflexive second
+    click; while a batch runs, every button of the page waits; if a
+    call is refused whole partway through a large selection, the page
+    still reports what earlier calls changed, and reloads.
+  Verified by 16 database tests [migration 0007 applied to a database
+  holding pending rows of every kind, keeping the queue's original
+  columns row for row; a whole entry approved in one call with one
+  line of history per row; a part rejected first staying rejected;
+  changed, missing, deleted, orphaned, already reviewed and refused
+  rows reported while the rest go through; contributors, members,
+  anonymous visitors and a token without a user refused before any
+  row is touched; every kind of malformed request refused, and 500
+  items accepted while 501 are not], 10 manager tests of the pure
+  logic in `admin/src/queue.ts`, the last one approving a real queue
+  read from the database, and, by hand, the page run in a headless
+  browser against a stand in for the database, on a computer and at
+  phone width. An independent review of the migration and the page
+  found no blocker; its findings are fixed in this version and listed
+  under Fixed.
 - `README.md`: the project's long-term goal, in English and in the
   Italian summary: a fully integrated Ligurian text editor for
   computers, phones and tablets, with spell checking, predictive text
@@ -29,16 +90,91 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
   record. It extends decision 0001 without reversing it. Verified:
   `npm run check`, all tests passing, the decision tables included.
 
-### Planned
-- 0.11.0: bulk import of word lists, each one checked by
-  `validate-lexicon` before it reaches the database, and its entries
-  named by their public codes.
-- 0.12.0: hardening, contributor documentation; a beta with native
-  speakers in Genoa.
-- 1.0.0: when every criterion in the README's roadmap is met.
-- After the beta, without delaying 1.0.0: the dictionary for readers,
-  first public entry pages by public code, then Spanish translations
-  of the most common words, then pronunciation [decision 0032].
+### Changed
+- The TSV and CSV downloads are named by the local date and time of
+  the click, such as `ligurian-lexicon-20261018-123107.csv`, instead
+  of always `ligurian-lexicon.csv` and `ligurian-lexicon.tsv`: a
+  second download no longer overwrites the first or becomes
+  `ligurian-lexicon [1].csv`, the name says which day's dictionary a
+  file holds, and the files sort by name in the order they were made.
+  The stamp is the one backups already used, digits only and local
+  time, now built by one function, `admin/src/file-names.ts`, for all
+  three downloads. Decision 0025, which said the CSV's name stays
+  fixed, is updated accordingly: the original point is kept, struck
+  through, above the new one. Verified by 4 manager tests [the
+  names, padding, sort order across days, months and years, and no
+  fixed name left in the page].
+- The review queue labels a sense by its number and Italian
+  definition, or as having none, such as "Significato 2, senza
+  definizione", and a translation by its language, its text and the
+  number of its sense. A sense without a definition used to appear as
+  a bare "1" or "2". Migration 0007 adds to `review_queue` each row's
+  version, its lemma's headword, status and public code, and the
+  sense of senses and translations; its six original columns are
+  unchanged. Verified by a database test of the new columns and a
+  manager test of the labels in all three languages.
+- The single Approve and Reject buttons of the queue go through
+  `review_batch()` too, with the version the page read. They used to
+  read each row's current version just before changing it, so a row a
+  contributor corrected after the queue was opened was approved in a
+  form the reviewer had never seen.
+- The install page `/tastiera/` has two links at the top, to the
+  editor and to the dictionary, in the language being read: the
+  section the address names [`#it`, `#en`, `#es`, with a new link to
+  return to Italian], else the language chosen elsewhere on the site,
+  else Italian. Following a link from a named section makes that the
+  site's language, so the editor or the dictionary opens in it. The
+  single link "← Scrivi in ligure" was in Italian only and led to the
+  editor alone. Without its script the page still works, in Italian.
+  Verified by 5 editor tests that run the page's own script against a
+  stand in for the browser, and in a headless browser.
+- `AppError` and the translation of PostgreSQL error codes moved from
+  `admin/src/db.ts` to `admin/src/errors.ts`, so that the queue's pure
+  logic can read a batch failure without loading Supabase.
+
+- `README.md`, `db/README.md`, `admin/README.md` and
+  `editor/README.md`: batch review, the stamped download names, the
+  install page's links, migration 0007, test counts [215 in all], and
+  the roadmap, which marks 0.11 done and moves bulk import to 0.12 and
+  the beta to 0.13, in English and in the Italian summary.
+- Keyboard version 0.11.0, following the project's; the keys are
+  unchanged.
+
+### Removed
+- `setStatusById()` in `admin/src/db.ts` and `QUEUE_KIND_TABLE` in
+  `admin/src/types.ts`, used only by the old queue buttons.
+
+### Fixed
+- A pending form, sense or translation whose lemma or sense had been
+  deleted stayed in the review queue, and could be approved; with
+  whole entry approval it would have been approved in one click under
+  a heading that called the lemma pending. Since 0.2.0. The queue now
+  leaves such rows out, and a batch reports them as not found.
+- A contributor's translation on another contributor's pending sense
+  was missing from their own queue, and a form on another's pending
+  lemma showed no lemma. Since 0.2.0. The queue now finds the lemma
+  through the sense whoever may read it, without revealing the other
+  contributor's text.
+- The backup file was named by the time the download finished; it is
+  now named by the time of the click, like the TSV and CSV.
+- The test counts in the README's table of parts, which still said 31
+  for the database and 29 for the lexicon manager, and the count in
+  "Install and check", which still said 154; the instructions for
+  setting up a database said "the five migrations" since 0005.
+
+### Known issues
+- Migration 0007 must run on Supabase **before** this version is
+  pushed: its lexicon manager calls `review_batch()`. Without it the
+  queue still appears, since the page falls back to the old columns,
+  but every Approve and Reject fails with a function not found. The
+  migration changes no data. Run the whole file in the SQL Editor,
+  with nothing selected.
+- A batch is not one transaction: when some rows fail, the others stay
+  changed. This is by design [decision 0033]; the list of failures
+  says what is still pending.
+
+Tests: 215, passing on Node.js 22 and 24 [engine 24, db 60, admin 56,
+editor 23, keyman 32, corpus 15, docs 5].
 
 ## [0.10.0] [2026/10/18] [public codes and backups]
 
@@ -1101,7 +1237,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.3...v0.9.0
 [0.8.3]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.2...v0.8.3

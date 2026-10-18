@@ -38,6 +38,7 @@ A decision is never edited away. If it changes, a new record replaces it, and th
 | [0030](0030-public-identifiers.md) | Public identifiers for lemmas and wordforms | 2026/10/18 | accepted |
 | [0031](0031-backups.md) | Backups from the lexicon manager | 2026/10/18 | accepted |
 | [0032](0032-dictionary-second-purpose.md) | The dictionary as a second purpose, for the diaspora first | 2026/10/18 | accepted |
+| [0033](0033-batch-review.md) | Batch review, the queue grouped by entry | 2026/10/18 | accepted |
 
 ## Still open
 

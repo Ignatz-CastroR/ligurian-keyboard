@@ -9,6 +9,8 @@
  * Updated:  2026/10/18, 09:23:48: for admins, a backup download and a
  *           restore into an empty dictionary [decision 0031]; the
  *           database checks the role and the emptiness again.
+ * Updated:  2026/10/18, 14:12:05: the backup file is named by the time
+ *           of the click, as the TSV and CSV downloads are.
  */
 
 import type { Context } from "../context.ts";
@@ -57,8 +59,9 @@ function backupCard(ctx: Context): HTMLElement {
   const { t } = ctx;
   const button: HTMLButtonElement = h("button", { type: "button", class: "primary" }, t.backupDownload);
   button.addEventListener("click", () => void runAction(t, button, async () => {
-    const backup: unknown = await exportBackup();
+    // Named at the click, like the TSV and CSV downloads.
     const name: string = backupFileName(new Date());
+    const backup: unknown = await exportBackup();
     downloadText(name, JSON.stringify(backup, null, 1), "application/json;charset=utf-8");
     showInfo(t.backupSaved(name));
   }));

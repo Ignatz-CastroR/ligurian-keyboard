@@ -6,6 +6,10 @@
  * Updated:  2026/10/18, 09:02:15: lemmasWithPublicId[], to find an
  *           entry by its code; exportBackup[] and restoreBackup[]
  *           [decisions 0030 and 0031].
+ * Updated:  2026/10/18, 13:15:02: reviewBatch[], approving or rejecting
+ *           many queue rows per call, replaces setStatusById[]
+ *           [decision 0033]; AppError and the SQLSTATE kinds moved to
+ *           errors.ts.
  * Purpose:  Every conversation between the lexicon manager and the
  *           database. Views never call Supabase directly; they call
  *           these functions, so the queries live in one place.
@@ -19,44 +23,25 @@ import { createClient, type SupabaseClient, type Session } from "@supabase/supab
 import { skeleton } from "../../engine/src/skeleton.ts";
 import { searchKeyFilter } from "./forms.ts";
 import type { RestoreReport } from "./backup.ts";
+import { AppError, sqlStateKind } from "./errors.ts";
+import {
+  BATCH_SIZE, chunks, mergeResults, type BatchItem, type BatchOutcome, type BatchResult, type ReviewStatus,
+} from "./queue.ts";
 import type {
   AuditEntry, Entry, Gloss, Lemma, LexiconTable, Profile, QueueItem,
   ReferenceData, RefItem, Role, Sense, Status, Wordform,
 } from "./types.ts";
 
-export type AppErrorKind =
-  "conflict" | "permission" | "duplicate" | "parent" | "invalid" | "notfound" | "notempty" | "generic";
-
-export class AppError extends Error {
-  public readonly kind: AppErrorKind;
-
-  public constructor(kind: AppErrorKind, message: string) {
-    super(message);
-    this.kind = kind;
-  }
-}
+export { AppError } from "./errors.ts";
+export type { AppErrorKind } from "./errors.ts";
 
 interface PgError {
   code?: string;
   message: string;
 }
 
-// PostgreSQL error codes [SQLSTATE] raised by our migrations.
 function toAppError(error: PgError): AppError {
-  const code: string = error.code ?? "";
-  let kind: AppErrorKind = "generic";
-  if (code === "42501") {
-    kind = "permission";
-  } else if (code === "23505") {
-    kind = "duplicate";
-  } else if (code === "23503") {
-    kind = "parent";
-  } else if (code === "23514" || code === "22P02" || code === "23502" || code === "22001" || code === "22023") {
-    kind = "invalid";
-  } else if (code === "55000") {
-    kind = "notempty";
-  }
-  return new AppError(kind, error.message);
+  return new AppError(sqlStateKind(error.code ?? ""), error.message);
 }
 
 let client: SupabaseClient | null = null;
@@ -342,18 +327,6 @@ export function restore(table: LexiconTable, id: number, version: number): Promi
   return updateRow(table, id, version, { deleted_at: null });
 }
 
-// For the review queue, which lists rows without their version.
-export async function setStatusById(table: LexiconTable, id: number, status: Status): Promise<void> {
-  const { data, error } = await db().from(table).select("version").eq("id", id).maybeSingle();
-  if (error !== null) {
-    throw toAppError(error);
-  }
-  if (data === null) {
-    throw new AppError("notfound", `${table} ${id}`);
-  }
-  await setStatus(table, id, (data as { version: number }).version, status);
-}
-
 /* ====================================================================
    Review queue, people and history
    ==================================================================== */
@@ -364,6 +337,33 @@ export async function reviewQueue(): Promise<QueueItem[]> {
     throw toAppError(error);
   }
   return (data ?? []) as QueueItem[];
+}
+
+/* Approve or reject queue rows, at the versions the reviewer saw, in
+   calls of at most BATCH_SIZE rows. A row that fails comes back in
+   "failed" with its reason; the other rows are changed all the same
+   [review_batch[], migration 0007]. A call refused whole [permission,
+   a malformed request, the network] stops the batch: it never throws,
+   but returns what earlier calls changed together with that error, so
+   the page can report both. */
+export async function reviewBatch(items: readonly BatchItem[], status: ReviewStatus): Promise<BatchOutcome> {
+  let result: BatchResult = { updated: 0, failed: [] };
+  let error: AppError | null = null;
+  for (const part of chunks(items, BATCH_SIZE)) {
+    if (error === null) {
+      try {
+        const response = await db().rpc("review_batch", { p_items: part, p_status: status });
+        if (response.error !== null) {
+          error = toAppError(response.error);
+        } else {
+          result = mergeResults(result, response.data as BatchResult);
+        }
+      } catch (thrown: unknown) {
+        error = new AppError("generic", thrown instanceof Error ? thrown.message : String(thrown));
+      }
+    }
+  }
+  return { result, error };
 }
 
 // Staff see every profile; everyone else sees only their own.

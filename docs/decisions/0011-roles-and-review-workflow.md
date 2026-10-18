@@ -3,6 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/10, refined 2026/10/11
 * **Decided by:** Eng. José Ignacio Castro de R.
+* **Refined by:** [0033](0033-batch-review.md), on batch review and the queue grouped by entry
 
 ## Context
 

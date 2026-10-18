@@ -6,15 +6,19 @@
  *           list of people; admins also rename them and change roles.
  * Contract: The database refuses self promotion and the demotion of
  *           the last admin [0002]; this page only reports its answer.
+ * Updated:  2026/10/18, 09:23:48: for admins, a backup download and a
+ *           restore into an empty dictionary [decision 0031]; the
+ *           database checks the role and the emptiness again.
  */
 
 import type { Context } from "../context.ts";
 import type { Profile, Role } from "../types.ts";
 import { ROLES } from "../types.ts";
-import { profiles, updateProfile } from "../db.ts";
-import { canManageRoles, isStaff } from "../permissions.ts";
+import { exportBackup, profiles, restoreBackup, updateProfile } from "../db.ts";
+import { canBackup, canManageRoles, isStaff } from "../permissions.ts";
 import { formatDateTime } from "../forms.ts";
-import { describeError, field, h, roleLabel, runAction, select, showError, showInfo } from "../ui.ts";
+import { backupFileName, checkBackupText, countsSummary, type BackupCheck, type CountLabels, type RestoreReport } from "../backup.ts";
+import { describeError, downloadText, field, h, roleLabel, runAction, select, showError, showInfo } from "../ui.ts";
 
 const MAX_NAME: number = 80;
 
@@ -34,7 +38,71 @@ export async function renderUsers(ctx: Context, root: HTMLElement): Promise<void
         list.replaceChildren(h("p", { class: "error-text" }, describeError(t, error)));
       }
     }
+    if (canBackup(ctx.role)) {
+      root.append(backupCard(ctx), restoreCard(ctx));
+    }
   }
+}
+
+function countLabels(ctx: Context): CountLabels {
+  const { t } = ctx;
+  return {
+    lemmas: t.countLemmas, wordforms: t.countWordforms, senses: t.countSenses,
+    glosses: t.countGlosses, history: t.countHistory,
+  };
+}
+
+// The whole dictionary as one JSON file, saved by the browser.
+function backupCard(ctx: Context): HTMLElement {
+  const { t } = ctx;
+  const button: HTMLButtonElement = h("button", { type: "button", class: "primary" }, t.backupDownload);
+  button.addEventListener("click", () => void runAction(t, button, async () => {
+    const backup: unknown = await exportBackup();
+    const name: string = backupFileName(new Date());
+    downloadText(name, JSON.stringify(backup, null, 1), "application/json;charset=utf-8");
+    showInfo(t.backupSaved(name));
+  }));
+  return h("section", { class: "card" },
+    h("h2", {}, t.backupTitle), h("p", { class: "muted" }, t.backupIntro),
+    h("div", { class: "buttons" }, button));
+}
+
+// Rebuild an empty dictionary from a backup file.
+function restoreCard(ctx: Context): HTMLElement {
+  const { t } = ctx;
+  const file: HTMLInputElement = h("input", { type: "file", accept: ".json,application/json" });
+  const button: HTMLButtonElement = h("button", { type: "button", class: "danger" }, t.restoreButton);
+  const reasons: Record<Exclude<BackupCheck, { ok: true }>["reason"], string> = {
+    json: t.restoreBadJson, format: t.restoreBadFormat, version: t.restoreBadVersion, tables: t.restoreBadTables,
+  };
+
+  button.addEventListener("click", () => void runAction(t, button, async () => {
+    const chosen: File | undefined = file.files?.[0];
+    if (chosen === undefined) {
+      showError(t.restoreNoFile);
+    } else {
+      const check: BackupCheck = checkBackupText(await chosen.text());
+      if (!check.ok) {
+        showError(reasons[check.reason]);
+      } else if (window.confirm(t.restoreConfirm(countsSummary(check.summary.counts, countLabels(ctx))))) {
+        const report: RestoreReport = await restoreBackup(check.backup);
+        const notes: string[] = [t.restoreDone(countsSummary(report.restored, countLabels(ctx)))];
+        if (report.profiles_skipped > 0) {
+          notes.push(t.restoreProfilesSkipped(report.profiles_skipped));
+        }
+        if (report.authors_unknown > 0) {
+          notes.push(t.restoreAuthorsUnknown(report.authors_unknown));
+        }
+        // Redraw the page: the dictionary is no longer empty.
+        ctx.navigate("#/users", notes.join(" "));
+      }
+    }
+  }));
+
+  return h("section", { class: "card" },
+    h("h2", {}, t.restoreTitle), h("p", { class: "muted" }, t.restoreIntro),
+    field(t.restoreFile, file),
+    h("div", { class: "buttons" }, button));
 }
 
 function accountCard(ctx: Context, me: Profile): HTMLElement {

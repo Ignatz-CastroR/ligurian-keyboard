@@ -2,6 +2,9 @@
  * ui.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:21:41, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/18, 09:08:41: the message for a restore refused
+ *           because the dictionary is not empty [decision 0031];
+ *           downloadText[], moved here from main.ts.
  * Purpose:  Small helpers to build the page without a framework.
  * Contract: Text is always inserted with textContent, never innerHTML,
  *           so a word or a note typed by anyone can never inject markup
@@ -103,6 +106,7 @@ export function describeError(t: Messages, error: unknown): string {
       parent: t.errParentMissing,
       invalid: t.errInvalidValue,
       notfound: t.errNotFound,
+      notempty: t.errNotEmpty,
     };
     text = known[error.kind] ?? t.errGeneric(error.message);
   } else if (error instanceof Error) {
@@ -111,6 +115,16 @@ export function describeError(t: Messages, error: unknown): string {
     text = t.errGeneric(String(error));
   }
   return text;
+}
+
+// Offer a text to the browser as a file to save.
+export function downloadText(fileName: string, text: string, mimeType: string): void {
+  const url: string = URL.createObjectURL(new Blob([text], { type: mimeType }));
+  const anchor: HTMLAnchorElement = h("a", { href: url, download: fileName });
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }
 
 /* ====================================================================

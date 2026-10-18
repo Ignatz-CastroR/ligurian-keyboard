@@ -8,13 +8,14 @@
  *           attempted on a fresh embedded PostgreSQL.
  * Contract: A disagreement means either a missing button or a button
  *           that always fails; both are bugs.
+ * Updated:  2026/10/18, 09:27:10: backups [decision 0031].
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { PGlite } from "@electric-sql/pglite";
 import { USERS, asUser, createSeededDatabase, actAs } from "../../db/test/harness.ts";
-import { canChangeStatus, canDeleteRow, canEdit } from "../src/permissions.ts";
+import { canBackup, canChangeStatus, canDeleteRow, canEdit } from "../src/permissions.ts";
 import type { Lemma, Role } from "../src/types.ts";
 
 const ROLE_USERS: [Role, string][] = [
@@ -112,4 +113,22 @@ test("a base form is never offered status or deletion buttons, and the database 
   assert.equal(await attempt(db, USERS.admin, "update wordforms set status = 'rejected' where id = $1", base.id), false);
   assert.equal(await attempt(db, USERS.admin, "update wordforms set deleted_at = now() where id = $1", base.id), false);
   assert.equal(await attempt(db, USERS.admin, "update wordforms set freq = 9 where id = $1", base.id), true);
+});
+
+test("backups: the interface offers them exactly to those the database serves", async () => {
+  const db = await createSeededDatabase();
+  for (const [role, userId] of ROLE_USERS) {
+    let served: boolean = false;
+    await actAs(db, asUser(userId));
+    try {
+      await db.query("select public.export_backup()");
+      served = true;
+    } catch {
+      served = false;
+    } finally {
+      await actAs(db, "trusted");
+    }
+    assert.equal(canBackup(role), served, role);
+  }
+  assert.equal(canBackup(null), false);
 });

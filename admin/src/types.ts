@@ -2,9 +2,11 @@
  * types.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:14:02, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/18, 09:03:30: public_id on lemmas and wordforms
+ *           [decision 0030].
  * Purpose:  The shapes of the rows the lexicon manager reads from the
- *           database. They mirror db/migrations/0001 and 0004 column by
- *           column; a column added there must be added here.
+ *           database. They mirror db/migrations/0001, 0004 and 0006
+ *           column by column; a column added there must be added here.
  */
 
 export type Role = "member" | "contributor" | "reviewer" | "admin";
@@ -30,6 +32,7 @@ export interface Tracked {
 }
 
 export interface Lemma extends Tracked {
+  public_id: string;
   headword: string;
   headword_key: string;
   variety: string;
@@ -39,6 +42,7 @@ export interface Lemma extends Tracked {
 }
 
 export interface Wordform extends Tracked {
+  public_id: string;
   lemma_id: number;
   form: string;
   form_key: string;

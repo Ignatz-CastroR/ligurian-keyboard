@@ -3,6 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/10
 * **Decided by:** Eng. José Ignacio Castro de R.
+* **Refined by:** [0032](0032-dictionary-second-purpose.md), on the dictionary the one database also becomes
 
 ## Context
 

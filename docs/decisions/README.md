@@ -35,6 +35,9 @@ A decision is never edited away. If it changes, a new record replaces it, and th
 | [0027](0027-real-frequencies.md) | Real frequencies from the Ligurian Wikipedia | 2026/10/17 | accepted |
 | [0028](0028-enye-warning-under-oficia.md) | The manager warns before saving ñ under the grafîa ofiçiâ | 2026/10/17 | accepted |
 | [0029](0029-elision.md) | Elided words are split at the apostrophe | 2026/10/17 | accepted |
+| [0030](0030-public-identifiers.md) | Public identifiers for lemmas and wordforms | 2026/10/18 | accepted |
+| [0031](0031-backups.md) | Backups from the lexicon manager | 2026/10/18 | accepted |
+| [0032](0032-dictionary-second-purpose.md) | The dictionary as a second purpose, for the diaspora first | 2026/10/18 | accepted |
 
 ## Still open
 

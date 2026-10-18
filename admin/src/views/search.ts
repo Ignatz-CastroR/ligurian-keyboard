@@ -9,15 +9,25 @@
  *           While the field is empty, the 20 approved lemmas added most
  *           recently are listed below it; typing replaces them with the
  *           results, and emptying the field brings them back.
+ * Updated:  2026/10/18, 09:12:06: a public code typed into the field,
+ *           such as LIJ-7K3Q9MDXK, finds its entry, and a code with a
+ *           wrong check character is reported as a typo; every lemma
+ *           listed shows its code [decision 0030].
  */
 
 import type { Context } from "../context.ts";
 import type { Lemma } from "../types.ts";
-import { latestLemmas, searchKeyFor, searchLemmas } from "../db.ts";
+import { latestLemmas, lemmasWithPublicId, searchKeyFor, searchLemmas } from "../db.ts";
+import { readTypedCode, type TypedCode } from "../public-id.ts";
 import { formatDateTime } from "../forms.ts";
 import { appendAll, clear, describeError, h, posLabel, statusBadge } from "../ui.ts";
 
 const DEBOUNCE_MS: number = 250;
+
+// Does this query search for something [a word or a code]?
+function isActive(query: string): boolean {
+  return readTypedCode(query).kind !== "none" || searchKeyFor(query) !== "";
+}
 
 export async function renderSearch(ctx: Context, root: HTMLElement, initialQuery: string): Promise<void> {
   const { t } = ctx;
@@ -39,12 +49,13 @@ export async function renderSearch(ctx: Context, root: HTMLElement, initialQuery
     h("h2", {}, t.navSearch),
     input,
     h("p", { class: "muted" }, t.searchHint),
+    h("p", { class: "muted small-text" }, t.searchCodeHint),
     ctx.userId === null && h("p", { class: "muted" }, t.searchPublicNote),
     keyLine,
     results,
     latestSection,
   );
-  latestSection.hidden = searchKeyFor(initialQuery) !== "";
+  latestSection.hidden = isActive(initialQuery);
   void loadLatest(ctx, latestList);
 
   // Only the answer to the latest query may be drawn: a slow early
@@ -55,15 +66,20 @@ export async function renderSearch(ctx: Context, root: HTMLElement, initialQuery
   const runSearch = async (): Promise<void> => {
     const query: string = input.value;
     const ticket: number = ++latest;
-    const key: string = searchKeyFor(query);
-    keyLine.textContent = key === "" ? "" : t.searchKey(key);
+    const typed: TypedCode = readTypedCode(query);
+    const key: string = typed.kind === "none" ? searchKeyFor(query) : "";
     history.replaceState(null, "", `#/search/${encodeURIComponent(query)}`);
-    latestSection.hidden = key !== "";
-    if (key === "") {
+    latestSection.hidden = isActive(query);
+    if (typed.kind === "typo") {
+      keyLine.textContent = "";
+      results.replaceChildren(h("p", { class: "error-text" }, t.searchCodeTypo(typed.typed)));
+    } else if (typed.kind === "none" && key === "") {
+      keyLine.textContent = "";
       clear(results);
     } else {
+      keyLine.textContent = typed.kind === "code" ? t.searchCode(typed.code) : t.searchKey(key);
       try {
-        const lemmas: Lemma[] = await searchLemmas(query);
+        const lemmas: Lemma[] = typed.kind === "code" ? await lemmasWithPublicId(typed.code) : await searchLemmas(query);
         if (ticket === latest) {
           drawResults(ctx, results, lemmas);
         }
@@ -100,7 +116,8 @@ async function loadLatest(ctx: Context, target: HTMLElement): Promise<void> {
           h("time", { class: "muted small-text nowrap", datetime: lemma.created_at }, formatDateTime(lemma.created_at)),
           h("span", {},
             h("a", { href: `#/entry/${lemma.id}`, class: "headword" }, lemma.headword),
-            h("span", { class: "muted" }, ` ${posLabel(t, lemma.part_of_speech)} · ${lemma.variety} · ${lemma.orthography}`)),
+            h("span", { class: "muted" }, ` ${posLabel(t, lemma.part_of_speech)} · ${lemma.variety} · ${lemma.orthography} `),
+            h("span", { class: "muted mono", title: t.publicIdNote }, lemma.public_id)),
         ));
       }
       target.replaceChildren(list);
@@ -121,6 +138,7 @@ function drawResults(ctx: Context, results: HTMLElement, lemmas: Lemma[]): void 
       list.append(h("li", {},
         h("a", { href: `#/entry/${lemma.id}`, class: "headword" }, lemma.headword),
         h("span", { class: "muted" }, ` ${posLabel(t, lemma.part_of_speech)} · ${lemma.variety} · ${lemma.orthography} `),
+        h("span", { class: "muted mono", title: t.publicIdNote }, `${lemma.public_id} `),
         (ctx.userId !== null) && statusBadge(t, lemma),
       ));
     }

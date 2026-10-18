@@ -4,6 +4,9 @@
  * Date:     2026/10/10, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: domainLetters[], the letters the
  *           database really accepts after every migration.
+ * Updated:  2026/10/18, 08:44:12: createDatabase[] can stop after a
+ *           given migration, and runMigration[] runs one more, to test
+ *           a migration on data written before it.
  * Purpose:  Build a fresh in-memory PostgreSQL [PGlite] with the Supabase
  *           shim and every migration, and switch between identities
  *           the way Supabase does for each API request.
@@ -37,22 +40,34 @@ export const USERS: TestUsers = {
   member: "00000000-0000-4000-8000-000000000005",
 };
 
-export async function createDatabase(): Promise<PGlite> {
-  const db: PGlite = new PGlite();
-  await db.exec(readFileSync(join(DB_DIR, "test", "supabase-shim.sql"), "utf8"));
-  const files: string[] = readdirSync(MIGRATIONS_DIR)
+// Every migration file name, in the order Supabase runs them.
+export function migrationNames(): string[] {
+  return readdirSync(MIGRATIONS_DIR)
     .filter((name) => name.endsWith(".sql"))
     .sort();
+}
+
+export async function runMigration(db: PGlite, name: string): Promise<void> {
+  await db.exec(readFileSync(join(MIGRATIONS_DIR, name), "utf8"));
+}
+
+/* A fresh database with the shim and every migration, or only those up
+   to and including the file named by "through". */
+export async function createDatabase(through?: string): Promise<PGlite> {
+  const db: PGlite = new PGlite();
+  await db.exec(readFileSync(join(DB_DIR, "test", "supabase-shim.sql"), "utf8"));
+  const files: string[] = migrationNames()
+    .filter((name) => through === undefined || name <= through);
   for (const name of files) {
-    await db.exec(readFileSync(join(MIGRATIONS_DIR, name), "utf8"));
+    await runMigration(db, name);
   }
   return db;
 }
 
 /* A database with the five test users, each already holding the role
    their name says. Roles are granted from a trusted session. */
-export async function createSeededDatabase(): Promise<PGlite> {
-  const db: PGlite = await createDatabase();
+export async function createSeededDatabase(through?: string): Promise<PGlite> {
+  const db: PGlite = await createDatabase(through);
   const roles: [string, string][] = [
     [USERS.admin, "admin"],
     [USERS.reviewer, "reviewer"],

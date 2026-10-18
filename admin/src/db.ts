@@ -3,6 +3,9 @@
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:15:56, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:28:44: latestLemmas[], the latest additions.
+ * Updated:  2026/10/18, 09:02:15: lemmasWithPublicId[], to find an
+ *           entry by its code; exportBackup[] and restoreBackup[]
+ *           [decisions 0030 and 0031].
  * Purpose:  Every conversation between the lexicon manager and the
  *           database. Views never call Supabase directly; they call
  *           these functions, so the queries live in one place.
@@ -15,12 +18,14 @@
 import { createClient, type SupabaseClient, type Session } from "@supabase/supabase-js";
 import { skeleton } from "../../engine/src/skeleton.ts";
 import { searchKeyFilter } from "./forms.ts";
+import type { RestoreReport } from "./backup.ts";
 import type {
   AuditEntry, Entry, Gloss, Lemma, LexiconTable, Profile, QueueItem,
   ReferenceData, RefItem, Role, Sense, Status, Wordform,
 } from "./types.ts";
 
-export type AppErrorKind = "conflict" | "permission" | "duplicate" | "parent" | "invalid" | "notfound" | "generic";
+export type AppErrorKind =
+  "conflict" | "permission" | "duplicate" | "parent" | "invalid" | "notfound" | "notempty" | "generic";
 
 export class AppError extends Error {
   public readonly kind: AppErrorKind;
@@ -46,8 +51,10 @@ function toAppError(error: PgError): AppError {
     kind = "duplicate";
   } else if (code === "23503") {
     kind = "parent";
-  } else if (code === "23514" || code === "22P02" || code === "23502" || code === "22001") {
+  } else if (code === "23514" || code === "22P02" || code === "23502" || code === "22001" || code === "22023") {
     kind = "invalid";
+  } else if (code === "55000") {
+    kind = "notempty";
   }
   return new AppError(kind, error.message);
 }
@@ -159,6 +166,32 @@ export async function searchLemmas(query: string): Promise<Lemma[]> {
         throw toAppError(extra.error);
       }
       lemmas = lemmas.concat((extra.data ?? []) as Lemma[]);
+    }
+  }
+  return lemmas;
+}
+
+/* The lemma a public identifier names: the lemma itself, or the lemma
+   of the wordform. code must already be valid [public-id.ts]; at most
+   one row can match, since codes are unique across both tables. */
+export async function lemmasWithPublicId(code: string): Promise<Lemma[]> {
+  const byLemma = await db().from("lemmas").select("*").eq("public_id", code);
+  if (byLemma.error !== null) {
+    throw toAppError(byLemma.error);
+  }
+  let lemmas: Lemma[] = (byLemma.data ?? []) as Lemma[];
+  if (lemmas.length === 0) {
+    const byForm = await db().from("wordforms").select("lemma_id").eq("public_id", code);
+    if (byForm.error !== null) {
+      throw toAppError(byForm.error);
+    }
+    const ids: number[] = ((byForm.data ?? []) as { lemma_id: number }[]).map((r) => r.lemma_id);
+    if (ids.length > 0) {
+      const parent = await db().from("lemmas").select("*").in("id", ids);
+      if (parent.error !== null) {
+        throw toAppError(parent.error);
+      }
+      lemmas = (parent.data ?? []) as Lemma[];
     }
   }
   return lemmas;
@@ -385,4 +418,25 @@ export async function exportTsv(): Promise<string> {
     throw toAppError(error);
   }
   return data as string;
+}
+
+/* ====================================================================
+   Backups, for admins: the database refuses everyone else
+   ==================================================================== */
+
+export async function exportBackup(): Promise<unknown> {
+  const { data, error } = await db().rpc("export_backup");
+  if (error !== null) {
+    throw toAppError(error);
+  }
+  return data as unknown;
+}
+
+// Only into a dictionary with no entries and no history at all.
+export async function restoreBackup(backup: Record<string, unknown>): Promise<RestoreReport> {
+  const { data, error } = await db().rpc("restore_backup", { p_backup: backup });
+  if (error !== null) {
+    throw toAppError(error);
+  }
+  return data as RestoreReport;
 }

@@ -3,6 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/10
 * **Decided by:** Eng. José Ignacio Castro de R.
+* **Refined by:** [0030](0030-public-identifiers.md), on the public identifiers the database owns; [0031](0031-backups.md), on backups that keep the whole history
 
 ## Context
 

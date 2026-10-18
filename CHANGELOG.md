@@ -13,20 +13,142 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 
 ## [Unreleased]
 
+### Planned
+- 0.11.0: bulk import of word lists, each one checked by
+  `validate-lexicon` before it reaches the database, and its entries
+  named by their public codes.
+- 0.12.0: hardening, contributor documentation; a beta with native
+  speakers in Genoa.
+- 1.0.0: when every criterion in the README's roadmap is met.
+- After the beta, without delaying 1.0.0: the dictionary for readers,
+  first public entry pages by public code, then Spanish translations
+  of the most common words, then pronunciation [decision 0032].
+
+## [0.10.0] [2026/10/18] [public codes and backups]
+
+### Added
+- Public identifiers for lemmas and wordforms [decision 0030]. Every
+  row's `id` is a number that belongs to one database: a restore into
+  a new project or a future import could renumber it. Each lemma and
+  each wordform now also carries `public_id`, such as
+  `LIJ-7K3Q9MDXK`: `LIJ-`, eight random characters of Crockford's
+  base 32 [no I, L, O or U, so a code cannot be misread] and
+  Crockford's check symbol, the value modulo 37, which catches every
+  single mistyped character and every swap of two neighbours.
+  - Migration 0006: the database draws the code when a row is
+    inserted, keeps it on every update, and overwrites any value a
+    client, an admin or the trusted backend sends. A check constraint
+    refuses a malformed code or a wrong check symbol in the table
+    itself. Every code ever issued is recorded in
+    `private.issued_public_ids`, so a code is unique across lemmas
+    and wordforms and never given again, not even after a deletion.
+  - Existing lemmas and wordforms receive their codes in migration
+    0006, through ordinary updates: each one's version rises by one
+    and the history records the assignment.
+  - The lexicon manager shows the codes on entry pages, for the lemma
+    and every form, beside each lemma in search results and in the
+    latest additions, and in each line of an entry's history. A code
+    typed into the search field finds its lemma, or the lemma of its
+    form; lower case, spaces, a missing hyphen, `O` for `0` and `I` or
+    `L` for `1` are forgiven, and a code with a wrong check symbol is
+    reported as a typing mistake.
+  - The codes are not in the daily snapshot nor in the TSV and CSV
+    downloads, whose format stays as it was.
+  Verified by 5 database tests [codes valid, unique and registered;
+  no one can choose or change one; malformed codes refused by the
+  constraint even with the trigger disabled; the database's check
+  symbols equal the manager's on 400 bodies and on 200 codes the
+  database drew; entries written before 0006 receiving their codes
+  with one line of history each] and 7 manager tests, among them one
+  that changes every character of a code to every other symbol, and
+  swaps every pair of neighbours, and sees each one refused.
+- Backups and restore, for admins [decision 0031]. On the people page
+  of the lexicon manager, **Download a backup** saves the whole
+  dictionary as one JSON file named by local date and time, such as
+  `ligurian-backup-20261018-085840.json`: the reference lists, the
+  profiles [display name and role; no email, no password], every
+  lemma, wordform, sense and gloss, pending, rejected and deleted ones
+  included, and the whole history. **Restore from a backup** loads
+  such a file into a dictionary that has no entries and no history at
+  all, and reports what it loaded.
+  - Migration 0006: `public.export_backup()`, which refuses everyone
+    but admins and the SQL Editor, and `public.restore_backup()`,
+    which also refuses a dictionary that is not empty and any file
+    that is not a backup of format version 1. A restore keeps every
+    id, code, version, date, status and line of history as it was;
+    the triggers that stamp new rows, create base forms and write
+    history step aside for the restore alone, through a flag no API
+    request can set; the identity counters continue after the highest
+    restored id; every restored code is registered, so it is never
+    drawn again.
+  - Login accounts are not in a backup. A profile is restored onto an
+    account with the same id; an author with no such account is
+    replaced by no author and counted in the report, while the
+    history keeps their id. The person restoring keeps their own
+    role, and no admin is ever demoted by a restore.
+  - Through the API, Supabase stops a statement after a few seconds;
+    a large backup is downloaded and restored from the SQL Editor.
+  - The manager checks a file before sending it, and names the reason
+    it refuses one: not JSON, not a backup, another format version, a
+    table missing.
+  Verified by 8 database tests, the main one a round trip: a
+  dictionary with approved, pending, rejected and deleted rows,
+  inflected forms, senses, translations, edits and several authors is
+  backed up, restored into a fresh database whose roles were reset,
+  and backed up again, and both backups, table by table, the roles
+  and both TSV exports are identical. Others restore into the same
+  project after its tables were emptied, refuse incomplete files, and
+  prove that a restore failing halfway leaves no row, no code and no
+  flag behind, and that a contributor who set the flag still meets
+  every rule. An independent review of the migration found that a
+  restore into the same project failed, because the registry still
+  held the backup's codes; fixed before release. A
+  mutation check removed in turn each of the restore's safeguards
+  [the history and base form guards, the immutability of codes, the
+  registration of restored codes, the reset of the identity
+  counters]; every removal made a test fail. Also 4 manager tests on
+  file names, summaries and refused files, including a real backup
+  written by the database, and 1 that compares the backup button
+  with what the database allows, for every role.
+- Decision records 0030 [public identifiers] and 0031 [backups];
+  record 0012 points to both.
+- Decision record 0032: the dictionary as a second purpose of the
+  project, after the input method, with the diaspora in Latin America
+  as its first audience; records 0001 and 0002 point to it. The
+  README's roadmap describes the dictionary steps that follow the
+  beta, in English and in the Italian summary.
+- The README's acknowledgements thank Alessio Gastaldi, who suggested
+  a lasting identifier for every entry.
+
 ### Changed
 - Migration 0005's header names the author as every other file does,
   `Eng. José Ignacio Castro de R. and contributors`. It was written
   after 0.5.1 made the name uniform, so the old GitHub handle was a
-  slip. The change is a comment: a database that already ran 0005 needs
-  nothing. Migrations 0001 to 0004 keep their original headers.
+  slip. The change is a comment: a database that already ran 0005
+  needs nothing. Migrations 0001 to 0004 keep their original headers.
   Verified: `npm run check`, all tests passing.
+- The database test harness can stop after a given migration, so a
+  migration is tested on data written before it.
+- `downloadText()` moved from the manager's `main.ts` to `ui.ts`, where
+  the backup download uses it too.
+- `README.md`, `db/README.md` and `admin/README.md`: public codes,
+  backups and the restore procedure, test counts [180 in all], and the
+  roadmap, which marks 0.10 done and moves bulk import to 0.11 and the
+  beta to 0.12, in English and in the Italian summary.
+- Keyboard version 0.10.0, following the project's; the keys are
+  unchanged.
 
-### Planned
-- 0.10: bulk import of word lists, each one checked by
-  `validate-lexicon` before it reaches the database.
-- 0.11: database backups, hardening, contributor documentation; a
-  beta with native speakers in Genoa.
-- 1.0: when every criterion in the README's roadmap is met.
+### Known issues
+- Backups are made by hand: an admin must press the button regularly
+  and keep the files outside Supabase. An automatic, scheduled backup
+  needs a decision of its own.
+- In a new Supabase project every account has a new id, so a restore
+  there brings back no author and no role: roles are given back by
+  hand from the names and roles the backup lists, and the history and
+  the backup file are the only record of who wrote what.
+- Migration 0006 raises the version of every existing lemma and form
+  by one; a page of the manager left open across the migration reports
+  a conflict on its next save, and reloads.
 
 ## [0.9.0] [2026/10/17] [elided words]
 
@@ -963,7 +1085,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.3...v0.9.0
 [0.8.3]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.8.1...v0.8.2

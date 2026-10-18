@@ -14,6 +14,8 @@
  *           [decision 0028].
  * Updated:  2026/10/17, 12:40:02: also when a form joins an elided
  *           particle and a word [decision 0029].
+ * Updated:  2026/10/18, 09:14:22: the public code of the lemma and of
+ *           every form, and in each line of history [decision 0030].
  */
 
 import type { Context } from "../context.ts";
@@ -169,7 +171,8 @@ function lemmaSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
         rowActions(ctx, "lemmas", lemma, false, reload, edit),
       ),
       h("p", { class: "muted" },
-        `${posLabel(t, lemma.part_of_speech)} · ${lemma.variety} · ${lemma.orthography} · ${t.entryVersion(lemma.version)}`),
+        `${posLabel(t, lemma.part_of_speech)} · ${lemma.variety} · ${lemma.orthography} · ${t.entryVersion(lemma.version)} · `,
+        h("span", { class: "mono", title: t.publicIdNote }, `${t.fieldPublicId} ${lemma.public_id}`)),
       lemma.note !== null && h("p", { class: "note" }, lemma.note),
     );
   };
@@ -250,7 +253,8 @@ function wordformItem(ctx: Context, wordform: Wordform, orthography: string, rel
       h("span", { class: "headword" }, wordform.form),
       wordform.is_base && h("span", { class: "tag", title: t.entryBaseNote }, t.entryBase),
       wordform.grammatical_tag !== null && h("span", { class: "muted" }, ` ${wordform.grammatical_tag}`),
-      h("span", { class: "muted" }, ` · ${t.fieldFreq.toLowerCase()} ${wordform.freq} `),
+      h("span", { class: "muted" }, ` · ${t.fieldFreq.toLowerCase()} ${wordform.freq} · `),
+      h("span", { class: "muted mono", title: t.publicIdNote }, `${wordform.public_id} `),
       statusBadge(t, wordform),
       rowActions(ctx, "wordforms", wordform, wordform.is_base, reload, edit),
     );
@@ -514,9 +518,13 @@ async function drawHistory(ctx: Context, entry: Entry, body: HTMLElement): Promi
       const fields: string[] = changedFields(row.old_row, row.new_row);
       const subject: unknown = row.new_row?.["headword"] ?? row.new_row?.["form"]
         ?? row.new_row?.["gloss"] ?? row.new_row?.["definition_it"] ?? row.row_id;
+      // Lemmas and wordforms written before 0.10.0 have no code in their oldest lines.
+      const code: unknown = row.new_row?.["public_id"];
       list.append(h("li", {},
         h("span", { class: "muted" }, formatDateTime(row.at)), " ",
-        h("strong", {}, actionLabels[row.action]), ` ${row.table_name} «${String(subject)}» · ${who}`,
+        h("strong", {}, actionLabels[row.action]), ` ${row.table_name} «${String(subject)}» `,
+        typeof code === "string" && h("span", { class: "mono" }, `${code} `),
+        `· ${who}`,
         fields.length > 0 && h("span", { class: "muted" }, ` · ${t.historyChanged(fields.join(", "))}`),
       ));
     }

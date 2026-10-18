@@ -6,11 +6,14 @@
  *           [admin/src/messages.ts]. The compiler already refuses a
  *           missing key; these tests catch empty texts, untranslated
  *           copies and broken placeholders.
+ * Updated:  2026/10/18, 09:27:10: the example code in the search hint
+ *           must be a valid code [decision 0030].
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { isLang, LANGUAGES, messagesFor, type Lang, type Messages } from "../src/messages.ts";
+import { isValidPublicId } from "../src/public-id.ts";
 
 const CODES: Lang[] = LANGUAGES.map((l) => l.code);
 
@@ -70,5 +73,13 @@ test("the new texts exist in all three languages", () => {
       assert.ok(text.length > 0);
     }
     assert.match(m.latestIntro, /20/);
+  }
+});
+
+test("the example code in the search hint is a code the database could issue", () => {
+  for (const code of CODES) {
+    const examples: string[] = messagesFor(code).searchCodeHint.match(/LIJ-\S+?(?=[.,;:]?$|[.,;:]?\s)/gu) ?? [];
+    assert.equal(examples.length, 1, code);
+    assert.ok(isValidPublicId(examples[0] ?? ""), `${code}: ${examples[0]}`);
   }
 });

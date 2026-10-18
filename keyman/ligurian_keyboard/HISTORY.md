@@ -1,5 +1,9 @@
 # Ligure [grafîa ofiçiâ]: keyboard history
 
+## 0.10.0 2026/10/18
+
+* No change to the keyboard; its version follows the project's.
+
 ## 0.9.0 2026/10/17
 
 * The welcome page says that the long press is only an option, and that the word starts again after an apostrophe; the keys are unchanged.

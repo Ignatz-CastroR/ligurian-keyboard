@@ -4,6 +4,8 @@
  * Date:     2026/10/11, 20:19:30, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:28:26: language menu [Italian, English,
  *           Spanish]; CSV download next to the TSV one.
+ * Updated:  2026/10/18, 09:20:37: downloadText[] moved to ui.ts, where
+ *           the backup download uses it too.
  * Purpose:  Start the lexicon manager: connect to Supabase, follow the
  *           session, draw the header and send each address to its view.
  * Routes:   #/search/<query>   search [everyone]
@@ -23,7 +25,9 @@ import type { Profile, ReferenceData } from "./types.ts";
 import { connect, currentSession, exportTsv, myProfile, onSessionChange, referenceData, signOut } from "./db.ts";
 import { tsvToCsv } from "./export.ts";
 import { canPropose } from "./permissions.ts";
-import { attachMessageBar, clear, describeError, h, hideMessage, roleLabel, runAction, showError, showInfo } from "./ui.ts";
+import {
+  attachMessageBar, clear, describeError, downloadText, h, hideMessage, roleLabel, runAction, showError, showInfo,
+} from "./ui.ts";
 import { renderSearch } from "./views/search.ts";
 import { renderEntry } from "./views/entry.ts";
 import { renderNewLemma } from "./views/new-lemma.ts";
@@ -171,15 +175,6 @@ function drawHeader(state: State): void {
     ),
     h("div", { class: "tools" }, tsvButton, csvButton, langMenu, account),
   );
-}
-
-function downloadText(fileName: string, text: string, mimeType: string): void {
-  const url: string = URL.createObjectURL(new Blob([text], { type: mimeType }));
-  const anchor: HTMLAnchorElement = h("a", { href: url, download: fileName });
-  document.body.append(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
 }
 
 let renderTicket: number = 0;

@@ -263,6 +263,7 @@ pénna  [noun, zeneize, ofiçiâ]
 * Its **forms** are every spelling the keyboard may suggest. The base form is created automatically from the headword; inflected forms such as plurals are added by hand, since there is no automatic inflection yet [decision [0006](docs/decisions/0006-wordforms-entered-by-hand.md)].
 * Its **senses** are its numbered meanings, each with an optional definition written in Italian [decision [0015](docs/decisions/0015-definitions-in-italian.md)].
 * Each sense may carry **translations** into Italian, Spanish and English, several per language when they are synonyms.
+* Every lemma and every form has a **public code**, such as `LIJ-7K3Q9MDXK`, given by the database and never changed or reused, so that an entry keeps its name in backups and future imports; its last character is a check symbol that catches a mistyped code [decision [0030](docs/decisions/0030-public-identifiers.md)].
 
 Only **forms** reach the editor and the keyboard; senses and translations serve the people who read the dictionary.
 
@@ -284,6 +285,7 @@ Accounts are created by an admin; there is no self sign up.
 * **Nothing is ever erased.** Entries are only marked as deleted and can be restored; every change is written to an append only history [decision [0012](docs/decisions/0012-never-hard-delete.md)].
 * **No lost edits.** If two reviewers change the same entry at once, the second is told and shown the new version instead of silently overwriting the first.
 * **Only approved words are published**, and only published words reach the editor and the keyboard.
+* **Backups** of the whole dictionary, history included, are downloaded by admins from the lexicon manager, and restore exactly into a new, empty dictionary [decision [0031](docs/decisions/0031-backups.md)].
 
 ## How a word travels from the dictionary to your screen
 
@@ -359,7 +361,9 @@ Keyman pairs the two packages through their language code, `lij`, the ISO 639-3 
 
 * **Search by plain letters**, the same way one types: `zena` finds `Zêna`, and an inflected form finds its lemma. Open to everyone.
 * **Latest additions:** while the search field is empty, the 20 approved entries added most recently are listed below it, newest first, with the date and time each was added.
-* **Entry pages** with forms, senses, translations and, for reviewers, the full history of every change.
+* **Entry pages** with forms, senses, translations, the public code of the lemma and of every form, and, for reviewers, the full history of every change.
+* **Search by public code:** typing `LIJ-7K3Q9MDXK` finds its entry; a code with a wrong check symbol is reported as a typing mistake.
+* **Backups and restore,** for admins: the whole dictionary as one JSON file, and a restore into an empty dictionary.
 * **Proposals** with buttons for the special letters, `ñ` included, and a warning when a lemma with the same skeleton already exists.
 * **A review queue**, oldest proposals first.
 * **Roles and profiles**, managed by admins.
@@ -469,13 +473,13 @@ engine/                 the conversion engine
   src/demo.ts             terminal demo
   test/                   24 tests
 db/                     the shared dictionary
-  migrations/             0001 to 0005, run in order on Supabase
-  test/                   31 tests on PGlite; the Supabase stand in is for tests only
+  migrations/             0001 to 0006, run in order on Supabase
+  test/                   44 tests on PGlite; the Supabase stand in is for tests only
   README.md               data model, roles, client rules, deployment
 admin/                  the lexicon manager, published under /admin/
   src/                    TypeScript, one file per page under views/
-  test/                   29 tests
-  README.md               pages, accounts, downloads, publishing
+  test/                   42 tests
+  README.md               pages, accounts, downloads, codes, backups, publishing
 editor/                 the web editor, the front page of the site
   src/ime.ts              the input method's decisions, pure functions
   src/main.ts             the page
@@ -509,11 +513,11 @@ export/                 further dictionary formats, planned
 
 ## Tests
 
-154 tests guard the project, and every one runs on every push to `main` before anything is published:
+180 tests guard the project, and every one runs on every push to `main` before anything is published:
 
 * **Engine [24]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows; elided words split after the inner apostrophe and converted part by part, with each part's casing, the menu of combinations and its limit, and the whole word winning over its parts.
-* **Database [31]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Ten of them guard the search keys: the database's own folding equals the engine's on every test word and on every letter the database accepts, a list read from the database itself; the engine loads a word holding any of those letters; and `ñ` is accepted and found by typing `n`.
-* **Lexicon manager [29]:** input checks, the warning before a particle and a word are saved as one form, with a letter list identical to the real database's; the warning before `ñ` is saved under grafîa ofiçiâ, compared with the database's own spelling system codes; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180 with semicolons, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy.
+* **Database [44]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Ten of them guard the search keys: the database's own folding equals the engine's on every test word and on every letter the database accepts, a list read from the database itself; the engine loads a word holding any of those letters; and `ñ` is accepted and found by typing `n`. Thirteen more guard the public codes and backups: every code valid, unique across lemmas and forms, out of every client's reach and never reused; the database and the manager computing the same check symbols; old entries receiving codes with a line of history; and a backup restored into a fresh database giving back an identical backup and export, while a restore into a dictionary that is not empty, or from an incomplete file, is refused; a restore works into the same project after its data was lost, and leaves nothing behind when it fails halfway.
+* **Lexicon manager [42]:** input checks, the warning before a particle and a word are saved as one form, with a letter list identical to the real database's; the warning before `ñ` is saved under grafîa ofiçiâ, compared with the database's own spelling system codes; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180 with semicolons, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy; public codes, whose check symbol catches every single wrong character and every swap of neighbours, read forgivingly when typed; and backup files, every wrong one refused with its reason before it reaches the database.
 * **Web editor [18]:** finishing a word, replacing, an elided word typed in a sentence, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages; its three languages, the same as the manager's, with Spanish really translated.
 * **Android keyboard [32]:** a real build with Keyman's compiler; the model's own word breaker, which splits words exactly where the engine does and keeps hyphenated words whole, in the source and in the compiled model; the compiled dictionary loaded and inspected, proving that its search keys equal the engine's on every character up to U+02FF, every test word in four forms and 5,000 pseudo-random strings whose coverage is itself tested; exactly the Ligurian letters on the layout, in both cases; rows of equal width by Keyman's own arithmetic; the layer rules; the contents of both packages; the refusal of a bad snapshot or a failing compiler, keeping earlier packages; error reporting always off.
 * **Word counts [15]:** the choice of the dump from Wikimedia's own status files, refusing unfinished, unsigned or unreadable runs and any address but Wikimedia's; what a word is, in capitals, with elision and with foreign letters; markup stripped from written-for-the-test wikitext, unclosed markup included; the dump read in pieces cut anywhere, articles only; the frequency list written, read back, and refused line by line when damaged; and, end to end, the corpus deciding which spelling of `penna` the editor offers first.
@@ -564,6 +568,9 @@ Every important decision is recorded in [docs/decisions/](docs/decisions/README.
 | [0027](docs/decisions/0027-real-frequencies.md) | Real frequencies from the Ligurian Wikipedia |
 | [0028](docs/decisions/0028-enye-warning-under-oficia.md) | The manager warns before saving ñ under the grafîa ofiçiâ |
 | [0029](docs/decisions/0029-elision.md) | Elided words are split at the apostrophe |
+| [0030](docs/decisions/0030-public-identifiers.md) | Public identifiers for lemmas and wordforms |
+| [0031](docs/decisions/0031-backups.md) | Backups from the lexicon manager |
+| [0032](docs/decisions/0032-dictionary-second-purpose.md) | The dictionary as a second purpose, for the diaspora first |
 
 ## Open questions
 
@@ -583,7 +590,7 @@ Version 1.0.0 is a promise of stability, given when these criteria are met, not 
 3. **Frozen foundations:** the skeleton rules, the word list format, and the database schema with a written migration policy.
 4. **Settled open questions,** or explicit decisions to postpone them.
 5. **Real use** by native speakers for several weeks, with their reports fixed.
-6. **Operations:** a database backup routine and validated bulk imports.
+6. **Operations:** a database backup routine [in place since 0.10, by hand] and validated bulk imports.
 
 | Version | Content |
 |---|---|
@@ -591,16 +598,20 @@ Version 1.0.0 is a promise of stability, given when these criteria are met, not 
 | 0.7 | Done: workflows on Ubuntu 26.04 and Node.js 24, also checked on Node.js 22; the CSV download separated by semicolons |
 | 0.8 | Done: real frequencies from the Ligurian Wikipedia; a warning before `ñ` is saved under grafîa ofiçiâ |
 | 0.9 | Done: elided words split at the apostrophe, in the editor and the keyboard; accents never needed, said plainly; the manager links to the keyboard page |
-| 0.10 | Bulk import with validation |
-| 0.11 | Backups, hardening, contributor documentation; beta with speakers in Genoa |
+| 0.10 | Done: public codes for lemmas and forms; backups downloaded from the lexicon manager, with a tested restore |
+| 0.11 | Bulk import with validation, entries named by their public codes |
+| 0.12 | Hardening, contributor documentation; beta with speakers in Genoa |
 | 1.0 | All criteria met |
 
 Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought throughout.
+
+**The dictionary, a second purpose.** The same database is the framework of a trilingual Ligurian dictionary, whose first audience is the diaspora, above all in Latin America: people who often know Ligurian words by ear and read Spanish rather than Italian. After the keyboard's beta, without delaying 1.0.0, come public entry pages at a permanent address built from each entry's code, Spanish translations of the most common words, and pronunciation [decision [0032](docs/decisions/0032-dictionary-second-purpose.md)].
 
 ## What is new in each version
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.10.0, 2026/10/18: public codes and backups.** Every lemma and form receives a code such as `LIJ-7K3Q9MDXK`, which never changes and is never reused, shown in the lexicon manager and searchable there, with a check symbol that catches a mistyped code. Admins download the whole dictionary as one JSON file and can restore it, exactly, into a new and empty dictionary.
 * **0.9.0, 2026/10/17: elided words.** `d'aegua` becomes `d'ægua` from the entries `d'` and `ægua`, in the editor and in the Android keyboard alike; the manager warns before a particle and a word are saved as one form, and links to the keyboard page; the install page says plainly that accents are never needed.
 * **0.8.3, 2026/10/17:** a stray apostrophe is no longer counted as a word; the snapshot's frequency line says how many rows were found in the list; two invisible characters written as escapes, and a test that forbids them anywhere.
 * **0.8.2, 2026/10/17: the first frequency list.** 83,575 words counted from the Ligurian Wikipedia dump of 2026/10/01; the editor and the keyboard now rank spellings by it.
@@ -628,6 +639,8 @@ Words, corrections, translations, code and reviews from native speakers are all 
 ## Acknowledgements and independence
 
 The spelling rules follow the *Arfabêto* published by the **Académia Ligùstica do Brénno** at <https://www.zeneize.net/grafia/arfabeto.htm>. The Android keyboard is built on **Keyman**, free software by SIL Global.
+
+**Alessio Gastaldi** suggested giving every entry a lasting identifier of its own, from his experience with online Ligurian dictionaries; the public codes of 0.10.0 come from that advice.
 
 This is an independent project. It is not affiliated with, or endorsed by, the Académia Ligùstica do Brénno, A Compagna, SIL Global or any other organization.
 
@@ -674,7 +687,7 @@ Quando le stesse lettere portano a più parole, si sceglie quella giusta da un b
 
 ### Il dizionario
 
-Il dizionario condiviso è un database dove i collaboratori propongono parole, con le loro forme, i significati numerati, le definizioni in italiano e le traduzioni in italiano, spagnolo e inglese. I revisori le approvano; solo le parole approvate arrivano all'editor e alla tastiera, entro un giorno. Nulla viene mai cancellato davvero, ogni modifica resta nella cronologia, e le regole sono imposte dal database stesso. Ogni voce registra la sua varietà, `zeneize` per impostazione predefinita, e il suo sistema di scrittura, `ofiçiâ` per impostazione predefinita. Le parole vengono solo dalla conoscenza dei collaboratori o da fonti con licenza libera: nessun dizionario protetto da diritto d'autore viene copiato. Gli account li crea un amministratore: chi vuole contribuire può chiederne uno. Tutto il sito, l'editor, la pagina del dizionario e quella della tastiera, è in italiano, inglese e spagnolo; la pagina del dizionario mostra sotto il campo di ricerca le 20 voci approvate aggiunte più di recente.
+Il dizionario condiviso è un database dove i collaboratori propongono parole, con le loro forme, i significati numerati, le definizioni in italiano e le traduzioni in italiano, spagnolo e inglese. I revisori le approvano; solo le parole approvate arrivano all'editor e alla tastiera, entro un giorno. Nulla viene mai cancellato davvero, ogni modifica resta nella cronologia, e le regole sono imposte dal database stesso. Ogni voce registra la sua varietà, `zeneize` per impostazione predefinita, e il suo sistema di scrittura, `ofiçiâ` per impostazione predefinita. Ogni lemma e ogni forma ha un codice pubblico, come `LIJ-7K3Q9MDXK`, che non cambia mai, e gli amministratori possono scaricare una copia di sicurezza di tutto il dizionario. Le parole vengono solo dalla conoscenza dei collaboratori o da fonti con licenza libera: nessun dizionario protetto da diritto d'autore viene copiato. Gli account li crea un amministratore: chi vuole contribuire può chiederne uno. Tutto il sito, l'editor, la pagina del dizionario e quella della tastiera, è in italiano, inglese e spagnolo; la pagina del dizionario mostra sotto il campo di ricerca le 20 voci approvate aggiunte più di recente.
 
 ### Limiti attuali
 
@@ -685,7 +698,7 @@ Il dizionario condiviso è un database dove i collaboratori propongono parole, c
 
 ### Verso la versione 1.0.0
 
-La 1.0.0 arriverà quando ci saranno: la tastiera Android provata sul campo, qualche migliaio di forme approvate con frequenze reali, regole e formati congelati, le questioni aperte risolte, alcune settimane d'uso reale a Genova, e copie di sicurezza regolari del database. Il percorso: frequenze reali [0.8, fatto], forme elise divise all'apostrofo [0.9, fatto], importazione in blocco con verifica [0.10], copie di sicurezza, documentazione e prova con parlanti genovesi [0.11].
+La 1.0.0 arriverà quando ci saranno: la tastiera Android provata sul campo, qualche migliaio di forme approvate con frequenze reali, regole e formati congelati, le questioni aperte risolte, alcune settimane d'uso reale a Genova, e copie di sicurezza regolari del database. Il percorso: frequenze reali [0.8, fatto], forme elise divise all'apostrofo [0.9, fatto], codici pubblici per lemmi e forme e copie di sicurezza scaricate dal gestore del lessico [0.10, fatto], importazione in blocco con verifica [0.11], documentazione e prova con parlanti genovesi [0.12]. Lo stesso database è anche la struttura di un dizionario trilingue, pensato prima di tutto per i discendenti dei liguri emigrati, soprattutto in America Latina: dopo la prova a Genova arriveranno pagine pubbliche per ogni voce, traduzioni spagnole delle parole più comuni e la pronuncia.
 
 ### Contribuire
 

@@ -2,6 +2,7 @@
  * permissions.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/11, 20:14:11, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/18, 09:20:37: canBackup[] [decision 0031].
  * Purpose:  Decide which buttons the interface shows to whom.
  * Contract: Cosmetic only. The database enforces every rule itself
  *           [row level security in 0003, triggers in 0002]; these
@@ -25,6 +26,11 @@ export function canDeleteOrRestore(role: Role | null): boolean {
 }
 
 export function canManageRoles(role: Role | null): boolean {
+  return role === "admin";
+}
+
+// Backups hold every row and every profile: admins only.
+export function canBackup(role: Role | null): boolean {
   return role === "admin";
 }
 

@@ -3,7 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/10
 * **Decided by:** Eng. José Ignacio Castro de R.
-* **Refined by:** [0021](0021-keyman-scope-and-toolchain.md), on what Keyman can do on each system
+* **Refined by:** [0021](0021-keyman-scope-and-toolchain.md), on what Keyman can do on each system; [0032](0032-dictionary-second-purpose.md), on the dictionary as a second purpose
 
 ## Context
 

@@ -168,10 +168,10 @@ Design: [decision 0031](../docs/decisions/0031-backups.md).
 
 Every id, public code, version, date and line of history comes back exactly as it was, and new entries continue after the highest id. The same steps restore into the same project after its data was lost, from step 3; there, profiles and authors are matched to the existing accounts, and nobody who is an admin already loses that role.
 
-**Large backups.** Supabase stops every statement made through its API after 8 seconds for signed-in users. Since migration 0008, `export_backup()` and `restore_backup()` carry a limit of 60 seconds of their own, which Supabase's API applies when the lexicon manager calls them; 60 seconds is the most Supabase allows there, and the Dashboard, the SQL Editor included, is held to the same minute. If the manager reports that the database stopped the operation:
+**Large backups.** Supabase stops every statement made through its API after 8 seconds for signed-in users, and 60 seconds is the most a function or the Dashboard may be given [migration 0008 gives `export_backup()` and `restore_backup()` that minute]. Since 0.11.2 the lexicon manager no longer calls `export_backup()`: it assembles the same file from small reads, a thousand rows at most each, so its backup button has no time limit to meet. The limits still apply to the two functions themselves, to a restore, and to anything run in the SQL Editor:
 
-1. **Up to a minute,** use the SQL Editor: `select public.export_backup();` gives the document, and `select public.restore_backup($backup$ ... $backup$::jsonb);`, with the file's content between the two markers, restores it.
-2. **Beyond a minute,** run the backup from your computer with `psql`, PostgreSQL's command line client, over the **Session pooler** connection string from the project's **Connect** button. A session there may lift its own limit:
+1. **Up to a minute,** the SQL Editor: `select public.export_backup();` gives the document, and `select public.restore_backup($backup$ ... $backup$::jsonb);`, with the file's content between the two markers, restores it.
+2. **Beyond a minute,** `psql` from your computer, PostgreSQL's command line client, over the **Session pooler** connection string from the project's **Connect** button. A session there may lift its own limit:
 
    ```bash
    psql "<session pooler connection string>" -At -v ON_ERROR_STOP=1 \
@@ -181,4 +181,4 @@ Every id, public code, version, date and line of history comes back exactly as i
 
    Each `-c` runs in the same session, one after the other. The connection is the trusted backend, so the backup is allowed; type the database password when asked and never write it into a file. Check that the file starts with `{"format": "ligurian-keyboard-backup"` before relying on it.
 
-The lasting answer, once even a minute is not enough for the lexicon manager, is a backup assembled by the manager table by table in small pages; it is a known issue of 0.11.1.
+A restore remains one statement: a backup too large to restore in a minute through the manager must be restored through `psql`, which is a known issue.

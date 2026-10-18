@@ -13,6 +13,9 @@
  *           dictionary that is not empty.
  * Updated:  2026/10/18, 12:33:40: backupFileName[] builds its name with
  *           stampedFileName[], shared with the TSV and CSV downloads.
+ * Updated:  2026/10/18, 16:48:20: assembleBackup[] builds the same file
+ *           from many small reads, so that no single statement can meet
+ *           the database's time limit, however large the dictionary.
  * Decision: docs/decisions/0031-backups.md
  */
 
@@ -111,4 +114,100 @@ export function checkBackupText(text: string): BackupCheck {
     }
   }
   return result;
+}
+
+/* ====================================================================
+   A backup assembled from small reads [version 0.11.2]
+
+   export_backup[] writes the whole file in one statement, and Supabase
+   stops a signed-in user's statement after a time limit; with the
+   corpus from Genoa it no longer fits. The manager therefore reads
+   each table itself, in pages of at most PAGE_SIZE rows, and builds a
+   file identical in format to export_backup[]'s, which restore_backup[]
+   and checkBackupText[] accept unchanged.
+
+   Many reads are not one snapshot. So that the file can always be
+   restored, the highest id of every table with an id is read first,
+   history first, then translations, senses, forms and lemmas, and no
+   row above its table's bound is taken. A row is then never in the
+   file without its parent, which existed before it, and the history
+   never mentions a row the file lacks. An edit made while the backup
+   runs may appear in a row without its line of history; a backup taken
+   while nobody edits is exact.
+   ==================================================================== */
+
+export const PAGE_SIZE: number = 1000;
+
+export type Row = Record<string, unknown>;
+
+// Where the rows come from: Supabase in the page, the test database in
+// the tests.
+export interface BackupSource {
+  // A small table whole, ordered by these columns.
+  all(table: string, order: readonly string[]): Promise<Row[]>;
+  // The highest id of a table; 0 when it is empty.
+  maxId(table: string): Promise<number>;
+  // Up to `limit` rows with after < id <= through, by id.
+  page(table: string, after: number, through: number, limit: number): Promise<Row[]>;
+}
+
+const SMALL_TABLES: readonly [string, readonly string[]][] = [
+  ["varieties", ["code"]],
+  ["orthographies", ["code"]],
+  ["gloss_languages", ["code"]],
+  ["profiles", ["created_at", "user_id"]],
+];
+
+// The order the bounds are read in: history, then children before
+// their parents.
+export const BOUND_ORDER: readonly string[] = ["audit_log", "glosses", "senses", "wordforms", "lemmas"];
+
+export async function assembleBackup(source: BackupSource, now: Date,
+  onProgress: (rows: number) => void = () => undefined): Promise<Row> {
+  const bounds: Map<string, number> = new Map();
+  for (const table of BOUND_ORDER) {
+    bounds.set(table, await source.maxId(table));
+  }
+
+  const tables: Record<string, Row[]> = {};
+  let read: number = 0;
+  for (const [table, order] of SMALL_TABLES) {
+    tables[table] = await source.all(table, order);
+    read += tables[table].length;
+    onProgress(read);
+  }
+  for (const table of ["lemmas", "wordforms", "senses", "glosses", "audit_log"]) {
+    const through: number = bounds.get(table) ?? 0;
+    const rows: Row[] = [];
+    let after: number = 0;
+    let done: boolean = through === 0;
+    while (!done) {
+      const page: Row[] = await source.page(table, after, through, PAGE_SIZE);
+      rows.push(...page);
+      read += page.length;
+      onProgress(read);
+      // A short page does not mean the end: the server may cap pages
+      // below PAGE_SIZE. Only an empty page, or the bound, ends a table.
+      const last: unknown = page.at(-1)?.["id"];
+      if (page.length === 0 || typeof last !== "number" || last >= through) {
+        done = true;
+      } else {
+        after = last;
+      }
+    }
+    tables[table] = rows;
+  }
+
+  const counts: Record<string, number> = {};
+  for (const name of BACKUP_TABLES) {
+    counts[name] = (tables[name] ?? []).length;
+  }
+  return {
+    format: BACKUP_FORMAT,
+    format_version: BACKUP_FORMAT_VERSION,
+    created_at: now.toISOString(),
+    license: "Lexicon data: CC BY-SA 4.0. Profiles and history: private to the project.",
+    counts,
+    tables,
+  };
 }

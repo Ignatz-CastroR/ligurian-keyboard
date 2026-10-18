@@ -6,6 +6,8 @@
  * Updated:  2026/10/18, 09:02:15: lemmasWithPublicId[], to find an
  *           entry by its code; exportBackup[] and restoreBackup[]
  *           [decisions 0030 and 0031].
+ * Updated:  2026/10/18, 16:50:44: backupSource[], the small reads from
+ *           which the manager assembles a backup [version 0.11.2].
  * Updated:  2026/10/18, 13:15:02: reviewBatch[], approving or rejecting
  *           many queue rows per call, replaces setStatusById[]
  *           [decision 0033]; AppError and the SQLSTATE kinds moved to
@@ -22,7 +24,7 @@
 import { createClient, type SupabaseClient, type Session } from "@supabase/supabase-js";
 import { skeleton } from "../../engine/src/skeleton.ts";
 import { searchKeyFilter } from "./forms.ts";
-import type { RestoreReport } from "./backup.ts";
+import type { BackupSource, RestoreReport, Row } from "./backup.ts";
 import { AppError, sqlStateKind } from "./errors.ts";
 import {
   BATCH_SIZE, chunks, mergeResults, type BatchItem, type BatchOutcome, type BatchResult, type ReviewStatus,
@@ -424,13 +426,50 @@ export async function exportTsv(): Promise<string> {
    Backups, for admins: the database refuses everyone else
    ==================================================================== */
 
-export async function exportBackup(): Promise<unknown> {
-  const { data, error } = await db().rpc("export_backup");
-  if (error !== null) {
-    throw toAppError(error);
-  }
-  return data as unknown;
+/* The reads a backup is assembled from [backup.ts]. Each one is a small,
+   fast query, far below the database's time limit; an admin's row
+   level security lets them see every row, deleted ones included. */
+export function backupSource(): BackupSource {
+  const fail = (error: PgError | null): void => {
+    if (error !== null) {
+      throw toAppError(error);
+    }
+  };
+  return {
+    async all(table: string, order: readonly string[]): Promise<Row[]> {
+      const rows: Row[] = [];
+      let from: number = 0;
+      let more: boolean = true;
+      while (more) {
+        let query = db().from(table).select("*");
+        for (const column of order) {
+          query = query.order(column);
+        }
+        const { data, error } = await query.range(from, from + 999);
+        fail(error);
+        const page: Row[] = (data ?? []) as Row[];
+        rows.push(...page);
+        from += page.length;
+        // Only an empty page ends the table: the server may cap pages.
+        more = page.length > 0;
+      }
+      return rows;
+    },
+    async maxId(table: string): Promise<number> {
+      const { data, error } = await db().from(table).select("id").order("id", { ascending: false }).limit(1);
+      fail(error);
+      const first: unknown = (data ?? [])[0];
+      return typeof first === "object" && first !== null ? Number((first as { id: number }).id) : 0;
+    },
+    async page(table: string, after: number, through: number, limit: number): Promise<Row[]> {
+      const { data, error } = await db().from(table).select("*")
+        .gt("id", after).lte("id", through).order("id").limit(limit);
+      fail(error);
+      return (data ?? []) as Row[];
+    },
+  };
 }
+
 
 // Only into a dictionary with no entries and no history at all.
 export async function restoreBackup(backup: Record<string, unknown>): Promise<RestoreReport> {

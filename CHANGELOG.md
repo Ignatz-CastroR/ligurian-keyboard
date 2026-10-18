@@ -27,6 +27,51 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
   public code, Spanish translations of the most common words, and
   pronunciation [decision 0032].
 
+## [0.11.2] [2026/10/18] [backups from small reads]
+
+### Fixed
+- The backup button still failed after 0.11.1 on the live dictionary,
+  now 11,792 approved forms with their history. Raising the time limit
+  of one statement was not enough: the lexicon manager no longer asks
+  for the backup in one statement. It assembles the same file from
+  small reads, a thousand rows at most each, and shows how many rows
+  it has read [`assembleBackup()` in `admin/src/backup.ts`, its reads
+  in `backupSource()` in `admin/src/db.ts`].
+  - Many reads are not one snapshot, so the highest id of every table
+    is read first, history first, then translations, senses, forms
+    and lemmas, and no row above its table's bound is taken: the file
+    never holds a row without its parent, nor history about a row it
+    lacks. An edit made while the backup runs may appear without its
+    line of history; a backup taken while nobody edits is exact.
+  - Only an empty page ends a table, never a short one, so a server
+    that caps its pages below a thousand rows loses nothing.
+  - The file is identical in format to `export_backup()`'s, which
+    stays for the SQL Editor and `psql`; `restore_backup()` and the
+    manager's own check accept it unchanged.
+  Verified by 4 manager tests on a real database: the assembled file
+  equals `export_backup()`'s table by table and count by count, with
+  pending, rejected and deleted rows, edits and two authors; pages
+  capped at 3 rows lose no row; an entry written while the backup runs
+  is left out whole and the file restores into a fresh database
+  exactly; an empty dictionary reads no page. The live button must
+  still be tried once, since only it talks to Supabase.
+
+### Changed
+- `exportBackup()` removed from `admin/src/db.ts`, no longer used.
+- `db/README.md`, `admin/README.md` and decision 0031: how the backup
+  is assembled, and which limits still apply, to the SQL Editor and to
+  a restore.
+- Keyboard version 0.11.2, following the project's; the keys are
+  unchanged.
+
+### Known issues
+- A restore is still one statement, held to a minute through the
+  manager or the SQL Editor; a larger backup is restored with `psql`.
+- No migration in this version.
+
+Tests: 223, passing on Node.js 22 and 24 [engine 24, db 63, admin 60,
+editor 24, keyman 32, corpus 15, docs 5].
+
 ## [0.11.1] [2026/10/18] [backups on a larger dictionary]
 
 ### Fixed
@@ -1283,7 +1328,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.1...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.2...HEAD
+[0.11.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.9.0...v0.10.0

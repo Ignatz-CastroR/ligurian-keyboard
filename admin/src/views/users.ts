@@ -11,15 +11,21 @@
  *           database checks the role and the emptiness again.
  * Updated:  2026/10/18, 14:12:05: the backup file is named by the time
  *           of the click, as the TSV and CSV downloads are.
+ * Updated:  2026/10/18, 16:53:31: the backup is assembled from small
+ *           reads, with its progress shown, instead of one statement
+ *           that the database's time limit could stop.
  */
 
 import type { Context } from "../context.ts";
 import type { Profile, Role } from "../types.ts";
 import { ROLES } from "../types.ts";
-import { exportBackup, profiles, restoreBackup, updateProfile } from "../db.ts";
+import { backupSource, profiles, restoreBackup, updateProfile } from "../db.ts";
 import { canBackup, canManageRoles, isStaff } from "../permissions.ts";
 import { formatDateTime } from "../forms.ts";
-import { backupFileName, checkBackupText, countsSummary, type BackupCheck, type CountLabels, type RestoreReport } from "../backup.ts";
+import {
+  assembleBackup, backupFileName, checkBackupText, countsSummary,
+  type BackupCheck, type CountLabels, type RestoreReport, type Row,
+} from "../backup.ts";
 import { describeError, downloadText, field, h, roleLabel, runAction, select, showError, showInfo } from "../ui.ts";
 
 const MAX_NAME: number = 80;
@@ -60,8 +66,9 @@ function backupCard(ctx: Context): HTMLElement {
   const button: HTMLButtonElement = h("button", { type: "button", class: "primary" }, t.backupDownload);
   button.addEventListener("click", () => void runAction(t, button, async () => {
     // Named at the click, like the TSV and CSV downloads.
-    const name: string = backupFileName(new Date());
-    const backup: unknown = await exportBackup();
+    const started: Date = new Date();
+    const name: string = backupFileName(started);
+    const backup: Row = await assembleBackup(backupSource(), started, (rows: number) => showInfo(t.backupProgress(rows)));
     downloadText(name, JSON.stringify(backup, null, 1), "application/json;charset=utf-8");
     showInfo(t.backupSaved(name));
   }));

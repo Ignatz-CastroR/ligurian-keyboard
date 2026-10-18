@@ -16,6 +16,7 @@
  *           [decision 0033].
  * Updated:  2026/10/18, 16:24:30: the message for an operation stopped
  *           at the database's time limit.
+ * Updated:  2026/10/18, 16:55:02: the progress of a backup.
  * Purpose:  Every text the lexicon manager shows, in Italian [default,
  *           for the Genoese contributors], English and Spanish.
  * Contract: EN and ES have exactly the type of IT, so the compiler
@@ -180,6 +181,7 @@ const IT = {
   backupIntro: "Scarica tutto il dizionario in un file JSON: lemmi, forme, significati, traduzioni, cronologia e profili [nomi e ruoli; niente email né password]. Conservalo fuori da questo sito.",
   backupDownload: "Scarica una copia di sicurezza",
   backupSaved: (name: string): string => `Copia salvata: ${name}`,
+  backupProgress: (n: number): string => (n === 1 ? "Scaricata 1 riga…" : `Scaricate ${n} righe…`),
   restoreTitle: "Ripristino da una copia",
   restoreIntro: "Solo in un dizionario vuoto, appena creato: la copia lo ricostruisce con gli stessi codici, le stesse versioni e la stessa cronologia. Gli account non sono nella copia: in un progetto nuovo i ruoli si riassegnano a mano, e la copia elenca il nome e il ruolo di tutti.",
   restoreFile: "File della copia",
@@ -232,7 +234,7 @@ const IT = {
   errInvalidValue: "Il database ha rifiutato un valore non valido.",
   errNotFound: "Voce non trovata, o non visibile per te.",
   errNotEmpty: "Il dizionario non è vuoto: una copia si ripristina solo in un dizionario appena creato.",
-  errTimeout: "Il database ha interrotto l'operazione perché durava troppo. Per una copia di sicurezza molto grande, usa l'editor SQL di Supabase, come spiega db/README.md.",
+  errTimeout: "Il database ha interrotto l'operazione perché durava troppo. Per ripristinare una copia molto grande, segui db/README.md.",
   errGeneric: (msg: string): string => `Errore: ${msg}`,
   errNotConfigured: "Configurazione mancante: VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY non sono impostate. Vedi admin/README.md.",
 };
@@ -383,6 +385,7 @@ const EN: Messages = {
   backupIntro: "Download the whole dictionary as one JSON file: lemmas, forms, senses, translations, history and profiles [names and roles; no emails or passwords]. Keep it somewhere other than this site.",
   backupDownload: "Download a backup",
   backupSaved: (name: string): string => `Backup saved: ${name}`,
+  backupProgress: (n: number): string => (n === 1 ? "1 row downloaded…" : `${n} rows downloaded…`),
   restoreTitle: "Restore from a backup",
   restoreIntro: "Only into an empty, newly created dictionary: the backup rebuilds it with the same codes, versions and history. Accounts are not in the backup: in a new project, roles are given back by hand, and the backup lists everyone's name and role.",
   restoreFile: "Backup file",
@@ -435,7 +438,7 @@ const EN: Messages = {
   errInvalidValue: "The database refused an invalid value.",
   errNotFound: "Entry not found, or not visible to you.",
   errNotEmpty: "The dictionary is not empty: a backup is restored only into a newly created dictionary.",
-  errTimeout: "The database stopped the operation because it took too long. For a very large backup, use the Supabase SQL Editor, as db/README.md explains.",
+  errTimeout: "The database stopped the operation because it took too long. To restore a very large backup, follow db/README.md.",
   errGeneric: (msg: string): string => `Error: ${msg}`,
   errNotConfigured: "Configuration missing: VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are not set. See admin/README.md.",
 };
@@ -584,6 +587,7 @@ const ES: Messages = {
   backupIntro: "Descarga todo el diccionario en un archivo JSON: lemas, formas, significados, traducciones, historial y perfiles [nombres y roles; ni correos ni contraseñas]. Guárdalo fuera de este sitio.",
   backupDownload: "Descargar una copia de seguridad",
   backupSaved: (name: string): string => `Copia guardada: ${name}`,
+  backupProgress: (n: number): string => (n === 1 ? "1 fila descargada…" : `${n} filas descargadas…`),
   restoreTitle: "Restaurar desde una copia",
   restoreIntro: "Solo en un diccionario vacío, recién creado: la copia lo reconstruye con los mismos códigos, versiones e historial. Las cuentas no están en la copia: en un proyecto nuevo los roles se reasignan a mano, y la copia lista el nombre y el rol de todos.",
   restoreFile: "Archivo de la copia",
@@ -636,7 +640,7 @@ const ES: Messages = {
   errInvalidValue: "La base de datos rechazó un valor no válido.",
   errNotFound: "Entrada no encontrada, o no visible para ti.",
   errNotEmpty: "El diccionario no está vacío: una copia solo se restaura en un diccionario recién creado.",
-  errTimeout: "La base de datos interrumpió la operación porque tardaba demasiado. Para una copia de seguridad muy grande, usa el editor SQL de Supabase, como explica db/README.md.",
+  errTimeout: "La base de datos interrumpió la operación porque tardaba demasiado. Para restaurar una copia muy grande, sigue db/README.md.",
   errGeneric: (msg: string): string => `Error: ${msg}`,
   errNotConfigured: "Falta la configuración: VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY no están definidas. Consulta admin/README.md.",
 };

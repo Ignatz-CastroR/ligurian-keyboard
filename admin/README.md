@@ -56,7 +56,7 @@ Every lemma and every form shows its **public code**, such as `LIJ-7K3Q9MDXK`, g
 
 On the people page, admins find two more cards [decision [0031](../docs/decisions/0031-backups.md)]:
 
-* **Download a backup:** the whole dictionary as one JSON file, named by date and time, such as `ligurian-backup-20261018-085840.json`. It holds every row, pending and deleted ones included, the whole history and every profile [name and role; no email and no password]: keep it private and away from Supabase.
+* **Download a backup:** the whole dictionary as one JSON file, named by date and time, such as `ligurian-backup-20261018-085840.json`. The page assembles it from many small reads, a thousand rows at most each, showing how many rows it has read, so no single request can meet the database's time limit however large the dictionary grows; the file is identical in format to the one `export_backup()` writes in the SQL Editor. It holds every row, pending and deleted ones included, the whole history and every profile [name and role; no email and no password]: keep it private and away from Supabase.
 * **Restore from a backup:** only into a newly created dictionary with no entries and no history; the database refuses anything else. The file is checked before it is sent, and the page reports what was restored. The full procedure is in [db/README.md](../db/README.md).
 
 The **frequency** of a form is a weight, 1 by default. The daily snapshot adds to it the number of times the Ligurian Wikipedia uses the form [decision [0027](../docs/decisions/0027-real-frequencies.md)], so there is usually no need to change it; raise it only to put a form ahead of what the corpus says. The TSV and CSV downloads show the stored value.
@@ -72,7 +72,7 @@ The **frequency** of a form is a weight, 1 by default. The daily snapshot adds t
 | `src/forms.ts` | Input checks and formatting; pure functions |
 | `src/export.ts` | TSV to CSV conversion; pure functions |
 | `src/public-id.ts` | Public codes: Crockford's base 32, the check symbol, reading a typed code; pure functions |
-| `src/backup.ts` | The check of a backup file before a restore, summaries of counts; pure functions |
+| `src/backup.ts` | A backup assembled from small reads, the check of a backup file before a restore, summaries of counts; pure functions |
 | `src/file-names.ts` | Download names stamped with the local date and time, for the TSV, the CSV and backups; pure functions |
 | `src/queue.ts` | The review queue grouped by entry, its labels, the selection and the items of a batch; pure functions |
 | `src/errors.ts` | The kinds of failure, and how a PostgreSQL error code becomes one |
@@ -87,6 +87,7 @@ The **frequency** of a form is a weight, 1 by default. The daily snapshot adds t
 | `test/messages.test.ts` | The three languages: no empty text, no lost placeholder, no untranslated copy; the example code in the search hint is valid |
 | `test/public-id.test.ts` | Public codes: both directions of base 32, the check symbol catching every single wrong character and every swap of neighbours, and the forgiving reading of a typed code |
 | `test/backup.test.ts` | Backup file names, summaries, every reason a wrong file is refused, and a real backup written by the database passing the check |
+| `test/backup-assembly.test.ts` | The backup assembled from small reads equals `export_backup()`'s on a real database, loses no row when the server sends short pages, leaves out whole any row written while it runs, and restores exactly |
 | `test/file-names.test.ts` | Download names: padded, digits only, sorting in time order; no fixed name left in the page |
 | `test/queue.test.ts` | Grouping by entry, labels in three languages, ranges, entry and "select all" selection, batch items, failure reasons, and a real queue approved whole by the database |
 | `vite.config.ts` | Build settings |

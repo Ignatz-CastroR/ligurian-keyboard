@@ -1,7 +1,9 @@
 /*
  * 0005_letter_enye.sql
- * Author:    Ignatz-CastroR and contributors
+ * Author:    Eng. José Ignacio Castro de R. and contributors
  * Date:      2026/10/17, 07:50:33, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:   2026/10/18, 07:01:56: the author's full name, as in every
+ *            file written after 0.5.1; comment only, nothing to run again.
  * Purpose:   Accept the letter ñ [and Ñ] in Ligurian spellings, for the
  *            spelling systems that write it, and give it the search key
  *            n, so that typing luna finds a spelling written with ñ.

@@ -13,6 +13,14 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 
 ## [Unreleased]
 
+### Changed
+- Migration 0005's header names the author as every other file does,
+  `Eng. José Ignacio Castro de R. and contributors`. It was written
+  after 0.5.1 made the name uniform, so the old GitHub handle was a
+  slip. The change is a comment: a database that already ran 0005 needs
+  nothing. Migrations 0001 to 0004 keep their original headers.
+  Verified: `npm run check`, all tests passing.
+
 ### Planned
 - 0.10: bulk import of word lists, each one checked by
   `validate-lexicon` before it reaches the database.

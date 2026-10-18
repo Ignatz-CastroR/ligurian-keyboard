@@ -13,6 +13,22 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 
 ## [Unreleased]
 
+### Added
+- `README.md`: the project's long-term goal, in English and in the
+  Italian summary: a fully integrated Ligurian text editor for
+  computers, phones and tablets, with spell checking, predictive text
+  and automatic correction, to be built as a separate project in its
+  own repository on top of this one, whose components are dogfooded
+  here first. It describes four layers of
+  correction [orthographic restoration, done today; phonologically
+  informed spelling correction, as `sun` to `són`; lexical
+  normalization of Italianisms; idiomatic normalization, as `dovéi` to
+  `avéighe da`], and the principles that bind them: corrections are
+  proposals, every rule is reviewed dictionary data, one engine runs
+  everywhere, and each layer waits for its data and its own decision
+  record. It extends decision 0001 without reversing it. Verified:
+  `npm run check`, all tests passing, the decision tables included.
+
 ### Planned
 - 0.11.0: bulk import of word lists, each one checked by
   `validate-lexicon` before it reaches the database, and its entries

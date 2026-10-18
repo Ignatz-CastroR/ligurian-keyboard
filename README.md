@@ -21,29 +21,30 @@ See [Downloads and versions](#downloads-and-versions) for exactly what can be do
 
 1. [What this project is](#what-this-project-is)
 2. [Why it exists](#why-it-exists)
-3. [Downloads and versions](#downloads-and-versions)
-4. [How the input method works](#how-the-input-method-works)
-5. [Spelling systems and varieties](#spelling-systems-and-varieties)
-6. [The parts of the project](#the-parts-of-the-project)
-7. [The shared dictionary](#the-shared-dictionary)
-8. [How a word travels from the dictionary to your screen](#how-a-word-travels-from-the-dictionary-to-your-screen)
-9. [The web editor](#the-web-editor)
-10. [The Android keyboard](#the-android-keyboard)
-11. [The lexicon manager](#the-lexicon-manager)
-12. [Where the words come from](#where-the-words-come-from)
-13. [Privacy](#privacy)
-14. [Getting started as a developer](#getting-started-as-a-developer)
-15. [Repository layout](#repository-layout)
-16. [Tests](#tests)
-17. [Automation](#automation)
-18. [Design decisions](#design-decisions)
-19. [Open questions](#open-questions)
-20. [Roadmap and the road to 1.0.0](#roadmap-and-the-road-to-100)
-21. [What is new in each version](#what-is-new-in-each-version)
-22. [Contributing](#contributing)
-23. [Licenses](#licenses)
-24. [Acknowledgements and independence](#acknowledgements-and-independence)
-25. [Riassunto in italiano](#riassunto-in-italiano)
+3. [The long-term goal: a Ligurian text editor](#the-long-term-goal-a-ligurian-text-editor)
+4. [Downloads and versions](#downloads-and-versions)
+5. [How the input method works](#how-the-input-method-works)
+6. [Spelling systems and varieties](#spelling-systems-and-varieties)
+7. [The parts of the project](#the-parts-of-the-project)
+8. [The shared dictionary](#the-shared-dictionary)
+9. [How a word travels from the dictionary to your screen](#how-a-word-travels-from-the-dictionary-to-your-screen)
+10. [The web editor](#the-web-editor)
+11. [The Android keyboard](#the-android-keyboard)
+12. [The lexicon manager](#the-lexicon-manager)
+13. [Where the words come from](#where-the-words-come-from)
+14. [Privacy](#privacy)
+15. [Getting started as a developer](#getting-started-as-a-developer)
+16. [Repository layout](#repository-layout)
+17. [Tests](#tests)
+18. [Automation](#automation)
+19. [Design decisions](#design-decisions)
+20. [Open questions](#open-questions)
+21. [Roadmap and the road to 1.0.0](#roadmap-and-the-road-to-100)
+22. [What is new in each version](#what-is-new-in-each-version)
+23. [Contributing](#contributing)
+24. [Licenses](#licenses)
+25. [Acknowledgements and independence](#acknowledgements-and-independence)
+26. [Riassunto in italiano](#riassunto-in-italiano)
 
 ---
 
@@ -97,6 +98,36 @@ The model is the Japanese input method: nobody in Japan types kanji directly; th
 * **Not a new spelling.** The project follows the grafîa ofiçiâ as published; it does not invent or reform anything.
 * **Not a replacement for the apps people use.** People write in WhatsApp, Facebook, Word and Gmail; the keyboard must work there [decision [0001](docs/decisions/0001-input-method-not-editor.md)]. The web editor is a demonstration, a tool for long texts, and the solution for computers.
 * **Not a copy of existing dictionaries.** Every word is contributed freely and lawfully [see [Where the words come from](#where-the-words-come-from)].
+
+## The long-term goal: a Ligurian text editor
+
+This repository is the foundation of a larger objective: **a fully integrated Ligurian text editor for computers, phones and tablets**, with spell checking, predictive text and automatic correction, which does not merely spell each word correctly but helps its writer produce correct Ligurian.
+
+That editor will be **a separate project, in a repository of its own, built on this one.** It will use this repository's conversion engine, its shared and reviewed dictionary, the dictionary's public codes, the frequency lists and, next, the inflection generator as its base. Here those components are **dogfooded:** they run in production, inside an input method used every day, so each one is proven by real writers before the editor depends on it.
+
+For that, this repository will offer its engine and its dictionary exports as a dependency with a stable, versioned interface; the 1.0.0 criterion of frozen foundations [see [Roadmap and the road to 1.0.0](#roadmap-and-the-road-to-100)] is its first step.
+
+### Four layers of correction
+
+The input method in this repository performs the first layer today. The editor will add three more, each building on the one before:
+
+| Layer | What it corrects | Example |
+|---|---|---|
+| **0. Orthographic restoration** [today] | Plain letters to the grafîa ofiçiâ | `zeneize` → `zenéize` |
+| **1. Phonologically informed spelling correction** | Spellings that follow pronunciation, or Italian spelling habits, instead of the official orthography | `sun` → `són` |
+| **2. Lexical normalization** | Italian loanwords and calques for which Ligurian has a word of its own | a common Italianism → its native Ligurian equivalent |
+| **3. Idiomatic normalization** | Constructions copied from Italian, replaced by the Ligurian construction, inflected to agree with their context | `dovéi` → `avéighe da` |
+
+### Design principles
+
+* **Corrections are proposals, never silent rewrites.** Beyond layer 0, every correction is shown with its reason and the dictionary entry behind it, and the writer accepts it or keeps their own text. An Italianism may be deliberate, quoted, or established in a given variety; the editor informs, the writer decides.
+* **Every rule is data, not code.** A form or construction to be corrected is an entry of the reviewed dictionary, linked by its public code to its preferred equivalent, with its variety and its sense, and reviewed like any other entry. Native speakers and linguists, not programmers, decide what is correct, and the rules are published as open data under CC BY-SA 4.0.
+* **Layer 1 rests on an error model:** a table of the sound to spelling correspondences of the grafîa ofiçiâ, which generates candidate spellings for a misspelled word; the dictionary keeps only real words, and the frequency lists rank them.
+* **Layer 3 rests on the inflection generator.** Replacing `dovéi` with `avéighe da` means conjugating `avéighe` in the person, number, tense and mood of the verb it replaces, and placing its clitic correctly; paradigms come from native speakers or from grammars whose license permits their use, never from guesswork.
+* **One engine everywhere.** Written once in TypeScript, the engine of this repository runs in the input method today and, through the editor, in applications for computers and phones tomorrow; the input method keeps serving every other application.
+* **Each layer is built only when its data exists,** and only after a decision record of its own.
+
+This extends, and does not reverse, decision [0001](docs/decisions/0001-input-method-not-editor.md): this repository remains an input method, the way to write Ligurian in the applications people already use; the editor is a second product, in its own repository, built on its foundations.
 
 ## Downloads and versions
 
@@ -660,6 +691,26 @@ This is an independent project. It is not affiliated with, or endorsed by, the A
 | `canpanna` | `canpànn-a` |
 
 Quando le stesse lettere portano a più parole, si sceglie quella giusta da un breve elenco, come con le tastiere giapponesi. Il progetto nasce per sostenere la rivitalizzazione della lingua ligure; codice e dati sono aperti.
+
+### L'obiettivo a lungo termine: un editor di testo ligure
+
+Questo progetto è la base di un obiettivo più ampio: **un editor di testo ligure completamente integrato, per computer, telefoni e tablet**, con controllo ortografico, testo predittivo e correzione automatica, che non si limita a scrivere ogni parola nella grafia giusta, ma aiuta chi scrive a produrre un ligure corretto. L'editor sarà **un progetto separato, in un repository proprio, costruito su questo:** userà come base il motore di conversione, il dizionario condiviso e revisionato, i suoi codici pubblici, gli elenchi di frequenza e, presto, il generatore delle forme flesse. Qui quei componenti funzionano già in produzione, dentro un metodo di scrittura usato ogni giorno, e ognuno viene messo alla prova da chi scrive davvero prima che l'editor ne dipenda.
+
+L'editor aggiungerà tre livelli di correzione a quello che il metodo di scrittura offre già:
+
+| Livello | Che cosa corregge | Esempio |
+|---|---|---|
+| **0. Ripristino della grafia** [oggi] | Le lettere semplici diventano grafîa ofiçiâ | `zeneize` → `zenéize` |
+| **1. Correzione ortografica guidata dalla pronuncia** | Grafie che seguono la pronuncia, o le abitudini dell'italiano, invece della grafia ufficiale | `sun` → `són` |
+| **2. Normalizzazione lessicale** | Prestiti e calchi dall'italiano per cui il ligure ha una parola sua | un italianismo comune → il suo equivalente ligure |
+| **3. Normalizzazione idiomatica** | Costrutti copiati dall'italiano, sostituiti dal costrutto ligure, flesso in accordo con il contesto | `dovéi` → `avéighe da` |
+
+* **Le correzioni sono proposte, mai sostituzioni silenziose.** Oltre il livello 0, ogni correzione mostra il motivo e la voce del dizionario da cui nasce, e chi scrive la accetta o tiene il proprio testo: un italianismo può essere voluto, citato o radicato in una varietà.
+* **Ogni regola è un dato, non codice.** Una forma o un costrutto da correggere è una voce del dizionario revisionato, collegata con il suo codice pubblico all'equivalente preferito, con la sua varietà e il suo significato. Decidono i parlanti nativi e i linguisti, non i programmatori, e le regole sono pubblicate come dati aperti sotto CC BY-SA 4.0.
+* **Il livello 1 si fonda su un modello degli errori,** una tabella delle corrispondenze tra suoni e grafia della grafîa ofiçiâ; **il livello 3 sul generatore delle forme flesse,** perché sostituire `dovéi` con `avéighe da` vuol dire coniugare `avéighe` nella persona, nel numero, nel tempo e nel modo del verbo sostituito.
+* **Ogni livello si costruisce solo quando esistono i dati,** e dopo una decisione registrata apposta.
+
+Questo repository resta un metodo di scrittura, il modo di scrivere in ligure nelle app che si usano già; l'editor sarà un secondo prodotto, in un repository proprio, costruito sulle sue fondamenta.
 
 ### Come usarlo, subito
 

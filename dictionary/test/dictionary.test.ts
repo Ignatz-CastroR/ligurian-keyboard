@@ -12,6 +12,8 @@
  *           [#/cerca/lij/...], its rows from the real database, and the
  *           letter of the index above an entry, the same as the
  *           database's [decision 0035].
+ * Updated:  2026/10/20, 04:15:10: the subtitle, each language named in
+ *           itself, the same in every interface language.
  * Decision: docs/decisions/0034-dictionary-for-readers.md
  *           docs/decisions/0035-site-in-five-sections.md
  */
@@ -85,7 +87,7 @@ test("the search field opens a code, reports a mistyped one, and otherwise searc
 });
 
 test("every text exists in the three languages, keeps its placeholder, and Spanish is really translated", () => {
-  const sameByNature: Set<string> = new Set(["senseNumber", "entryBase", "searchForm"]);
+  const sameByNature: Set<string> = new Set(["senseNumber", "entryBase", "searchForm", "appSubtitle"]);
   const texts = (m: Messages): Map<string, string> => new Map(Object.entries(m).map(([k, v]) =>
     [k, typeof v === "function" ? String((v as (x: unknown) => string)("§7§")) : String(v)]));
   const it = texts(messagesFor("it"));
@@ -101,6 +103,10 @@ test("every text exists in the three languages, keeps its placeholder, and Spani
   const copies: string[] = [...texts(messagesFor("es"))].filter(([key, text]) =>
     !sameByNature.has(key) && (text === it.get(key) || text === en.get(key))).map(([key]) => key);
   assert.deepEqual(copies, []);
+  // Each language named in itself, Ligurian as lìgure, in every interface language.
+  for (const { code } of LANGUAGES) {
+    assert.equal(messagesFor(code).appSubtitle, "lìgure · italiano · español · English", code);
+  }
   assert.equal(partOfSpeech("es", "noun"), "sustantivo");
   assert.equal(partOfSpeech("it", null), "");
   assert.equal(partOfSpeech("en", "unknown_pos"), "unknown_pos");

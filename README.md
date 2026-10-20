@@ -710,6 +710,7 @@ Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought 
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.13.1, 2026/10/20:** the dictionary's subtitle names each language in itself, Ligurian as "lìgure".
 * **0.13.0, 2026/10/20: the site in five sections.** The same five large buttons on every page, the current one filled: Write, Dictionary, Lexicon manager, Keyboard and Users, with the dictionary's size beneath them. The manager has its own tabs, Backups among them. Users is a section of its own, `/utenti/`, with each person's complete history to the second. The dictionary finds Ligurian words typed with or without accents, and each entry links to its other face in the manager and back. Translations can be added several at a time, separated by ";", and their language is always chosen.
 * **0.12.1, 2026/10/19:** the review queue opens again after a load of thousands of entries: it comes in pages of 50 entries, with the totals, and reads only the pending rows. A tested SQL template adds entries in the right shape from the SQL Editor.
 * **0.12.0, 2026/10/18: the dictionary for readers.** A public section, <https://ignatz-castror.github.io/ligurian-keyboard/dizionario/>, open to everyone: an index by initial letter as on Wiktionary, a search by translation in Italian, Spanish or English that ignores accents, and a page for every entry at the address of its public code. The editor, the install page and the manager link to it.

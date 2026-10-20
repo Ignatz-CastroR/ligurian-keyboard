@@ -1,5 +1,9 @@
 # Ligure [grafîa ofiçiâ]: keyboard history
 
+## 0.13.1 2026/10/20
+
+* No change to the keyboard; its version follows the project's.
+
 ## 0.13.0 2026/10/20
 
 * No change to the keyboard; its version follows the project's.

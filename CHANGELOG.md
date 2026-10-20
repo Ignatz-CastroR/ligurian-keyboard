@@ -34,6 +34,23 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
   speakers in Genoa.
 - 1.0.0: when every criterion in the README's roadmap is met.
 
+## [0.13.1] [2026/10/20] [lìgure]
+
+### Changed
+- The dictionary's subtitle names each of its four languages in
+  itself, Ligurian as "lìgure": "lìgure · italiano · español ·
+  English", the same in every interface language. Until now it read
+  "ligure", "Ligurian" or "ligur" by interface language, and "inglés"
+  in Spanish, while the other languages were already named in
+  themselves. Verified by the dictionary's test of its texts, which
+  now checks the line in all three interface languages.
+- Keyboard version 0.13.1, following the project's; the keys are
+  unchanged.
+
+Tests: 275, passing on Node.js 22 [engine 24, db 93, admin 65,
+editor 24, dictionary 9, users 4, site 4, keyman 32, corpus 15,
+docs 5].
+
 ## [0.13.0] [2026/10/20] [the site in five sections]
 
 ### Added
@@ -1647,7 +1664,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.2...v0.12.0

@@ -5,6 +5,9 @@
  * Updated:  2026/10/20, 01:38:20: the search finds Ligurian words too;
  *           the links to the other sections left the footer for the
  *           site's bar; a path above an entry replaces "← Index".
+ * Updated:  2026/10/20, 04:14:30: the subtitle names each language in
+ *           itself, Ligurian as "lìgure", the same in every interface
+ *           language.
  * Purpose:  Every text of the dictionary for readers, in Italian
  *           [default], English and Spanish: the same three languages,
  *           and the same stored choice, as the editor and the lexicon
@@ -20,9 +23,14 @@ import { LANGUAGES, isLang, messagesFor as managerMessages, type Lang } from "..
 
 export { LANGUAGES, isLang, type Lang };
 
+// The dictionary's four languages, each named in itself, as the
+// language menus name theirs: the same line whatever the interface's
+// language.
+const SUBTITLE: string = "lìgure · italiano · español · English";
+
 const IT = {
   appTitle: "Dizionario ligure",
-  appSubtitle: "ligure · italiano · español · English",
+  appSubtitle: SUBTITLE,
   langLabel: "Lingua",
 
   navIndex: "Indice",
@@ -78,7 +86,7 @@ export type Messages = typeof IT;
 
 const EN: Messages = {
   appTitle: "Ligurian dictionary",
-  appSubtitle: "Ligurian · italiano · español · English",
+  appSubtitle: SUBTITLE,
   langLabel: "Language",
 
   navIndex: "Index",
@@ -132,7 +140,7 @@ const EN: Messages = {
 
 const ES: Messages = {
   appTitle: "Diccionario ligur",
-  appSubtitle: "ligur · italiano · español · inglés",
+  appSubtitle: SUBTITLE,
   langLabel: "Idioma",
 
   navIndex: "Índice",

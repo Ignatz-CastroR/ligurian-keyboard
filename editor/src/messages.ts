@@ -4,6 +4,8 @@
  * Date:     2026/10/17, 02:12:54, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 08:23:03: Spanish, and a language menu with the
  *           same entries as the lexicon manager's [decision 0023].
+ * Updated:  2026/10/18, 18:41:15: navManager, now that "Dictionary"
+ *           leads to the dictionary for readers.
  * Purpose:  Every text the web editor shows, in Italian [default, for
  *           Genoese readers], English and Spanish.
  * Contract: EN and ES have exactly the type of IT, so the compiler
@@ -31,6 +33,7 @@ const IT = {
   appSubtitle: "In grafîa ofiçiâ, da qualsiasi tastiera",
   navKeyboard: "Tastiera Android",
   navDictionary: "Dizionario",
+  navManager: "Gestore del lessico",
   langLabel: "Lingua dell'interfaccia",
 
   textLabel: "Testo",
@@ -67,6 +70,7 @@ const EN: Messages = {
   appSubtitle: "In grafîa ofiçiâ, from any keyboard",
   navKeyboard: "Android keyboard",
   navDictionary: "Dictionary",
+  navManager: "Lexicon manager",
   langLabel: "Interface language",
 
   textLabel: "Text",
@@ -101,6 +105,7 @@ const ES: Messages = {
   appSubtitle: "En grafîa ofiçiâ, desde cualquier teclado",
   navKeyboard: "Teclado Android",
   navDictionary: "Diccionario",
+  navManager: "Gestor del léxico",
   langLabel: "Idioma de la interfaz",
 
   textLabel: "Texto",

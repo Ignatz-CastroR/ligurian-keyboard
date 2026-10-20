@@ -7,6 +7,8 @@
  * Updated:  2026/10/18, 08:44:12: createDatabase[] can stop after a
  *           given migration, and runMigration[] runs one more, to test
  *           a migration on data written before it.
+ * Updated:  2026/10/18, 19:58:12: the pg_trgm extension is loaded, as
+ *           Supabase offers it, for migration 0009's trigram index.
  * Purpose:  Build a fresh in-memory PostgreSQL [PGlite] with the Supabase
  *           shim and every migration, and switch between identities
  *           the way Supabase does for each API request.
@@ -17,6 +19,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
+import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 
 const DB_DIR: string = join(import.meta.dirname, "..");
 const MIGRATIONS_DIR: string = join(DB_DIR, "migrations");
@@ -54,7 +57,7 @@ export async function runMigration(db: PGlite, name: string): Promise<void> {
 /* A fresh database with the shim and every migration, or only those up
    to and including the file named by "through". */
 export async function createDatabase(through?: string): Promise<PGlite> {
-  const db: PGlite = new PGlite();
+  const db: PGlite = new PGlite({ extensions: { pg_trgm } });
   await db.exec(readFileSync(join(DB_DIR, "test", "supabase-shim.sql"), "utf8"));
   const files: string[] = migrationNames()
     .filter((name) => through === undefined || name <= through);

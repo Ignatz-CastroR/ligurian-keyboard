@@ -14,9 +14,6 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- 0.12.0: the dictionary for readers, a public section `/dizionario/`
-  with an index by initial letter and a search by translation in
-  Italian, Spanish and English.
 - 0.13.0: bulk import of word lists, each one checked by
   `validate-lexicon` before it reaches the database, and its entries
   named by their public codes.
@@ -26,6 +23,100 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 - After the beta, without delaying 1.0.0: public entry pages by
   public code, Spanish translations of the most common words, and
   pronunciation [decision 0032].
+
+## [0.12.0] [2026/10/18] [the dictionary for readers]
+
+### Added
+- The dictionary for readers, a public section of the site at
+  `/dizionario/`, read only and open to everyone without an account,
+  in Italian, English and Spanish [decision 0034, superseding in part
+  0032]. The friends in Genoa had grown the dictionary to 11,792
+  approved forms in one day, and a dictionary that size needs a way
+  to be read, not only a way to be typed with.
+  - **The index,** as on Wiktionary: every initial with entries, then
+    the entries of the chosen letter, a hundred at a time, each with
+    its translations on one line. Accented vowels are listed under
+    their base letter; `æ` and `ç` have letters of their own, `æ` after
+    `a` and `ç` after `c`; an initial that is not a letter is listed
+    under "altro".
+  - **The search by translation,** in Italian, Spanish, English or
+    all three, ignoring accents, diacritics and capitals: exact
+    matches first, then translations beginning with the words, then
+    translations with a word beginning with them; results grouped by
+    entry. A public code typed into the field opens its entry.
+  - **A page for every entry** at `#/voce/<code>`, the code of its
+    lemma or of any of its forms: senses with their Italian
+    definitions and translations by language, then the forms.
+  - Migration 0009: `dictionary_letters()`, `dictionary_index()`,
+    `dictionary_search()` and `dictionary_entry()`. They run with
+    their owner's rights, so that row level security cannot keep
+    their queries from the indexes, and each writes out the filters
+    of publication in full. Three indexes: the initials of published
+    headwords; the folded translations in byte order; and their
+    trigrams, through the `pg_trgm` extension, installed if missing.
+    The search runs in two steps that each stop at its limit of 200;
+    the query is cut at 100 characters. No column is added, so
+    backups, restores and the export are unchanged. The page's
+    database client never uses a stored session.
+  - A new Vite app, `dictionary/`, built into `_site/dizionario/`.
+  Verified by 10 database tests [published rows only for a visitor,
+  a reviewer and a contributor alike, with pending, deleted and
+  unpublished parents in the data; the initials of unusual headwords;
+  paging; folding of accents, capitals and punctuation; a query never
+  treated as a pattern; word starts after punctuation; a 20,000
+  character query cut; an entry by the code of a form; the functions
+  running as their owner and their query plans using the indexes], 7
+  tests of the page's logic and texts, the last on rows from the real
+  database, and the page run by hand in a headless browser against a
+  stand in for the database, on a computer and at phone width.
+  An independent review measured the first version on a real
+  PostgreSQL with 12,000 lemmas and 48,000 translations: under row
+  level security no index was used, and an ordinary search took 1.6
+  to 4 seconds, beyond the 3 seconds Supabase allows a visitor. Fixed
+  before release; on the test engine, which is slower than a server,
+  a search now takes 4 to 50 milliseconds, a common word included.
+  The review's other findings are fixed too: the folding no longer
+  depends on the database's locale, a word now starts after any
+  punctuation, a long query is cut, and the page never acts on a
+  search the reader has already left.
+
+### Fixed
+- A backup assembled while someone edited could fail to restore, or
+  restore a lemma without its base form: many small reads are not one
+  snapshot, and two lemmas renamed into each other's spelling between
+  two pages appeared twice under one spelling. Since 0.11.2. The
+  manager now reads the history's highest id again at the end; every
+  change writes a line of history, so an unchanged history proves the
+  file exact. Otherwise the backup starts again, up to three times,
+  then refuses rather than offer a file that might not restore. A
+  failed read is tried again, up to three times. Verified by 3
+  manager tests, replacing one, among them the renaming swap the
+  review used to break a restore.
+
+### Changed
+- The editor's "Dictionary" link and the install page's dictionary
+  link lead to `/dizionario/`; the editor links the lexicon manager
+  separately, and the manager links the dictionary. The editor's
+  offline copy leaves `/dizionario/` alone, as it does `/admin/`.
+- `.gitignore`: the dictionary's build folder, `/dictionary/dist/`.
+- `README.md`, `db/README.md`, `dictionary/README.md`: the dictionary
+  for readers, migration 0009, test counts [242 in all], and the
+  roadmap, which marks 0.12 done. Decision 0032 is superseded in part
+  by 0034, on when the dictionary for readers begins and how its
+  pages are served.
+- Keyboard version 0.12.0, following the project's; the keys are
+  unchanged.
+
+### Known issues
+- Migration 0009 must run before this version is pushed: the
+  dictionary page calls its functions.
+- Every reader's page queries the free Supabase project live. The
+  static pages decision 0032 planned remain the way to make readers
+  cost the database nothing, when readership calls for it.
+- The search does not stem words: `plumas` does not find `pluma`.
+
+Tests: 242, passing on Node.js 22 and 24 [engine 24, db 73, admin 62,
+editor 24, dictionary 7, keyman 32, corpus 15, docs 5].
 
 ## [0.11.2] [2026/10/18] [backups from small reads]
 
@@ -1328,7 +1419,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.2...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.2...v0.12.0
 [0.11.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.10.0...v0.11.0

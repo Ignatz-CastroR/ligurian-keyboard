@@ -3,6 +3,8 @@
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 02:16:09, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 08:23:03: the language menu, with Spanish.
+ * Updated:  2026/10/18, 18:41:15: the header links the dictionary for
+ *           readers and, apart, the lexicon manager [decision 0034].
  * Purpose:  The web editor in the browser: load the dictionary snapshot,
  *           watch the text area, apply the decisions of ime.ts, draw the
  *           candidate menu, and offer copy, download and clear.
@@ -507,7 +509,8 @@ function drawPage(): void {
       h("span", { class: "muted" }, t.appSubtitle)),
     h("nav", {},
       h("a", { href: "./tastiera/", class: "nav-link" }, t.navKeyboard),
-      h("a", { href: "./admin/", class: "nav-link" }, t.navDictionary)),
+      h("a", { href: "./dizionario/", class: "nav-link" }, t.navDictionary),
+      h("a", { href: "./admin/", class: "nav-link" }, t.navManager)),
     h("div", { class: "tools" }, langMenu),
   );
 

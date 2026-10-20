@@ -17,6 +17,8 @@
  * Updated:  2026/10/18, 16:24:30: the message for an operation stopped
  *           at the database's time limit.
  * Updated:  2026/10/18, 16:55:02: the progress of a backup.
+ * Updated:  2026/10/18, 18:41:15: navReaders, the dictionary for
+ *           readers.
  * Purpose:  Every text the lexicon manager shows, in Italian [default,
  *           for the Genoese contributors], English and Spanish.
  * Contract: EN and ES have exactly the type of IT, so the compiler
@@ -43,6 +45,7 @@ const IT = {
 
   navEditor: "Scrivi",
   navKeyboard: "Tastiera Android",
+  navReaders: "Dizionario",
   navSearch: "Cerca",
   navNew: "Nuovo lemma",
   navReview: "Da revisionare",
@@ -182,6 +185,8 @@ const IT = {
   backupDownload: "Scarica una copia di sicurezza",
   backupSaved: (name: string): string => `Copia salvata: ${name}`,
   backupProgress: (n: number): string => (n === 1 ? "Scaricata 1 riga…" : `Scaricate ${n} righe…`),
+  backupRetry: (n: number): string => `Il dizionario è cambiato durante la copia: ricomincio da capo, tentativo ${n}…`,
+  backupBusy: "Il dizionario è cambiato durante ogni tentativo di copia, e un file letto mentre si modifica potrebbe non ripristinarsi. Riprova quando nessuno sta modificando voci.",
   restoreTitle: "Ripristino da una copia",
   restoreIntro: "Solo in un dizionario vuoto, appena creato: la copia lo ricostruisce con gli stessi codici, le stesse versioni e la stessa cronologia. Gli account non sono nella copia: in un progetto nuovo i ruoli si riassegnano a mano, e la copia elenca il nome e il ruolo di tutti.",
   restoreFile: "File della copia",
@@ -247,6 +252,7 @@ const EN: Messages = {
 
   navEditor: "Write",
   navKeyboard: "Android keyboard",
+  navReaders: "Dictionary",
   navSearch: "Search",
   navNew: "New lemma",
   navReview: "To review",
@@ -386,6 +392,8 @@ const EN: Messages = {
   backupDownload: "Download a backup",
   backupSaved: (name: string): string => `Backup saved: ${name}`,
   backupProgress: (n: number): string => (n === 1 ? "1 row downloaded…" : `${n} rows downloaded…`),
+  backupRetry: (n: number): string => `The dictionary changed during the backup: starting again, attempt ${n}…`,
+  backupBusy: "The dictionary changed during every attempt, and a file read while entries change might not restore. Try again when nobody is editing.",
   restoreTitle: "Restore from a backup",
   restoreIntro: "Only into an empty, newly created dictionary: the backup rebuilds it with the same codes, versions and history. Accounts are not in the backup: in a new project, roles are given back by hand, and the backup lists everyone's name and role.",
   restoreFile: "Backup file",
@@ -449,6 +457,7 @@ const ES: Messages = {
 
   navEditor: "Escribir",
   navKeyboard: "Teclado Android",
+  navReaders: "Diccionario",
   navSearch: "Buscar",
   navNew: "Nuevo lema",
   navReview: "Por revisar",
@@ -588,6 +597,8 @@ const ES: Messages = {
   backupDownload: "Descargar una copia de seguridad",
   backupSaved: (name: string): string => `Copia guardada: ${name}`,
   backupProgress: (n: number): string => (n === 1 ? "1 fila descargada…" : `${n} filas descargadas…`),
+  backupRetry: (n: number): string => `El diccionario cambió durante la copia: empiezo de nuevo, intento ${n}…`,
+  backupBusy: "El diccionario cambió durante cada intento de copia, y un archivo leído mientras se modifican entradas podría no restaurarse. Inténtalo de nuevo cuando nadie esté editando.",
   restoreTitle: "Restaurar desde una copia",
   restoreIntro: "Solo en un diccionario vacío, recién creado: la copia lo reconstruye con los mismos códigos, versiones e historial. Las cuentas no están en la copia: en un proyecto nuevo los roles se reasignan a mano, y la copia lista el nombre y el rol de todos.",
   restoreFile: "Archivo de la copia",

@@ -7,8 +7,9 @@
  *           tables export_backup[] writes, passes the manager's check,
  *           restores into a fresh database and gives back the same
  *           backup; a server that caps its pages below PAGE_SIZE loses
- *           no row; and rows written while the backup runs never leave
- *           a row without its parent.
+ *           no row; a change while the backup runs makes it start
+ *           again, so the file always restores; a dictionary that never
+ *           rests is refused; a failed read is tried again.
  * Method:   The source reads as an admin, as the page does; rows come
  *           back as to_jsonb[], the same JSON the API sends.
  * Decision: docs/decisions/0031-backups.md
@@ -19,7 +20,8 @@ import assert from "node:assert/strict";
 import type { PGlite } from "@electric-sql/pglite";
 import { USERS, asUser, createSeededDatabase, rowsAs } from "../../db/test/harness.ts";
 import {
-  BACKUP_TABLES, BOUND_ORDER, PAGE_SIZE, assembleBackup, checkBackupText, type BackupSource, type Row,
+  ATTEMPTS, BACKUP_TABLES, BOUND_ORDER, BackupBusyError, PAGE_SIZE, READ_TRIES, assembleBackup, checkBackupText,
+  type BackupSource, type Row,
 } from "../src/backup.ts";
 
 const admin = asUser(USERS.admin);
@@ -30,9 +32,11 @@ interface Backup { format: string; format_version: number; counts: Record<string
 
 // The page's reads, against the test database, as an admin. A cap
 // below PAGE_SIZE imitates a server that sends shorter pages.
-function source(db: PGlite, cap: number = PAGE_SIZE, afterBounds: () => Promise<void> = async () => undefined): BackupSource & { calls: string[] } {
+function source(db: PGlite, cap: number = PAGE_SIZE, afterBounds: (attempt: number) => Promise<void> = async () => undefined,
+  failures: number = 0): BackupSource & { calls: string[] } {
   const calls: string[] = [];
-  let bounds: number = 0;
+  let attempt: number = 0;
+  let toFail: number = failures;
   return {
     calls,
     async all(table: string, order: readonly string[]): Promise<Row[]> {
@@ -43,14 +47,19 @@ function source(db: PGlite, cap: number = PAGE_SIZE, afterBounds: () => Promise<
     async maxId(table: string): Promise<number> {
       calls.push(`max ${table}`);
       const max: number = Number((await rowsAs<{ m: number }>(db, admin, `select coalesce(max(id), 0) as m from public.${table}`))[0]?.m ?? 0);
-      bounds += 1;
-      if (bounds === BOUND_ORDER.length) {
-        await afterBounds();
+      // The last bound of each attempt is the lemmas'.
+      if (table === "lemmas") {
+        attempt += 1;
+        await afterBounds(attempt);
       }
       return max;
     },
     async page(table: string, after: number, through: number, limit: number): Promise<Row[]> {
       calls.push(`page ${table} ${after}`);
+      if (toFail > 0) {
+        toFail -= 1;
+        throw new Error("network");
+      }
       return (await rowsAs<{ r: Row }>(db, admin,
         `select to_jsonb(t) as r from public.${table} as t where t.id > $1 and t.id <= $2 order by t.id limit $3`,
         [after, through, Math.min(limit, cap)])).map((x) => x.r);
@@ -108,26 +117,66 @@ test("pages capped by the server below PAGE_SIZE lose no row, and every table en
   assert.deepEqual(capped.calls.slice(0, BOUND_ORDER.length), BOUND_ORDER.map((t) => `max ${t}`));
 });
 
-test("rows written while the backup runs are left out whole: no row without its parent, no history without its row", async () => {
+async function addEntry(db: PGlite, headword: string): Promise<void> {
+  const lemma: number = await one(db, admin, "insert into lemmas (headword, status) values ($1, 'approved') returning id", [headword]);
+  const sense: number = await one(db, admin, "insert into senses (lemma_id) values ($1) returning id", [lemma]);
+  await one(db, admin, "insert into glosses (sense_id, language, gloss) values ($1, 'it', 'nuovo') returning id", [sense]);
+}
+
+test("a change while the backup runs makes it start again, and the file it gives holds the change and restores", async () => {
   const db = await createSeededDatabase();
   await fill(db);
-  const before: Backup = await exported(db);
-  const late = source(db, 2, async () => {
-    const lemma: number = await one(db, admin, "insert into lemmas (headword, status) values ('nêuvo', 'approved') returning id");
-    const sense: number = await one(db, admin, "insert into senses (lemma_id) values ($1) returning id", [lemma]);
-    await one(db, admin, "insert into glosses (sense_id, language, gloss) values ($1, 'it', 'nuovo') returning id", [sense]);
+  const retries: number[] = [];
+  const changing = source(db, 2, async (attempt) => {
+    if (attempt === 1) {
+      await addEntry(db, "nêuvo");
+    }
   });
-  const assembled = await assembleBackup(late, new Date()) as unknown as Backup;
-  assert.deepEqual(assembled.counts, before.counts);
-  assert.ok(!JSON.stringify(assembled.tables).includes("nêuvo"));
+  const assembled = await assembleBackup(changing, new Date(), () => undefined, (n) => retries.push(n)) as unknown as Backup;
+  assert.deepEqual(retries, [2]);
+  assert.deepEqual(assembled.tables, (await exported(db)).tables);
+  assert.ok(JSON.stringify(assembled.tables).includes("nêuvo"));
 
-  // And the file restores into a fresh database exactly.
   const fresh = await createSeededDatabase();
   await rowsAs(fresh, admin, "select public.restore_backup($1::jsonb)", [JSON.stringify(assembled)]);
+  // The fresh database has profiles of its own; the lexicon and its
+  // history come back exactly.
   const again: Backup = await exported(fresh);
-  assert.deepEqual(again.counts, assembled.counts);
-  assert.deepEqual(again.tables["lemmas"], assembled.tables["lemmas"]);
-  assert.deepEqual(again.tables["audit_log"], assembled.tables["audit_log"]);
+  for (const table of ["lemmas", "wordforms", "senses", "glosses", "audit_log"]) {
+    assert.deepEqual(again.tables[table], assembled.tables[table], table);
+  }
+});
+
+test("two lemmas renamed into each other's spelling mid backup never reach the file; a dictionary that never rests is refused", async () => {
+  const db = await createSeededDatabase();
+  await fill(db);
+  // The swap that, read across pages, gave two live lemmas one spelling.
+  const swapping = source(db, 1, async (attempt) => {
+    if (attempt === 1) {
+      await rowsAs(db, admin, "update lemmas set headword = 'zzzèta' where headword = 'pénna'");
+      await rowsAs(db, admin, "update lemmas set headword = 'pénna' where headword = 'cà'");
+    }
+  });
+  const assembled = await assembleBackup(swapping, new Date()) as unknown as Backup;
+  const fresh = await createSeededDatabase();
+  await rowsAs(fresh, admin, "select public.restore_backup($1::jsonb)", [JSON.stringify(assembled)]);
+
+  let n: number = 0;
+  const restless = source(db, PAGE_SIZE, async () => {
+    n += 1;
+    await addEntry(db, `nêuvo${"a".repeat(n)}`);
+  });
+  await assert.rejects(assembleBackup(restless, new Date()), BackupBusyError);
+  assert.equal(n, ATTEMPTS);
+});
+
+test("a read that fails is tried again; one that keeps failing stops the backup with its error", async () => {
+  const db = await createSeededDatabase();
+  await fill(db);
+  const flaky = source(db, PAGE_SIZE, async () => undefined, READ_TRIES - 1);
+  assert.deepEqual((await assembleBackup(flaky, new Date()) as unknown as Backup).tables, (await exported(db)).tables);
+  const broken = source(db, PAGE_SIZE, async () => undefined, READ_TRIES);
+  await assert.rejects(assembleBackup(broken, new Date()), /network/u);
 });
 
 test("an empty dictionary gives a complete backup with empty tables, without reading a single page", async () => {

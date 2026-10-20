@@ -7,6 +7,8 @@
  * Contract: TEST ONLY. Never run this on a real Supabase project, which
  *           already has all of it. auth.uid[] reads the user id from
  *           request.jwt.claims exactly as Supabase's own function does.
+ * Updated:  2026/10/18, 19:58:12: the schema "extensions", where
+ *           Supabase installs extensions such as pg_trgm.
  */
 
 create role anon nologin;
@@ -14,6 +16,10 @@ create role authenticated nologin;
 
 create schema auth;
 grant usage on schema auth to anon, authenticated;
+
+/* Supabase installs extensions in a schema of their own. */
+create schema extensions;
+grant usage on schema extensions to anon, authenticated;
 
 create table auth.users (
     id                  uuid primary key,

@@ -8,10 +8,13 @@
  *           is kept, and served only when the network fails.
  * Contract: Plain JavaScript, copied as it is by Vite [public/]. Never
  *           touches the lexicon manager [/admin/], the Android install
- *           page and its packages [/tastiera/], other sites, or any
+ *           page and its packages [/tastiera/], the dictionary for readers
+ *           [/dizionario/], other sites, or any
  *           request that is not a GET.
  * Updated:  2026/10/17, 05:51:21: /tastiera/ excluded; installing the
  *           keyboard needs a connection anyway.
+ * Updated:  2026/10/18, 18:40:02: /dizionario/ excluded; the dictionary
+ *           for readers asks the database on every page anyway.
  */
 
 const CACHE = "ligurian-keyboard-editor-v1";
@@ -34,6 +37,7 @@ self.addEventListener("fetch", (event) => {
   const ours = request.method === "GET"
     && url.origin === self.location.origin
     && !url.pathname.includes("/admin/")
+    && !url.pathname.includes("/dizionario/")
     && !url.pathname.includes("/tastiera/");
 
   if (ours) {

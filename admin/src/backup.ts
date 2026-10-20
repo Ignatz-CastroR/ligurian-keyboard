@@ -126,14 +126,19 @@ export function checkBackupText(text: string): BackupCheck {
    file identical in format to export_backup[]'s, which restore_backup[]
    and checkBackupText[] accept unchanged.
 
-   Many reads are not one snapshot. So that the file can always be
-   restored, the highest id of every table with an id is read first,
-   history first, then translations, senses, forms and lemmas, and no
-   row above its table's bound is taken. A row is then never in the
-   file without its parent, which existed before it, and the history
-   never mentions a row the file lacks. An edit made while the backup
-   runs may appear in a row without its line of history; a backup taken
-   while nobody edits is exact.
+   Many reads are not one snapshot, and a file read while someone edits
+   may not restore: two lemmas renamed into each other's spelling
+   between two pages appear twice under one spelling, and a lemma
+   committed between two bounds may arrive without its base form. So
+   the highest id of every table with an id is read first, history
+   first, then translations, senses, forms and lemmas, no row above its
+   table's bound is taken, and at the end the history's highest id is
+   read again. Every change to the lexicon writes a line of history, so
+   an unchanged history proves that nothing changed while the file was
+   read, and the file is exact. If it did change, the backup starts
+   again, up to ATTEMPTS times, and then gives up with BackupBusyError
+   rather than offer a file that might not restore. A read that fails
+   is tried again, up to READ_TRIES times.
    ==================================================================== */
 
 export const PAGE_SIZE: number = 1000;
@@ -162,17 +167,41 @@ const SMALL_TABLES: readonly [string, readonly string[]][] = [
 // their parents.
 export const BOUND_ORDER: readonly string[] = ["audit_log", "glosses", "senses", "wordforms", "lemmas"];
 
-export async function assembleBackup(source: BackupSource, now: Date,
-  onProgress: (rows: number) => void = () => undefined): Promise<Row> {
+// The backup started again this many times when the dictionary changed
+// while it was read; a failed read tried this many times.
+export const ATTEMPTS: number = 3;
+export const READ_TRIES: number = 3;
+
+// The dictionary kept changing while the backup was read.
+export class BackupBusyError extends Error {
+  public constructor() {
+    super("the dictionary changed during every attempt to back it up");
+  }
+}
+
+async function retried<T>(read: () => Promise<T>): Promise<T> {
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= READ_TRIES; attempt += 1) {
+    try {
+      return await read();
+    } catch (error: unknown) {
+      lastError = error;
+    }
+  }
+  throw lastError;
+}
+
+async function assembleOnce(source: BackupSource, now: Date, onProgress: (rows: number) => void):
+  Promise<{ backup: Row; historyBound: number }> {
   const bounds: Map<string, number> = new Map();
   for (const table of BOUND_ORDER) {
-    bounds.set(table, await source.maxId(table));
+    bounds.set(table, await retried(() => source.maxId(table)));
   }
 
   const tables: Record<string, Row[]> = {};
   let read: number = 0;
   for (const [table, order] of SMALL_TABLES) {
-    tables[table] = await source.all(table, order);
+    tables[table] = await retried(() => source.all(table, order));
     read += tables[table].length;
     onProgress(read);
   }
@@ -182,7 +211,8 @@ export async function assembleBackup(source: BackupSource, now: Date,
     let after: number = 0;
     let done: boolean = through === 0;
     while (!done) {
-      const page: Row[] = await source.page(table, after, through, PAGE_SIZE);
+      const from: number = after;
+      const page: Row[] = await retried(() => source.page(table, from, through, PAGE_SIZE));
       rows.push(...page);
       read += page.length;
       onProgress(read);
@@ -203,11 +233,32 @@ export async function assembleBackup(source: BackupSource, now: Date,
     counts[name] = (tables[name] ?? []).length;
   }
   return {
-    format: BACKUP_FORMAT,
-    format_version: BACKUP_FORMAT_VERSION,
-    created_at: now.toISOString(),
-    license: "Lexicon data: CC BY-SA 4.0. Profiles and history: private to the project.",
-    counts,
-    tables,
+    historyBound: bounds.get("audit_log") ?? 0,
+    backup: {
+      format: BACKUP_FORMAT,
+      format_version: BACKUP_FORMAT_VERSION,
+      created_at: now.toISOString(),
+      license: "Lexicon data: CC BY-SA 4.0. Profiles and history: private to the project.",
+      counts,
+      tables,
+    },
   };
+}
+
+/* The whole backup, exact: read again whenever the history shows that
+   the dictionary changed meanwhile. onProgress counts the rows read in
+   the current attempt; onRetry reports a new attempt. */
+export async function assembleBackup(source: BackupSource, now: Date,
+  onProgress: (rows: number) => void = () => undefined,
+  onRetry: (attempt: number) => void = () => undefined): Promise<Row> {
+  for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
+    if (attempt > 1) {
+      onRetry(attempt);
+    }
+    const { backup, historyBound } = await assembleOnce(source, now, onProgress);
+    if (await retried(() => source.maxId("audit_log")) === historyBound) {
+      return backup;
+    }
+  }
+  throw new BackupBusyError();
 }

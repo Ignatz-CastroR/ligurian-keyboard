@@ -4,6 +4,7 @@
 * **Date:** 2026/10/18
 * **Decided by:** Eng. José Ignacio Castro de R.
 * **Refines:** [0001](0001-input-method-not-editor.md), on what the project is for; [0002](0002-one-dictionary-database.md), on what the one database serves
+* **Superseded in part by:** [0034](0034-dictionary-for-readers.md), on when the dictionary for readers begins and how its first pages are served
 
 ## Context
 

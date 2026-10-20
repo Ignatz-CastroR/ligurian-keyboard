@@ -13,7 +13,9 @@
  *           of the click, as the TSV and CSV downloads are.
  * Updated:  2026/10/18, 16:53:31: the backup is assembled from small
  *           reads, with its progress shown, instead of one statement
- *           that the database's time limit could stop.
+ *           that the database's time limit could stop; started again
+ *           when the dictionary changes meanwhile, so the file always
+ *           restores.
  */
 
 import type { Context } from "../context.ts";
@@ -23,7 +25,7 @@ import { backupSource, profiles, restoreBackup, updateProfile } from "../db.ts";
 import { canBackup, canManageRoles, isStaff } from "../permissions.ts";
 import { formatDateTime } from "../forms.ts";
 import {
-  assembleBackup, backupFileName, checkBackupText, countsSummary,
+  BackupBusyError, assembleBackup, backupFileName, checkBackupText, countsSummary,
   type BackupCheck, type CountLabels, type RestoreReport, type Row,
 } from "../backup.ts";
 import { describeError, downloadText, field, h, roleLabel, runAction, select, showError, showInfo } from "../ui.ts";
@@ -68,9 +70,18 @@ function backupCard(ctx: Context): HTMLElement {
     // Named at the click, like the TSV and CSV downloads.
     const started: Date = new Date();
     const name: string = backupFileName(started);
-    const backup: Row = await assembleBackup(backupSource(), started, (rows: number) => showInfo(t.backupProgress(rows)));
-    downloadText(name, JSON.stringify(backup, null, 1), "application/json;charset=utf-8");
-    showInfo(t.backupSaved(name));
+    try {
+      const backup: Row = await assembleBackup(backupSource(), started,
+        (rows: number) => showInfo(t.backupProgress(rows)),
+        (attempt: number) => showInfo(t.backupRetry(attempt)));
+      downloadText(name, JSON.stringify(backup, null, 1), "application/json;charset=utf-8");
+      showInfo(t.backupSaved(name));
+    } catch (error: unknown) {
+      if (!(error instanceof BackupBusyError)) {
+        throw error;
+      }
+      showError(t.backupBusy);
+    }
   }));
   return h("section", { class: "card" },
     h("h2", {}, t.backupTitle), h("p", { class: "muted" }, t.backupIntro),

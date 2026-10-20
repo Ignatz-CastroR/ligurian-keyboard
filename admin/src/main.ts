@@ -8,6 +8,7 @@
  *           the backup download uses it too.
  * Updated:  2026/10/18, 12:34:52: the TSV and CSV downloads are named by
  *           the local date and time of the click [decision 0025].
+ * Updated:  2026/10/18, 18:41:15: a link to the dictionary for readers.
  * Purpose:  Start the lexicon manager: connect to Supabase, follow the
  *           session, draw the header and send each address to its view.
  * Routes:   #/search/<query>   search [everyone]
@@ -171,6 +172,7 @@ function drawHeader(state: State): void {
     h("nav", {},
       link("../", t.navEditor),
       link("../tastiera/", t.navKeyboard),
+      link("../dizionario/", t.navReaders),
       link("#/search/", t.navSearch),
       canPropose(ctx.role) && link("#/new", t.navNew),
       ctx.userId !== null && link("#/review", t.navReview),

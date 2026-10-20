@@ -91,7 +91,7 @@ function run(hash: string, stored: string | null): Run {
 
 test("the page links both the editor and the dictionary, and reads in Italian without its script", () => {
   assert.match(PAGE, /<a href="\.\.\/" data-link="editor">← Scrivi in ligure<\/a>/u);
-  assert.match(PAGE, /<a href="\.\.\/admin\/" data-link="dictionary">Dizionario<\/a>/u);
+  assert.match(PAGE, /<a href="\.\.\/dizionario\/" data-link="dictionary">Dizionario<\/a>/u);
   assert.match(PAGE, /<h1 id="it">/u);
   assert.match(PAGE, /<section id="en" lang="en">/u);
   assert.match(PAGE, /<section id="es" lang="es">/u);

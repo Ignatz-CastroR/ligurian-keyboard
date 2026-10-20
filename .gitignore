@@ -40,15 +40,17 @@ TAG-MESSAGE.txt
 # folder itself is never committed: it is large and machine specific.
 node_modules/
 
-# Build output of the lexicon manager and the web editor, rebuilt by
-# Vite; only the TypeScript source is committed. Each folder is named
-# with its leading "/", so that a future source folder called "dist" or
-# "build" elsewhere is never hidden by accident.
+# Build output of the lexicon manager, the web editor and the dictionary
+# for readers, rebuilt by Vite; only the TypeScript source is committed.
+# Each folder is named with its leading "/", so that a future source
+# folder called "dist" or "build" elsewhere is never hidden by accident.
 /admin/dist/
 /editor/dist/
+/dictionary/dist/
 
-# The assembled Pages site [editor at the root, manager under admin/],
-# rebuilt by npm run site:build and by the workflow.
+# The assembled Pages site [editor at the root, manager under admin/,
+# dictionary under dizionario/], rebuilt by npm run site:build and by
+# the workflow.
 _site/
 
 # The web editor's dictionary snapshot: taken from the database at

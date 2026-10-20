@@ -19,6 +19,7 @@
     "db/**/*.ts",
     "admin/**/*.ts",
     "editor/**/*.ts",
+    "dictionary/**/*.ts",
     "tools/**/*.ts",
     "keyman/**/*.ts",
     "corpus/**/*.ts",
@@ -27,6 +28,7 @@
   "exclude": [
     "admin/dist",
     "editor/dist",
+    "dictionary/dist",
     "_site",
     "node_modules",
     "keyman/build",

@@ -14,7 +14,7 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- 0.14.1: in a menu where two forms differ only by a capital, such as
+- 0.14.2: in a menu where two forms differ only by a capital, such as
   a common noun and a proper noun, the capitalized form first only
   when the word is typed with a capital [decision 0037]. The
   snapshot counts frequencies in lower case, so today such forms tie
@@ -38,6 +38,35 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 - Then: hardening, contributor documentation; a beta with native
   speakers in Genoa.
 - 1.0.0: when every criterion in the README's roadmap is met.
+
+## [0.14.1] [2026/10/20] [the frequency list and the long s]
+
+### Fixed
+- The site build failed at `npm run lexicon:snapshot`, and the v0.14.0
+  release received no Keyman packages: the committed frequency list,
+  `data/frequencies/lijwiki.tsv`, held 28 words written with the long
+  s, `ſ` [U+017F], such as `coſa` and `queſto`, from old texts quoted
+  on the Ligurian Wikipedia. The counter of 0.8 had taken them for
+  Ligurian words because `isValidForm()` folded case; 0.14.0 stopped
+  accepting `ſ`, so the reader refused those rows and the build
+  stopped, as it must for a damaged list. The site stayed as it was,
+  since nothing was deployed. The 28 rows are removed and the
+  `# Words:` line reads 83,546; nothing else changes. This is exactly
+  the list a new count of the same dump would give: of the two
+  characters 0.14.0 refuses, only `ſ` survives the counter's lower
+  casing [the Kelvin sign becomes `k`], and a refused word is dropped
+  whole, so no other word's count can move.
+- No test read the committed list, so the tests passed while the build
+  failed. A corpus test now reads it and requires no problem and a
+  `# Words:` line equal to its rows; it fails on the list of 0.14.0.
+
+### Changed
+- Keyboard version 0.14.1, following the project's; the keys are
+  unchanged.
+
+Tests: 307, passing on Node.js 22 [engine 54, db 93, admin 66,
+editor 24, dictionary 9, users 4, site 4, keyman 32, corpus 16,
+docs 5].
 
 ## [0.14.0] [2026/10/20] [a checker for lexicon files]
 
@@ -1730,7 +1759,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.1...HEAD
+[0.14.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.1...v0.13.0

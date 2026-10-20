@@ -7,6 +7,9 @@
  *           list with its effect on a snapshot [frequency-list.ts].
  * Updated:  2026/10/17, 11:29:40: a word needs a letter; the rows in
  *           the list's orthography are reported.
+ * Updated:  2026/10/20, 15:05:52: the committed frequency list reads without a
+ *           problem, so a change to the word rules that refuses its
+ *           rows fails here, not in the site build.
  * Method:   Every wikitext and dump below is written for these tests,
  *           with spellings from the test fixture [the Académia's
  *           alphabet page]; no Wikipedia text is copied.
@@ -136,6 +139,14 @@ test("the frequency list is written sorted, without rare words, and reads back i
   assert.equal(back.list.orthography, "ofiçiâ");
   assert.equal(back.list.counted, "2026/10/17 16:24:47 UTC");
   assert.deepEqual([...back.list.counts], [["a", 40], ["pénna", 2], ["zêna", 9]]);
+});
+
+test("the committed frequency list reads without a problem", () => {
+  const text: string = readFileSync(new URL("../../data/frequencies/lijwiki.tsv", import.meta.url), "utf8");
+  const { list, problems } = readFrequencyList(text);
+  assert.deepEqual(problems.slice(0, 5), [], "the first problems, if any");
+  assert.equal(problems.length, 0);
+  assert.equal(text.includes(`# Words: ${list.counts.size},`), true, "the # Words: line counts the rows");
 });
 
 test("a damaged frequency list reports every bad line by number", () => {

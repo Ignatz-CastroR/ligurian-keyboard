@@ -9,6 +9,8 @@
  *           apostrophes and each part is converted on its own, so
  *           "d'aegua" becomes "d'ægua" from the entries "d'" and "ægua"
  *           [decision 0029].
+ * Updated:  2026/10/20, 14:18:54: casePatternOf reads the first letter
+ *           without a non null assertion.
  * Contract: Surrounding punctuation is preserved untouched; the casing
  *           pattern of the typed word, or of each typed part, is
  *           reapplied to every candidate. A whole word found in the
@@ -109,7 +111,7 @@ function casePatternOf(word: string): CasePattern {
   const letters: string = word.replace(/[^\p{L}]/gu, "");
   if (letters.length > 1 && letters === letters.toUpperCase() && letters !== letters.toLowerCase()) {
     pattern = "upper";
-  } else if (letters.length > 0 && letters[0] !== letters[0]!.toLowerCase()) {
+  } else if (letters.length > 0 && letters.charAt(0) !== letters.charAt(0).toLowerCase()) {
     pattern = "capitalized";
   }
   return pattern;

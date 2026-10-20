@@ -10,6 +10,8 @@
  *           and a word are saved as one form [decision 0029].
  * Updated:  2026/10/20, 02:40:30: several translations typed in one
  *           field, split on ";" [decision 0035].
+ * Updated:  2026/10/20, 14:18:54: the engine's isValidForm accepts
+ *           exactly these letters, checked over every code point.
  * Purpose:  The checks the lexicon manager runs before sending anything,
  *           and their agreement with the database's own rules.
  */
@@ -21,9 +23,23 @@ import {
   LIGURIAN_LETTERS, MAX_TRANSLATION_LENGTH, OFICIA, SPECIAL_LETTERS, changedFields, checkForm, checkFreq,
   cleanForm, cleanOptionalText, enyeUnderOficia, formatDateTime, joinedElisions, searchKeyFilter, splitTranslations,
 } from "../src/forms.ts";
+import { isValidForm } from "../../engine/src/lexicon.ts";
 
 test("the letters accepted here are exactly the database domain's", async () => {
   assert.equal(LIGURIAN_LETTERS, await domainLetters(await createDatabase()));
+});
+
+test("the engine's isValidForm accepts exactly these letters, one by one", () => {
+  const letter: RegExp = new RegExp(`^[${LIGURIAN_LETTERS}]$`, "u");
+  const disagreements: string[] = [];
+  for (let code: number = 0; code <= 0x10ffff; code += 1) {
+    const isSurrogate: boolean = code >= 0xd800 && code <= 0xdfff;
+    const char: string = String.fromCodePoint(code);
+    if (!isSurrogate && isValidForm(char) !== letter.test(char)) {
+      disagreements.push(`U+${code.toString(16).toUpperCase().padStart(4, "0")}`);
+    }
+  }
+  assert.deepEqual(disagreements, []);
 });
 
 test("the palette offers ñ, last, and every letter only once", () => {

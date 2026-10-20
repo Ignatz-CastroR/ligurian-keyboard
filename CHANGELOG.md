@@ -14,7 +14,12 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- 0.14.0: repairs of the entries loaded by SQL before 0.12.1: a repair
+- 0.14.1: in a menu where two forms differ only by a capital, such as
+  a common noun and a proper noun, the capitalized form first only
+  when the word is typed with a capital [decision 0037]. The
+  snapshot counts frequencies in lower case, so today such forms tie
+  and are ordered alphabetically; the dictionary holds 136 such menus.
+- 0.15.0: repairs of the entries loaded by SQL before 0.12.1: a repair
   page per entry, merging senses split one per translation by default
   and allowing other groupings; the language of a translation
   corrected by hand; translations that hold ";" split; possibly the
@@ -23,16 +28,77 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
   `db/templates/add-entries.sql`, and an enrichment format, keyed by
   public code and sense, for translations and definitions prepared
   outside the site.
-- 0.15.0: grammar for every form, base lemma included, in structured
+- 0.16.0: grammar for every form, base lemma included, in structured
   fields [gender, number, person, tense and mood]; richer entries:
   etymology, examples, definitions in four languages, usage labels,
   images uploaded to Supabase; pronunciation in IPA by form and
   variety.
-- 0.16.0: recordings by native speakers, with their consent and a free
+- 0.17.0: recordings by native speakers, with their consent and a free
   license.
 - Then: hardening, contributor documentation; a beta with native
   speakers in Genoa.
 - 1.0.0: when every criterion in the README's roadmap is met.
+
+## [0.14.0] [2026/10/20] [a checker for lexicon files]
+
+### Added
+- `validate-lexicon`, a checker for files in the format of
+  `docs/lexicon-format.md`: `npm run lexicon:validate -- <file.tsv>`.
+  It reads the file without changing it and reports, each at the
+  file's own line number: the rows the engine or the database would
+  refuse [an invalid form, naming each refused character and pointing
+  out a typographic apostrophe; a form longer than 64 characters; a
+  freq that is not plain digits up to 2147483647; an empty variety or
+  orthography; an unknown status; a wrong number of cells]; rows that
+  repeat the same form, variety and orthography, whatever their
+  status; the approved forms that share a skeleton, for which the
+  input method opens a menu, in the menu's own order; approved forms
+  with freq 0; and the lexicon manager's two warnings, `ñ` under
+  grafîa ofiçiâ and an elided particle joined to a word [decisions
+  0028 and 0029]. Exit code 0 when the file has no error and no
+  duplicate, 1 when it has either, 2 when the arguments are wrong or
+  the file cannot be read as UTF-8 text. Until now the only check of a
+  word list was the snapshot's own load, which reports invalid rows
+  and nothing else. The checks are pure functions in
+  `engine/src/validate.ts`; the menus are ordered by `Lexicon`
+  itself, so the report cannot drift from what users see;
+  `tools/validate-lexicon.ts` reads the file and prints the report.
+  Its uses: the daily snapshot, contributors' files, and every file
+  before the structured import. Verified by 29 tests on text written
+  in the tests [line numbers kept across comments, blank lines, a
+  byte order mark and CRLF endings; every error and warning;
+  duplicates of two and three rows with different statuses;
+  collisions, the same forms in different varieties, pending rows
+  ignored; the printed report, singular and plural; the exit codes;
+  the ñ and elision rules proved identical to the manager's], by the
+  test dictionary [exactly its three collisions: `é` and `e`, `ò` and
+  `o`, `pénna` and `pénn-a`], by damaged files written for the
+  purpose, and by an export of the real dictionary, 28,175 rows,
+  checked in under a second with no error and no duplicate.
+- `.gitattributes`: every text file is stored and checked out with LF
+  line endings, whatever the computer's own `core.autocrlf`. A working
+  copy checked out on Windows had received CRLF endings, and two tests
+  that read the decision tables failed there.
+
+### Fixed
+- `isValidForm()` accepted two characters the database refuses: `ſ`
+  [U+017F, the long s] and the Kelvin sign [U+212A], which Unicode
+  case folding treats as `s` and `k`. Its letter list now writes the
+  capitals out, as the database's `ligurian_form` domain does, with no
+  case folding. Found while the checker was written. Verified by a
+  test comparing the engine's check with the database's letters on
+  every Unicode code point, and by a test of both characters; both
+  tests failed before the fix.
+- `engine/src/convert.ts` reads the first letter of a typed word
+  without a non null assertion, as the rest of the code does.
+
+### Changed
+- Keyboard version 0.14.0, following the project's; the keys are
+  unchanged.
+
+Tests: 306, passing on Node.js 22 [engine 54, db 93, admin 66,
+editor 24, dictionary 9, users 4, site 4, keyman 32, corpus 15,
+docs 5].
 
 ## [0.13.1] [2026/10/20] [lìgure]
 
@@ -1664,7 +1730,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.0...v0.12.1

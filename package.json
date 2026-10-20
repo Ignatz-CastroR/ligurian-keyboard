@@ -1,6 +1,6 @@
 {
   "name": "ligurian-keyboard",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "description": "Scrivi in ligure [grafîa ofiçiâ] da qualsiasi tastiera | Write Ligurian in grafîa ofiçiâ from any keyboard",
   "license": "MIT",
   "private": true,
@@ -32,6 +32,7 @@
     "dictionary:build": "vite build --config dictionary/vite.config.ts",
     "users:dev": "vite --config users/vite.config.ts",
     "users:build": "vite build --config users/vite.config.ts",
+    "lexicon:validate": "node tools/validate-lexicon.ts",
     "lexicon:snapshot": "node --env-file-if-exists=.env tools/fetch-lexicon.ts",
     "lexicon:fixture": "node tools/use-fixture-lexicon.ts",
     "frequencies:count": "node tools/count-frequencies.ts",

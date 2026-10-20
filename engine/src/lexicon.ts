@@ -6,6 +6,9 @@
  * Updated:  2026/10/17, 09:47:05: isValidForm exported for the corpus
  *           counter [decision 0027]; the byte order mark written as an
  *           escape, as the project's rule requires.
+ * Updated:  2026/10/20, 14:18:54: isValidForm lists capitals itself
+ *           instead of folding case, which let ſ [U+017F] and the
+ *           Kelvin sign [U+212A] pass as s and k.
  * Purpose:  Load the published wordform list and index it by skeleton.
  * Format:   TSV with header: form, freq, variety, orthography, status
  *           See docs/lexicon-format.md.
@@ -35,8 +38,12 @@ export interface LookupFilter {
 
 const REQUIRED_COLUMNS: readonly string[] = ["form", "freq", "variety", "orthography", "status"];
 
-// Letters a Ligurian wordform may contain, plus apostrophe and hyphen.
-const VALID_FORM: RegExp = /^[a-zàáâäèéêëìíîïòóôöùúûüæçñ'-]+$/iu;
+// Letters a Ligurian wordform may contain, plus apostrophe and hyphen:
+// the character class of the database's ligurian_form domain, capitals
+// written out. No "i" flag: under Unicode case folding it also accepts
+// ſ [U+017F] as s and the Kelvin sign [U+212A] as k, which the database
+// refuses.
+const VALID_FORM: RegExp = /^[a-zA-ZàáâäèéêëìíîïòóôöùúûüæçñÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜÆÇÑ'-]+$/u;
 
 // True when a string may be a Ligurian wordform: the one test the
 // loader, the corpus counter and the tools share.

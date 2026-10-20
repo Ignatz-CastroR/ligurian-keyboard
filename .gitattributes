@@ -1,0 +1,13 @@
+# .gitattributes
+# Date: 2026/10/20, 14:18:54.
+# Version: 1.0
+#
+# Every line that is not a pattern starts with "#"; git reads any other
+# line as a file pattern followed by its attributes.
+
+# Every file git judges to be text is stored with LF line endings and
+# checked out with LF on every computer, whatever its own core.autocrlf
+# setting. The tests read files byte for byte, and a checkout on
+# Windows with CRLF endings made two of them fail. Files git judges to
+# be binary are left exactly as they are.
+* text=auto eol=lf

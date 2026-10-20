@@ -3,6 +3,8 @@
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/10, 21:08:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: the letter ñ [decision 0024].
+ * Updated:  2026/10/20, 14:18:54: isValidForm refuses the characters
+ *           that only Unicode case folding made letters.
  * Purpose:  Unit tests for skeleton folding, lexicon loading and token
  *           conversion. Expected spellings come from the Académia
  *           Ligùstica do Brénno alphabet page.
@@ -12,6 +14,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { isValidForm } from "../src/lexicon.ts";
 import { skeleton, isPlainAscii, Lexicon, convertToken, renderChoice } from "../src/index.ts";
 
 const fixture: Lexicon = Lexicon.fromTsv(readFileSync("data/fixtures/test-lexicon.tsv", "utf8"));
@@ -122,4 +125,13 @@ test("higher frequency ranks first", () => {
     "form\tfreq\tvariety\torthography\tstatus\npénna\t2\tz\tof\tapproved\npénn-a\t9\tz\tof\tapproved",
   );
   assert.deepEqual(lex.lookup("penna").map((e) => e.form), ["pénn-a", "pénna"]);
+});
+
+test("isValidForm accepts capitals and refuses ſ and the Kelvin sign", () => {
+  assert.equal(isValidForm("Ñaro"), true);
+  assert.equal(isValidForm("ÇITÆ"), true);
+  assert.equal(isValidForm("RESCIÖO"), true);
+  assert.equal(isValidForm("\u017F"), false, "ſ is not s");
+  assert.equal(isValidForm("re\u017Fciöo"), false, "not even inside a word");
+  assert.equal(isValidForm("\u212A"), false, "the Kelvin sign is not K");
 });

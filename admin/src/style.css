@@ -214,6 +214,7 @@ table.queue { width: 100%; border-collapse: collapse; }
 /* ---------- review queue grouped by entry [decision 0033] ---------- */
 
 .batch-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0 12px; }
+.pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin: 16px 0; }
 .pick-all { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
 .queue th.pick, .queue td.pick { width: 2em; user-select: none; }
 .queue .group-head td { padding-top: 14px; border-bottom: 2px solid var(--line); font-size: 1.02rem; }

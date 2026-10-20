@@ -16,12 +16,15 @@
  *           that the database's time limit could stop; started again
  *           when the dictionary changes meanwhile, so the file always
  *           restores.
+ * Updated:  2026/10/19, 23:33:20: a restore past the time limit points
+ *           to the procedure for large backups.
  */
 
 import type { Context } from "../context.ts";
 import type { Profile, Role } from "../types.ts";
 import { ROLES } from "../types.ts";
 import { backupSource, profiles, restoreBackup, updateProfile } from "../db.ts";
+import { AppError } from "../errors.ts";
 import { canBackup, canManageRoles, isStaff } from "../permissions.ts";
 import { formatDateTime } from "../forms.ts";
 import {
@@ -106,7 +109,14 @@ function restoreCard(ctx: Context): HTMLElement {
       if (!check.ok) {
         showError(reasons[check.reason]);
       } else if (window.confirm(t.restoreConfirm(countsSummary(check.summary.counts, countLabels(ctx))))) {
-        const report: RestoreReport = await restoreBackup(check.backup);
+        let report: RestoreReport;
+        try {
+          report = await restoreBackup(check.backup);
+        } catch (error: unknown) {
+          // A restore is one statement: past the time limit, the way
+          // is the procedure for large backups.
+          throw error instanceof AppError && error.kind === "timeout" ? new AppError("generic", t.restoreTimeout) : error;
+        }
         const notes: string[] = [t.restoreDone(countsSummary(report.restored, countLabels(ctx)))];
         if (report.profiles_skipped > 0) {
           notes.push(t.restoreProfilesSkipped(report.profiles_skipped));

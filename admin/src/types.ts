@@ -107,6 +107,9 @@ export interface QueueItem {
   // Translations only.
   language: string | null;
   gloss: string | null;
+  // From migration 0010, in the pages of the queue: the time of the
+  // entry's oldest pending row, which orders the entries.
+  group_created?: string;
 }
 
 export interface AuditEntry {

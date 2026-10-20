@@ -14,15 +14,109 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- 0.13.0: bulk import of word lists, each one checked by
-  `validate-lexicon` before it reaches the database, and its entries
-  named by their public codes.
-- 0.14.0: hardening, contributor documentation; a beta with native
+- 0.13.0: `import_entries()`, a structured import with a dry run and
+  authors, in the format of `db/templates/add-entries.sql`; repair
+  tools for entries loaded before it [splitting translations that
+  hold ";", moving translations between senses, changing a
+  translation's language]; the language of a translation required in
+  the forms.
+- 0.14.0: the site's structure: the same five sections on every page,
+  as clear buttons; the manager's own tabs; Users as a section of its
+  own, with each person's complete history; the size of the
+  dictionary on every page; the dictionary also searching Ligurian
+  words, with or without accents.
+- 0.15.0: grammar for every form, base lemma included, in structured
+  fields; richer entries: etymology, examples, definitions in four
+  languages, usage labels, images uploaded to Supabase; the entry
+  page redesigned.
+- Then: hardening, contributor documentation; a beta with native
   speakers in Genoa.
 - 1.0.0: when every criterion in the README's roadmap is met.
 - After the beta, without delaying 1.0.0: public entry pages by
   public code, Spanish translations of the most common words, and
   pronunciation [decision 0032].
+
+## [0.12.1] [2026/10/19] [the review queue in pages]
+
+### Fixed
+- The review queue no longer opened after a load of thousands of
+  entries by SQL: it showed the database's time limit, and in words
+  meant for backups. Two causes, reproduced with 12,000 approved and
+  3,000 pending lemmas: the view `review_queue` runs under row level
+  security, which makes the database check every row of every table,
+  approved ones included, before it reaches the pending ones; and the
+  page asked for the whole queue at once, then drew every row.
+  - Migration 0010: `review_queue_page()` returns the next 50 entries,
+    oldest first, one row per entry with its pending rows as JSON, so
+    that no cap on API rows can cut an entry in two, and with the
+    entry's position and the totals, counted in the same snapshot. It
+    reads four new partial indexes, which hold the pending rows alone.
+    Reviewers and admins get every pending row; anyone else only their
+    own, with a lemma or sense above them only when they could read it
+    themselves. The view stays, unchanged, for any client still
+    using it.
+  - The manager shows the queue in pages of 50 entries, with the
+    entries and rows waiting and Previous and Next; "Select all"
+    covers the page. Position and totals come from the database, so
+    they stay right while several reviewers work at once; every button
+    waits while a page is turned, and a late answer to an older
+    request is dropped.
+  Measured in the test engine, a page costs about 40 ms with 9,000
+  pending rows, 0.3 s with 90,000 and 1.2 s with 300,000, against
+  0.8, 8 and 29 seconds for the view: its cost grows with the pending
+  rows, not with the dictionary. Verified by 7 database tests [every
+  caller getting the rows the view shows them and no parent they could
+  not read; entries oldest first, whole, one API row each; an entry of
+  61 rows still one row; position and totals right after others
+  reviewed meanwhile; visitors refused; a page more than four times
+  faster than the view at the live dictionary's size] and the page run
+  by hand in a headless browser with 120 stand in entries.
+  An independent review found no blocker. It found that the first
+  version computed the position in the browser, so that with two
+  reviewers the last entries could become unreachable, and returned
+  one API row per pending row, which Supabase's cap of 1,000 rows
+  could cut in the middle of an entry; both fixed before release.
+- A database timeout was always reported with the backup's
+  instructions. It now says the database took too long and to try
+  again; a restore past the limit points to the procedure for large
+  backups.
+
+### Added
+- `db/templates/add-entries.sql`, for the SQL Editor: adds whole
+  entries in the right shape, each sense with all its translations,
+  each translation its own row in its own language, credited to the
+  person named in its first step, which is required. One transaction:
+  a refused entry writes nothing, and the error names the headword
+  and the form or translation at fault. Refused: unknown keys, such as
+  a misspelt "definition"; a key written twice in one object; a
+  translation holding ";". Its examples are comments, and its helpers
+  are removed at the end of the run. Loads made before it created one
+  sense per translation and wrote every translation as Italian.
+- `db/templates/check-loaded-entries.sql`, read only: measures what
+  those loads left behind, to size the repairs of 0.13.0; it counts
+  live rows under live parents only, as the queue does.
+  Verified by 6 database tests that run both files exactly as
+  committed, fourteen wrong entries among them.
+
+### Changed
+- `db/README.md`, `admin/README.md`, `README.md` and decision 0033:
+  the queue in pages, migration 0010, the templates, test counts.
+- Keyboard version 0.12.1, following the project's; the keys are
+  unchanged.
+
+### Known issues
+- Migration 0010 must run before this version is pushed: the review
+  page calls its function.
+- Paging is by key: while others review, an entry approved in part
+  may appear again further on, and one whose oldest pending row moves
+  earlier is reached again from the first page.
+- Entries loaded by SQL before the template keep their split senses
+  and their Italian labels until the repair tools of 0.13.0.
+- The view `review_queue` remains readable by every signed-in user and
+  slow on a large dictionary; nothing in the manager uses it now.
+
+Tests: 255, passing on Node.js 22 and 24 [engine 24, db 86, admin 62,
+editor 24, dictionary 7, keyman 32, corpus 15, docs 5].
 
 ## [0.12.0] [2026/10/18] [the dictionary for readers]
 
@@ -1419,7 +1513,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.2...v0.12.0
 [0.11.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.0...v0.11.1

@@ -11,6 +11,10 @@
  *           row of it stays selected, and the rows that failed are
  *           marked in the queue; while a batch runs, every button of
  *           the page waits.
+ * Updated:  2026/10/19, 23:31:05: the queue in pages of 50 entries, with
+ *           the position and totals the database counts with each page
+ *           [review_queue_page[], migration 0010]; the whole queue at
+ *           once no longer opened after a load of thousands of entries.
  * Purpose:  The review queue: everything pending, oldest first, grouped
  *           by entry. Reviewers and admins approve or reject from here;
  *           contributors see their own proposals still waiting.
@@ -22,7 +26,7 @@
 
 import type { Context } from "../context.ts";
 import type { Profile, QueueItem, QueueKind } from "../types.ts";
-import { profiles, reviewBatch, reviewQueue } from "../db.ts";
+import { profiles, reviewBatch, reviewQueuePage, type QueuePage } from "../db.ts";
 import { AppError } from "../errors.ts";
 import { isStaff } from "../permissions.ts";
 import { formatDateTime, shortId } from "../forms.ts";
@@ -33,8 +37,16 @@ import {
 } from "../queue.ts";
 import { appendAll, clear, describeError, h, hideMessage, runAction, showError, showInfo, statusLabel } from "../ui.ts";
 
+// Entries a page of the queue shows.
+export const QUEUE_PAGE: number = 50;
+
 interface Page {
   busy: boolean;
+  // The last row of every page before this one; empty on the first.
+  before: QueueItem[];
+  // The first entry on this page, counting from 1.
+  first: number;
+  totals: { entries: number; items: number };
   // Rows the last batch could not change, marked until the next one.
   flagged: Set<string>;
   groups: QueueGroup[];
@@ -47,7 +59,7 @@ interface Page {
 export async function renderReview(ctx: Context, root: HTMLElement): Promise<void> {
   const { t } = ctx;
   const staff: boolean = isStaff(ctx.role);
-  const page: Page = { busy: false, flagged: new Set(), groups: [], names: new Map(), selection: { selected: new Set(), anchor: null }, rowBoxes: new Map(), groupBoxes: new Map() };
+  const page: Page = { busy: false, before: [], first: 1, totals: { entries: 0, items: 0 }, flagged: new Set(), groups: [], names: new Map(), selection: { selected: new Set(), anchor: null }, rowBoxes: new Map(), groupBoxes: new Map() };
   const kindLabels: Record<QueueKind, string> = {
     lemma: t.kindLemma, wordform: t.kindWordform, sense: t.kindSense, gloss: t.kindGloss,
   };
@@ -55,6 +67,11 @@ export async function renderReview(ctx: Context, root: HTMLElement): Promise<voi
 
   const failures: HTMLElement = h("div", { class: "batch-failures", hidden: true, role: "alert" });
   const body: HTMLElement = h("div", {}, h("p", { class: "muted" }, t.loading));
+  const totals: HTMLElement = h("p", { class: "muted", "aria-live": "polite" });
+  const previous: HTMLButtonElement = h("button", { type: "button", class: "small" }, t.reviewPrevious);
+  const next: HTMLButtonElement = h("button", { type: "button", class: "small" }, t.reviewNext);
+  const range: HTMLElement = h("span", { class: "muted" });
+  const pager: HTMLElement = h("div", { class: "pager", hidden: true }, previous, range, next);
 
   const allBox: HTMLInputElement = h("input", { type: "checkbox" });
   const count: HTMLElement = h("span", { class: "muted", "aria-live": "polite" });
@@ -66,9 +83,11 @@ export async function renderReview(ctx: Context, root: HTMLElement): Promise<voi
   appendAll(root,
     h("h2", {}, t.reviewTitle),
     h("p", { class: "muted" }, staff ? t.reviewIntro : t.reviewOwnIntro),
+    totals,
     failures,
     staff && toolbar,
     body,
+    pager,
   );
 
   // Every box on the page shows the current selection.
@@ -111,22 +130,78 @@ export async function renderReview(ctx: Context, root: HTMLElement): Promise<voi
     }
   };
 
-  // A failed reload empties the page's rows and selection, so that no
-  // button can act on rows no longer shown.
+  // The pager's words and buttons, from the position and totals the
+  // database counted with this page.
+  const drawPager = (): void => {
+    const last: number = page.first + page.groups.length - 1;
+    totals.textContent = page.totals.entries === 0 ? "" : t.reviewTotals(page.totals.entries, page.totals.items);
+    range.textContent = page.groups.length === 0 ? "" : t.reviewRange(page.first, last, page.totals.entries);
+    previous.disabled = page.busy || page.before.length === 0;
+    next.disabled = page.busy || page.groups.length === 0 || last >= page.totals.entries;
+    pager.hidden = page.totals.entries <= QUEUE_PAGE && page.before.length === 0;
+  };
+
+  /* A failed reload empties the page's rows and selection, so that no
+     button can act on rows no longer shown. A page left empty, because
+     its entries were reviewed and none follow, gives way to the one
+     before it. Only the latest reload may draw: an older answer that
+     arrives late is dropped. */
+  let loads: number = 0;
   const reload = async (): Promise<void> => {
+    const mine: number = ++loads;
     try {
-      const [queue, people] = await Promise.all([reviewQueue(), staff ? profiles() : Promise.resolve([] as Profile[])]);
-      page.groups = groupQueue(queue);
-      page.names = new Map(people.map((p) => [p.user_id, p.display_name]));
-      page.selection = keepVisible(page.selection, page.groups);
-      draw();
+      const [people, firstTry] = await Promise.all([
+        staff ? profiles() : Promise.resolve([] as Profile[]),
+        reviewQueuePage(page.before.at(-1) ?? null, QUEUE_PAGE),
+      ]);
+      let result: QueuePage = firstTry;
+      while (result.entries === 0 && page.before.length > 0 && mine === loads) {
+        page.before.pop();
+        result = await reviewQueuePage(page.before.at(-1) ?? null, QUEUE_PAGE);
+      }
+      if (mine === loads) {
+        page.totals = { entries: result.totalEntries, items: result.totalItems };
+        page.first = result.entries === 0 ? 1 : result.first;
+        page.groups = groupQueue(result.items);
+        page.names = new Map(people.map((p) => [p.user_id, p.display_name]));
+        page.selection = keepVisible(page.selection, page.groups);
+        draw();
+      }
     } catch (error: unknown) {
-      page.groups = [];
-      page.selection = { selected: new Set(), anchor: null };
-      body.replaceChildren(h("p", { class: "error-text" }, describeError(t, error)));
-      sync();
+      if (mine === loads) {
+        page.groups = [];
+        page.selection = { selected: new Set(), anchor: null };
+        body.replaceChildren(h("p", { class: "error-text" }, describeError(t, error)));
+        sync();
+      }
+    }
+    if (mine === loads) {
+      drawPager();
     }
   };
+
+  // Another page: the selection belongs to the page left behind, and
+  // every button waits until the new page is drawn.
+  const turn = async (forward: boolean): Promise<void> => {
+    const lastRow: QueueItem | undefined = page.groups.at(-1)?.parts.at(-1) ?? page.groups.at(-1)?.lemma ?? undefined;
+    if (forward && lastRow !== undefined) {
+      page.before.push(lastRow);
+    } else if (!forward && page.before.length > 0) {
+      page.before.pop();
+    }
+    page.selection = { selected: new Set(), anchor: null };
+    page.flagged = new Set();
+    failures.hidden = true;
+    setBusy(true);
+    try {
+      await reload();
+    } finally {
+      setBusy(false);
+    }
+    root.scrollIntoView({ block: "start" });
+  };
+  previous.addEventListener("click", () => void runAction(t, previous, () => turn(false)).then(drawPager));
+  next.addEventListener("click", () => void runAction(t, next, () => turn(true)).then(drawPager));
 
   // While a batch runs, every button on the page waits for it.
   const setBusy = (busy: boolean): void => {
@@ -135,6 +210,7 @@ export async function renderReview(ctx: Context, root: HTMLElement): Promise<voi
       button.disabled = busy;
     }
     sync();
+    drawPager();
   };
 
   // Approve or reject these rows, then reload and show what happened.

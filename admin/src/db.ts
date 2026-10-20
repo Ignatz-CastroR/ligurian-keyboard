@@ -6,6 +6,9 @@
  * Updated:  2026/10/18, 09:02:15: lemmasWithPublicId[], to find an
  *           entry by its code; exportBackup[] and restoreBackup[]
  *           [decisions 0030 and 0031].
+ * Updated:  2026/10/19, 23:29:02: reviewQueuePage[] replaces
+ *           reviewQueue[]: the queue in pages, each entry whole, with
+ *           its position and the totals [migration 0010].
  * Updated:  2026/10/18, 16:50:44: backupSource[], the small reads from
  *           which the manager assembles a backup [version 0.11.2].
  * Updated:  2026/10/18, 13:15:02: reviewBatch[], approving or rejecting
@@ -333,12 +336,48 @@ export function restore(table: LexiconTable, id: number, version: number): Promi
    Review queue, people and history
    ==================================================================== */
 
-export async function reviewQueue(): Promise<QueueItem[]> {
-  const { data, error } = await db().from("review_queue").select("*");
+/* One page of the review queue: the next entries after `after`, the
+   last row of the page before [null for the first], oldest first, each
+   entry whole, with the position of the first entry and the totals,
+   all counted by the database in one snapshot [review_queue_page[],
+   migration 0010]. An empty page carries no totals. */
+export interface QueuePage {
+  items: QueueItem[];
+  entries: number;
+  first: number;
+  totalEntries: number;
+  totalItems: number;
+}
+
+interface QueuePageRow {
+  lemma_id: number;
+  group_created: string;
+  entry_number: number | string;
+  total_entries: number | string;
+  total_items: number | string;
+  items: QueueItem[];
+}
+
+export async function reviewQueuePage(after: QueueItem | null, entries: number): Promise<QueuePage> {
+  const { data, error } = await db().rpc("review_queue_page", {
+    p_after_created: after?.group_created ?? null,
+    p_after_lemma: after?.lemma_id ?? null,
+    p_entries: entries,
+  });
   if (error !== null) {
     throw toAppError(error);
   }
-  return (data ?? []) as QueueItem[];
+  const rows: QueuePageRow[] = (data ?? []) as QueuePageRow[];
+  const head: QueuePageRow | undefined = rows[0];
+  return {
+    // group_created stays the database's own text, so the next page's
+    // key is exact to the microsecond.
+    items: rows.flatMap((row) => row.items.map((item) => ({ ...item, group_created: row.group_created }))),
+    entries: rows.length,
+    first: Number(head?.entry_number ?? 0),
+    totalEntries: Number(head?.total_entries ?? 0),
+    totalItems: Number(head?.total_items ?? 0),
+  };
 }
 
 /* Approve or reject queue rows, at the versions the reviewer saw, in

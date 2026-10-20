@@ -19,6 +19,9 @@
  * Updated:  2026/10/18, 16:55:02: the progress of a backup.
  * Updated:  2026/10/18, 18:41:15: navReaders, the dictionary for
  *           readers.
+ * Updated:  2026/10/19, 23:31:05: the pages and totals of the queue; a
+ *           timeout message that no longer speaks of backups, which
+ *           have their own.
  * Purpose:  Every text the lexicon manager shows, in Italian [default,
  *           for the Genoese contributors], English and Spanish.
  * Contract: EN and ES have exactly the type of IT, so the compiler
@@ -169,6 +172,11 @@ const IT = {
   reviewApproved: (n: number): string => (n === 1 ? "1 elemento approvato." : `${n} elementi approvati.`),
   reviewRejected: (n: number): string => (n === 1 ? "1 elemento rifiutato." : `${n} elementi rifiutati.`),
   reviewFailed: (n: number): string => (n === 1 ? "1 elemento non è stato modificato:" : `${n} elementi non sono stati modificati:`),
+  reviewTotals: (entries: number, items: number): string =>
+    `In attesa: ${entries === 1 ? "1 voce" : `${entries} voci`}, ${items === 1 ? "1 elemento" : `${items} elementi`}.`,
+  reviewRange: (from: number, to: number, total: number): string => `Voci ${from}–${to} di ${total}`,
+  reviewPrevious: "← Pagina precedente",
+  reviewNext: "Pagina seguente →",
   senseNumbered: (n: number): string => `Significato ${n}`,
   senseWithoutDefinition: (n: number): string => `Significato ${n}, senza definizione`,
   glossOfSense: (n: number): string => `del significato ${n}`,
@@ -239,7 +247,8 @@ const IT = {
   errInvalidValue: "Il database ha rifiutato un valore non valido.",
   errNotFound: "Voce non trovata, o non visibile per te.",
   errNotEmpty: "Il dizionario non è vuoto: una copia si ripristina solo in un dizionario appena creato.",
-  errTimeout: "Il database ha interrotto l'operazione perché durava troppo. Per ripristinare una copia molto grande, segui db/README.md.",
+  errTimeout: "Il database ha impiegato troppo tempo a rispondere. Riprova tra poco; se succede ancora, avvisa un amministratore.",
+  restoreTimeout: "Il ripristino ha superato il limite di tempo del database: per una copia così grande, segui la procedura di db/README.md.",
   errGeneric: (msg: string): string => `Errore: ${msg}`,
   errNotConfigured: "Configurazione mancante: VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY non sono impostate. Vedi admin/README.md.",
 };
@@ -376,6 +385,11 @@ const EN: Messages = {
   reviewApproved: (n: number): string => (n === 1 ? "1 item approved." : `${n} items approved.`),
   reviewRejected: (n: number): string => (n === 1 ? "1 item rejected." : `${n} items rejected.`),
   reviewFailed: (n: number): string => (n === 1 ? "1 item was not changed:" : `${n} items were not changed:`),
+  reviewTotals: (entries: number, items: number): string =>
+    `Waiting: ${entries === 1 ? "1 entry" : `${entries} entries`}, ${items === 1 ? "1 item" : `${items} items`}.`,
+  reviewRange: (from: number, to: number, total: number): string => `Entries ${from} to ${to} of ${total}`,
+  reviewPrevious: "← Previous page",
+  reviewNext: "Next page →",
   senseNumbered: (n: number): string => `Sense ${n}`,
   senseWithoutDefinition: (n: number): string => `Sense ${n}, no definition`,
   glossOfSense: (n: number): string => `of sense ${n}`,
@@ -446,7 +460,8 @@ const EN: Messages = {
   errInvalidValue: "The database refused an invalid value.",
   errNotFound: "Entry not found, or not visible to you.",
   errNotEmpty: "The dictionary is not empty: a backup is restored only into a newly created dictionary.",
-  errTimeout: "The database stopped the operation because it took too long. To restore a very large backup, follow db/README.md.",
+  errTimeout: "The database took too long to answer. Try again in a moment; if it keeps happening, tell an administrator.",
+  restoreTimeout: "The restore passed the database's time limit: for a backup this large, follow the procedure in db/README.md.",
   errGeneric: (msg: string): string => `Error: ${msg}`,
   errNotConfigured: "Configuration missing: VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are not set. See admin/README.md.",
 };
@@ -581,6 +596,11 @@ const ES: Messages = {
   reviewApproved: (n: number): string => (n === 1 ? "1 elemento aprobado." : `${n} elementos aprobados.`),
   reviewRejected: (n: number): string => (n === 1 ? "1 elemento rechazado." : `${n} elementos rechazados.`),
   reviewFailed: (n: number): string => (n === 1 ? "1 elemento no se modificó:" : `${n} elementos no se modificaron:`),
+  reviewTotals: (entries: number, items: number): string =>
+    `Pendientes: ${entries === 1 ? "1 entrada" : `${entries} entradas`}, ${items === 1 ? "1 elemento" : `${items} elementos`}.`,
+  reviewRange: (from: number, to: number, total: number): string => `Entradas ${from} a ${to} de ${total}`,
+  reviewPrevious: "← Página anterior",
+  reviewNext: "Página siguiente →",
   senseNumbered: (n: number): string => `Acepción ${n}`,
   senseWithoutDefinition: (n: number): string => `Acepción ${n}, sin definición`,
   glossOfSense: (n: number): string => `de la acepción ${n}`,
@@ -651,7 +671,8 @@ const ES: Messages = {
   errInvalidValue: "La base de datos rechazó un valor no válido.",
   errNotFound: "Entrada no encontrada, o no visible para ti.",
   errNotEmpty: "El diccionario no está vacío: una copia solo se restaura en un diccionario recién creado.",
-  errTimeout: "La base de datos interrumpió la operación porque tardaba demasiado. Para restaurar una copia muy grande, sigue db/README.md.",
+  errTimeout: "La base de datos tardó demasiado en responder. Inténtalo de nuevo en un momento; si vuelve a pasar, avisa a un administrador.",
+  restoreTimeout: "La restauración superó el límite de tiempo de la base de datos: para una copia tan grande, sigue el procedimiento de db/README.md.",
   errGeneric: (msg: string): string => `Error: ${msg}`,
   errNotConfigured: "Falta la configuración: VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY no están definidas. Consulta admin/README.md.",
 };

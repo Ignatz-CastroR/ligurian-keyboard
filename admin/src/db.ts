@@ -15,6 +15,9 @@
  *           many queue rows per call, replaces setStatusById[]
  *           [decision 0033]; AppError and the SQLSTATE kinds moved to
  *           errors.ts.
+ * Updated:  2026/10/20, 01:55:30: peopleActivity[], userHistory[] and
+ *           userSummary[], for the site's Users section [migration
+ *           0011, decision 0035].
  * Purpose:  Every conversation between the lexicon manager and the
  *           database. Views never call Supabase directly; they call
  *           these functions, so the queries live in one place.
@@ -447,6 +450,67 @@ export async function entryHistory(entry: Entry): Promise<AuditEntry[]> {
   }
   history.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : b.id - a.id));
   return history;
+}
+
+/* ====================================================================
+   People and their history [migration 0011], for the Users section.
+   A null person means the changes written from the SQL Editor, with no
+   user; only reviewers and admins may ask for them, or for anyone
+   else's.
+   ==================================================================== */
+
+export interface Activity {
+  user_id: string | null;
+  display_name: string | null;
+  changes: number;
+  last_change: string;
+}
+
+export interface Change {
+  id: number;
+  table_name: LexiconTable;
+  row_id: number;
+  action: AuditEntry["action"];
+  at: string;
+  label: string | null;
+  status: Status | null;
+  lemma_id: number | null;
+  changed: string[] | null;
+}
+
+export interface ChangeCount {
+  table_name: LexiconTable;
+  action: AuditEntry["action"];
+  changes: number;
+  first_change: string;
+  last_change: string;
+}
+
+export const HISTORY_PAGE: number = 100;
+
+async function rpcRows<T>(name: string, args: Record<string, unknown> = {}): Promise<T[]> {
+  const { data, error } = await db().rpc(name, args);
+  if (error !== null) {
+    throw toAppError(error);
+  }
+  return (data ?? []) as T[];
+}
+
+// Everyone with at least one change, the latest first.
+export async function peopleActivity(): Promise<Activity[]> {
+  const rows = await rpcRows<Activity & { changes: number | string }>("people_activity");
+  return rows.map((r) => ({ ...r, changes: Number(r.changes) }));
+}
+
+// One page of a person's changes, newest first; `before` is the id of
+// the last change already shown, null for the first page.
+export function userHistory(userId: string | null, before: number | null): Promise<Change[]> {
+  return rpcRows<Change>("user_history", { p_user: userId, p_before: before, p_limit: HISTORY_PAGE });
+}
+
+export async function userSummary(userId: string | null): Promise<ChangeCount[]> {
+  const rows = await rpcRows<ChangeCount & { changes: number | string }>("user_summary", { p_user: userId });
+  return rows.map((r) => ({ ...r, changes: Number(r.changes) }));
 }
 
 /* ====================================================================

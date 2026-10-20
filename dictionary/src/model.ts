@@ -2,14 +2,19 @@
  * model.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/18, 18:06:40, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/20, 01:36:10: the search also looks in Ligurian
+ *           spellings [dictionary_lookup[] of migration 0011]; the
+ *           letter of the index under which an entry is listed.
  * Purpose:  The dictionary page's logic, apart from the page: the order
  *           of the index's letters, the addresses of its views, and the
  *           grouping of translations by sense and of search results by
  *           entry. Pure functions, no DOM, tested in Node.
  * Contract: The rows are those of migration 0009's functions:
  *           dictionary_letters[], dictionary_index[],
- *           dictionary_search[] and dictionary_entry[].
+ *           dictionary_search[] and dictionary_entry[], and of migration
+ *           0011's dictionary_lookup[].
  * Decision: docs/decisions/0034-dictionary-for-readers.md
+ *           docs/decisions/0035-site-in-five-sections.md
  */
 
 import { readTypedCode } from "../../admin/src/public-id.ts";
@@ -44,6 +49,19 @@ export interface SearchRow {
   language: string;
   gloss: string;
   rank: number;
+}
+
+// One entry found by its Ligurian spelling, as dictionary_lookup[] of
+// migration 0011 gives it: the headword itself [rank 0 or 1] or one of
+// its forms [rank 2 or 3, with matched_form] begins with the query.
+export interface LookupRow {
+  id: number;
+  public_id: string;
+  headword: string;
+  part_of_speech: string | null;
+  matched_form: string | null;
+  rank: number;
+  glosses: GlossRow[] | null;
 }
 
 export interface EntryForm {
@@ -88,6 +106,11 @@ export type Route =
 // The languages of the translations, in the order they are shown.
 export const TRANSLATION_LANGUAGES: readonly string[] = ["it", "es", "en"];
 
+// What the search can look in: Ligurian spellings, or the translations
+// of one language. No language means all of them.
+export const LIGURIAN: string = "lij";
+export const SEARCH_LANGUAGES: readonly string[] = [LIGURIAN, ...TRANSLATION_LANGUAGES];
+
 // The order of the index: æ after a, ç after c, then anything else
 // that is a letter, and "#" last.
 const LETTER_ORDER: readonly string[] = [
@@ -117,7 +140,8 @@ const decode = (part: string | undefined): string => {
   return text;
 };
 
-/* #/indice/a, #/cerca/es/pluma [or #/cerca/tutte/pluma], #/voce/LIJ-...;
+/* #/indice/a, #/cerca/es/pluma [#/cerca/lij/zena for Ligurian words,
+   #/cerca/tutte/pluma for everything], #/voce/LIJ-...;
    anything else is the index at its first letter. */
 export function parseRoute(hash: string): Route {
   const [view, first, ...rest] = hash.replace(/^#\/?/u, "").split("/");
@@ -128,7 +152,7 @@ export function parseRoute(hash: string): Route {
     const language: string = decode(first);
     route = {
       view: "search",
-      language: TRANSLATION_LANGUAGES.includes(language) ? language : null,
+      language: SEARCH_LANGUAGES.includes(language) ? language : null,
       query: decode(rest.join("/")),
     };
   } else if (view === "voce" && first !== undefined && first !== "") {
@@ -212,6 +236,24 @@ export function groupResults(rows: readonly SearchRow[]): FoundEntry[] {
     entry.matches.push({ sense_number: row.sense_number, definition_it: row.definition_it, language: row.language, gloss: row.gloss });
   }
   return [...entries.values()];
+}
+
+/* The letter of the index under which a headword is listed, the same
+   as the database's private.index_initial[] of migration 0009: æ and ç
+   are letters of their own, an accented letter goes under its base
+   letter, anything that is not a letter under "#". */
+export function initialOf(headword: string): string {
+  const first: string = [...headword.normalize("NFC")][0] ?? "";
+  let initial: string;
+  if (first === "æ" || first === "Æ") {
+    initial = "æ";
+  } else if (first === "ç" || first === "Ç") {
+    initial = "ç";
+  } else {
+    const base: string = first.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().slice(0, 1);
+    initial = /^[a-z]$/u.test(base) ? base : OTHER_INITIAL;
+  }
+  return initial;
 }
 
 /* What the search field holds: a public code to open, a code with a

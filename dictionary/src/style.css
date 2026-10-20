@@ -5,6 +5,8 @@
  * Purpose:  Look of the dictionary for readers: the tokens and palette
  *           of the editor and the lexicon manager, light and dark, made
  *           for reading, usable on a phone.
+ * Updated:  2026/10/20, 02:17:10: the path above an entry, and the two
+ *           groups of search results [decision 0035].
  */
 
 :root {
@@ -157,3 +159,8 @@ h2 { font-size: 1.15rem; margin: 24px 0 8px; }
   .tabs { flex-basis: 100%; }
   .entry-title { font-size: 1.6rem; }
 }
+
+/* ---------- the path above an entry; the groups of results [decision 0035] ---------- */
+
+.breadcrumb { margin: 0 0 8px; color: var(--muted); }
+.results h2 { margin-top: 20px; }

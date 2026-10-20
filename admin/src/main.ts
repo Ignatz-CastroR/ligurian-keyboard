@@ -9,14 +9,22 @@
  * Updated:  2026/10/18, 12:34:52: the TSV and CSV downloads are named by
  *           the local date and time of the click [decision 0025].
  * Updated:  2026/10/18, 18:41:15: a link to the dictionary for readers.
+ * Updated:  2026/10/20, 02:14:40: the site's bar of five sections on
+ *           top; below it, the manager's own tabs, the current one
+ *           marked: Search, New lemma, To review and, for admins,
+ *           Backups, moved here from the users page. Profiles and people
+ *           moved to the site's Users section, /utenti/, where the old
+ *           address #/users now leads [decision 0035].
  * Purpose:  Start the lexicon manager: connect to Supabase, follow the
  *           session, draw the header and send each address to its view.
  * Routes:   #/search/<query>   search [everyone]
  *           #/entry/<id>       one entry [everyone, as far as visible]
  *           #/new              propose a lemma [contributors and up]
  *           #/review           review queue [signed in]
- *           #/users            own profile; people and roles [staff]
+ *           #/backups          backup and restore [admins]
  *           #/signin           sign in
+ *           #/users            moved: opens ../utenti/
+ * Decision: docs/decisions/0035-site-in-five-sections.md
  */
 
 import "./style.css";
@@ -28,7 +36,8 @@ import type { Profile, ReferenceData } from "./types.ts";
 import { connect, currentSession, exportTsv, myProfile, onSessionChange, referenceData, signOut } from "./db.ts";
 import { tsvToCsv } from "./export.ts";
 import { lexiconFileName } from "./file-names.ts";
-import { canPropose } from "./permissions.ts";
+import { canBackup, canPropose } from "./permissions.ts";
+import { loadStats, mountSiteBar } from "../../site/bar.ts";
 import {
   attachMessageBar, clear, describeError, downloadText, h, hideMessage, roleLabel, runAction, showError, showInfo,
 } from "./ui.ts";
@@ -36,7 +45,7 @@ import { renderSearch } from "./views/search.ts";
 import { renderEntry } from "./views/entry.ts";
 import { renderNewLemma } from "./views/new-lemma.ts";
 import { renderReview } from "./views/review.ts";
-import { renderUsers } from "./views/users.ts";
+import { renderBackups } from "./views/backups.ts";
 import { renderSignIn } from "./views/sign-in.ts";
 
 const LANG_KEY: string = "ligurian-keyboard.lang";
@@ -46,7 +55,7 @@ const ROUTES: Readonly<Record<string, View>> = {
   entry: renderEntry,
   new: renderNewLemma,
   review: renderReview,
-  users: renderUsers,
+  backups: renderBackups,
   signin: renderSignIn,
 };
 
@@ -84,6 +93,9 @@ function saveLang(lang: Lang): void {
     // Not remembered; harmless.
   }
 }
+
+// Addresses that moved to another section of the site.
+const MOVED: Readonly<Record<string, string>> = { users: "../utenti/" };
 
 function parseRoute(hash: string): { name: string; param: string } {
   const parts: string[] = hash.replace(/^#\/?/, "").split("/");
@@ -158,36 +170,64 @@ function drawHeader(state: State): void {
     const outButton: HTMLButtonElement = h("button", { type: "button", class: "small" }, t.signOut);
     outButton.addEventListener("click", () => void signOut());
     const who: string = state.profile?.display_name || state.session?.user.email || "";
+    // The profile lives in the Users section.
     account = h("span", { class: "account" },
-      h("a", { href: "#/users", class: "nav-link" }, who),
+      h("a", { href: "../utenti/", class: "nav-link", title: t.navAccount }, who),
       ctx.role !== null && h("span", { class: "tag" }, roleLabel(t, ctx.role)),
       outButton,
     );
   }
 
+  // The manager's own tabs, the current one marked.
+  const current: string = parseRoute(window.location.hash).name;
+  const tab = (href: string, label: string, names: readonly string[]): HTMLElement => {
+    const link: HTMLElement = h("a", { href, class: "tab" }, label);
+    link.dataset["routes"] = names.join(" ");
+    return link;
+  };
+
+  mountSiteBar("manager", state.lang, loadStats(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY));
   header.replaceChildren(
     h("div", { class: "brand" },
       h("a", { href: "#/search/", class: "brand-title" }, t.appTitle),
       h("span", { class: "muted" }, t.appSubtitle)),
-    h("nav", {},
-      link("../", t.navEditor),
-      link("../tastiera/", t.navKeyboard),
-      link("../dizionario/", t.navReaders),
-      link("#/search/", t.navSearch),
-      canPropose(ctx.role) && link("#/new", t.navNew),
-      ctx.userId !== null && link("#/review", t.navReview),
-      ctx.userId !== null && link("#/users", ctx.role === "reviewer" || ctx.role === "admin" ? t.navUsers : t.navAccount),
-    ),
     h("div", { class: "tools" }, tsvButton, csvButton, langMenu, account),
+    h("nav", { class: "tabs", "aria-label": t.tabsLabel },
+      tab("#/search/", t.navSearch, ["search", "entry"]),
+      canPropose(ctx.role) && tab("#/new", t.navNew, ["new"]),
+      ctx.userId !== null && tab("#/review", t.navReview, ["review"]),
+      canBackup(ctx.role) && tab("#/backups", t.navBackups, ["backups"]),
+    ),
   );
+  markTab(current);
+}
+
+// Mark the tab of the current page, without redrawing the header, so
+// that the link just followed keeps the keyboard's focus.
+function markTab(route: string): void {
+  for (const link of header.querySelectorAll<HTMLElement>(".tabs .tab")) {
+    const on: boolean = (link.dataset["routes"] ?? "").split(" ").includes(route);
+    link.classList.toggle("current", on);
+    if (on) {
+      link.setAttribute("aria-current", "page");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  }
 }
 
 let renderTicket: number = 0;
 
 async function render(state: State): Promise<void> {
   const ticket: number = ++renderTicket;
+  const moved: string | undefined = MOVED[window.location.hash.replace(/^#\/?/u, "").split("/")[0] ?? ""];
+  if (moved !== undefined) {
+    window.location.replace(moved);
+    return;
+  }
   const ctx: Context = makeContext(state);
   const route = parseRoute(window.location.hash);
+  markTab(route.name);
   const view: View = ROUTES[route.name] ?? renderSearch;
   const page: HTMLElement = h("div", { class: "page" });
 

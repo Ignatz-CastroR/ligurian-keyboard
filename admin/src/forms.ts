@@ -11,6 +11,9 @@
  * Updated:  2026/10/17, 12:35:12: joinedElisions, the warning before an
  *           elided particle and a word are saved as one form [decision
  *           0029].
+ * Updated:  2026/10/20, 02:27:30: splitTranslations, several
+ *           translations typed in one field, separated by ";", each
+ *           saved as its own row [decision 0035].
  * Contract: LIGURIAN_LETTERS must equal the character class of the
  *           ligurian_form domain, as the migrations leave it [last
  *           changed in db/migrations/0005]; a test compares the two on
@@ -106,6 +109,34 @@ export function cleanOptionalText(input: string, max: number): { ok: true; value
     result = { ok: false };
   } else {
     result = { ok: true, value };
+  }
+  return result;
+}
+
+export const MAX_TRANSLATION_LENGTH: number = 500;
+
+export type TranslationSplit =
+  | { ok: true; items: string[] }
+  | { ok: false; reason: "empty" | "too_long" };
+
+/* Several translations of one sense typed in one field, "penna;
+   stilografica": each one its own row, as the database keeps them, so
+   that each can be searched, reviewed and corrected alone. Spaces
+   around each are removed, empty pieces ["penna;;" or a final ";"]
+   ignored, and a translation typed twice kept once. */
+export function splitTranslations(input: string): TranslationSplit {
+  const items: string[] = [];
+  for (const piece of input.normalize("NFC").split(";")) {
+    const item: string = piece.trim().replace(/\s+/gu, " ");
+    if (item !== "" && !items.includes(item)) {
+      items.push(item);
+    }
+  }
+  let result: TranslationSplit = { ok: true, items };
+  if (items.length === 0) {
+    result = { ok: false, reason: "empty" };
+  } else if (items.some((item) => [...item].length > MAX_TRANSLATION_LENGTH)) {
+    result = { ok: false, reason: "too_long" };
   }
   return result;
 }

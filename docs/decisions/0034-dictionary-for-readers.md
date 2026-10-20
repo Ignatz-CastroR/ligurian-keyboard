@@ -4,6 +4,7 @@
 * **Date:** 2026/10/18
 * **Decided by:** Eng. José Ignacio Castro de R.
 * **Supersedes:** the points "After the keyboard's beta" and "static files" of [0032](0032-dictionary-second-purpose.md), on when the dictionary for readers begins and how its first pages are served
+* **Superseded in part by:** [0035](0035-site-in-five-sections.md), on looking up a Ligurian word typed without accents, which the dictionary now does too
 
 ## Context
 

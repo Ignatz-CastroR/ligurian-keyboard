@@ -5,7 +5,10 @@
  * Updated:  2026/10/17, 08:14:12: the language menu and the latest
  *           additions; header links kept on one line, in a row of their
  *           own on phones.
- * Purpose:  Look of the lexicon manager: plain, readable, light and
+ * Updated:  2026/10/20, 02:16:30: the manager's own tabs, under its
+ *           title; the link to the dictionary; the Users section's
+ *           pieces, which uses this stylesheet too [decision 0035].
+ * Purpose:  Look of the lexicon manager and of the Users section: plain, readable, light and
  *           dark, usable on a phone. Colours are defined once, as tokens.
  */
 
@@ -17,6 +20,7 @@
   --line: #ddd8cc;
   --accent: #1f5f8b;        /* Genoese blue */
   --accent-text: #ffffff;
+  --accent-soft: #e2eef7;
   --ok: #2e7d4f;
   --warn: #9a6200;
   --danger: #b3261e;
@@ -37,6 +41,7 @@
     --line: #333b47;
     --accent: #6fb1e0;
     --accent-text: #0d1117;
+    --accent-soft: #22384a;
     --ok: #6fcf97;
     --warn: #f2c94c;
     --danger: #ff8a80;
@@ -229,4 +234,44 @@ table.queue { width: 100%; border-collapse: collapse; }
   .queue .group-head td { border-bottom: none; padding-top: 2px; }
   .queue td.pick, .queue td.pick + td { display: inline-block; width: auto; margin-right: 6px; }
   .queue tbody.entry-group tr:not(.group-head) td:nth-child(2) { padding-left: 0; }
+}
+
+/* ---------- the manager's own tabs, and the Users section [decision 0035] ---------- */
+
+/* The tabs take a row of their own under the title and the tools; the
+   site's five sections are in the bar above. */
+.site-header .brand { flex: 1; }
+.site-header .tabs { flex-basis: 100%; gap: 6px; padding-top: 8px; border-top: 1px solid var(--line); }
+.tab { padding: 8px 14px; border-radius: var(--radius); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.tab:hover { background: var(--accent-soft); }
+.tab.current { background: var(--accent); color: var(--accent-text); }
+
+/* A link that looks like a button: "See it in the dictionary", "My
+   complete history". */
+.button-link {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  font-weight: 600;
+  text-decoration: none;
+}
+.button-link:hover { background: var(--accent-soft); }
+.to-dictionary { margin: 8px 0 0; }
+
+nav.breadcrumb { display: block; flex: none; margin: 0 0 8px; color: var(--muted); }
+.table-scroll { overflow-x: auto; }
+.number { text-align: right; font-variant-numeric: tabular-nums; }
+.queue.compact { width: auto; }
+.more { margin: 12px 0; }
+
+/* On a phone, where table heads are hidden, a cell that carries its
+   column's name shows it before its value. */
+@media (max-width: 640px) {
+  .queue td[data-label]:not(:empty)::before {
+    content: attr(data-label) ": ";
+    color: var(--muted);
+    font: .85rem/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .number { text-align: left; }
 }

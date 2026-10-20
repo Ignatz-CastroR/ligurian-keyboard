@@ -2,6 +2,7 @@
 # Version: 1.1
 # Updated: 2026/10/17, 11:31:46: build output named folder by folder;
 #          Wikipedia dumps; stale comments brought up to date.
+# Updated: 2026/10/20, 02:18:30: the Users section's build output.
 #
 # Every line that is not a pattern starts with "#"; git reads any other
 # line as a file pattern.
@@ -40,16 +41,17 @@ TAG-MESSAGE.txt
 # folder itself is never committed: it is large and machine specific.
 node_modules/
 
-# Build output of the lexicon manager, the web editor and the dictionary
-# for readers, rebuilt by Vite; only the TypeScript source is committed.
+# Build output of the lexicon manager, the web editor, the dictionary
+# for readers and the Users section, rebuilt by Vite; only the TypeScript source is committed.
 # Each folder is named with its leading "/", so that a future source
 # folder called "dist" or "build" elsewhere is never hidden by accident.
 /admin/dist/
 /editor/dist/
 /dictionary/dist/
+/users/dist/
 
 # The assembled Pages site [editor at the root, manager under admin/,
-# dictionary under dizionario/], rebuilt by npm run site:build and by
+# dictionary under dizionario/, Users under utenti/], rebuilt by npm run site:build and by
 # the workflow.
 _site/
 

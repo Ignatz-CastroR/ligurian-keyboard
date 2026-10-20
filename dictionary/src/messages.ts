@@ -2,6 +2,9 @@
  * messages.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/18, 17:58:06, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/20, 01:38:20: the search finds Ligurian words too;
+ *           the links to the other sections left the footer for the
+ *           site's bar; a path above an entry replaces "← Index".
  * Purpose:  Every text of the dictionary for readers, in Italian
  *           [default], English and Spanish: the same three languages,
  *           and the same stored choice, as the editor and the lexicon
@@ -24,9 +27,6 @@ const IT = {
 
   navIndex: "Indice",
   navSearch: "Cerca",
-  navEditor: "Scrivi in ligure",
-  navKeyboard: "Tastiera Android",
-  navManager: "Gestore del lessico",
 
   indexTitle: "Indice",
   indexIntro: "Scegli una lettera per vedere tutte le voci che cominciano così. Le vocali accentate stanno sotto la loro lettera; æ e ç hanno una lettera propria.",
@@ -36,12 +36,19 @@ const IT = {
   indexMore: "Mostra altre voci",
   indexEmpty: "Il dizionario non ha ancora voci pubblicate.",
 
-  searchTitle: "Cerca per traduzione",
-  searchIntro: "Scrivi una parola in italiano, spagnolo o inglese: il dizionario mostra le voci liguri che la traducono. Gli accenti non servono. Per cercare una parola ligure scritta senza accenti, usa l'editor o il gestore del lessico; un codice come LIJ-7K3Q9MDXK apre la sua voce.",
+  searchTitle: "Cerca",
+  searchIntro: "Scrivi una parola ligure, con o senza accenti [zena trova Zêna], oppure una parola italiana, spagnola o inglese: il dizionario mostra le voci liguri che le corrispondono. Un codice come LIJ-7K3Q9MDXK apre la sua voce.",
   searchLabel: "Parola da cercare",
-  searchLanguage: "Lingua della traduzione",
-  searchAll: "tutte",
-  searchNone: (query: string): string => `Nessuna voce tradotta con «${query}».`,
+  searchLanguage: "Dove cercare",
+  searchAll: "ovunque",
+  searchLigurianOption: "ligure",
+  searchNone: (query: string): string => `Nessuna voce ligure e nessuna traduzione per «${query}».`,
+  searchLigurian: "Voci liguri",
+  searchTranslations: "Traduzioni",
+  searchLigurianNone: "Nessuna voce ligure comincia così.",
+  searchTranslationsNone: "Nessuna traduzione corrisponde.",
+  searchForm: (form: string): string => `forma ${form}`,
+  searchLookupCapped: (n: number): string => `Sono mostrate le prime ${n} voci liguri: scrivi qualche lettera in più per vedere le altre.`,
   searchTypo: "Sembra un codice, ma l'ultimo carattere non corrisponde: controlla di averlo scritto bene.",
   searchResults: (n: number): string => (n === 1 ? "1 voce" : `${n} voci`),
   searchCapped: (n: number): string => `Sono mostrate le prime ${n} traduzioni trovate: rendi la ricerca più precisa per vedere le altre.`,
@@ -55,7 +62,9 @@ const IT = {
   entryOrthography: "Grafia",
   entryBase: "forma base",
   entryNotFound: "Nessuna voce pubblicata con questo codice.",
-  entryBack: "← Indice",
+  entryLetter: (letter: string): string => `Lettera ${letter}`,
+  entryPath: "Posizione nell'indice",
+  entryToIndex: "Vai all'indice",
   entryEdit: "Correggi nel gestore del lessico",
   senseNumber: (n: number): string => `${n}.`,
 
@@ -74,9 +83,6 @@ const EN: Messages = {
 
   navIndex: "Index",
   navSearch: "Search",
-  navEditor: "Write in Ligurian",
-  navKeyboard: "Android keyboard",
-  navManager: "Lexicon manager",
 
   indexTitle: "Index",
   indexIntro: "Choose a letter to see every entry that begins with it. Accented vowels are listed under their letter; æ and ç have letters of their own.",
@@ -86,12 +92,19 @@ const EN: Messages = {
   indexMore: "Show more entries",
   indexEmpty: "The dictionary has no published entries yet.",
 
-  searchTitle: "Search by translation",
-  searchIntro: "Type a word in Italian, Spanish or English: the dictionary shows the Ligurian entries that translate it. Accents are not needed. To look up a Ligurian word typed without accents, use the editor or the lexicon manager; a code such as LIJ-7K3Q9MDXK opens its entry.",
+  searchTitle: "Search",
+  searchIntro: "Type a Ligurian word, with or without accents [zena finds Zêna], or an Italian, Spanish or English word: the dictionary shows the Ligurian entries that match it. A code such as LIJ-7K3Q9MDXK opens its entry.",
   searchLabel: "Word to search for",
-  searchLanguage: "Language of the translation",
-  searchAll: "all",
-  searchNone: (query: string): string => `No entry is translated as “${query}”.`,
+  searchLanguage: "Where to search",
+  searchAll: "everywhere",
+  searchLigurianOption: "Ligurian",
+  searchNone: (query: string): string => `No Ligurian entry and no translation for “${query}”.`,
+  searchLigurian: "Ligurian entries",
+  searchTranslations: "Translations",
+  searchLigurianNone: "No Ligurian entry begins like this.",
+  searchTranslationsNone: "No translation matches.",
+  searchForm: (form: string): string => `form ${form}`,
+  searchLookupCapped: (n: number): string => `Only the first ${n} Ligurian entries are shown: type a few more letters to see the rest.`,
   searchTypo: "This looks like a code, but its last character does not match: check that it was typed correctly.",
   searchResults: (n: number): string => (n === 1 ? "1 entry" : `${n} entries`),
   searchCapped: (n: number): string => `Only the first ${n} translations found are shown: make the search more precise to see the rest.`,
@@ -105,7 +118,9 @@ const EN: Messages = {
   entryOrthography: "Spelling",
   entryBase: "base form",
   entryNotFound: "No published entry has this code.",
-  entryBack: "← Index",
+  entryLetter: (letter: string): string => `Letter ${letter}`,
+  entryPath: "Place in the index",
+  entryToIndex: "Go to the index",
   entryEdit: "Correct it in the lexicon manager",
   senseNumber: (n: number): string => `${n}.`,
 
@@ -122,9 +137,6 @@ const ES: Messages = {
 
   navIndex: "Índice",
   navSearch: "Buscar",
-  navEditor: "Escribe en ligur",
-  navKeyboard: "Teclado Android",
-  navManager: "Gestor del léxico",
 
   indexTitle: "Índice",
   indexIntro: "Elige una letra para ver todas las entradas que empiezan por ella. Las vocales acentuadas están bajo su letra; æ y ç tienen letra propia.",
@@ -134,12 +146,19 @@ const ES: Messages = {
   indexMore: "Mostrar más entradas",
   indexEmpty: "El diccionario todavía no tiene entradas publicadas.",
 
-  searchTitle: "Buscar por traducción",
-  searchIntro: "Escribe una palabra en italiano, español o inglés: el diccionario muestra las entradas ligures que la traducen. Los acentos no hacen falta. Para buscar una palabra ligur escrita sin acentos, usa el editor o el gestor del léxico; un código como LIJ-7K3Q9MDXK abre su entrada.",
+  searchTitle: "Buscar",
+  searchIntro: "Escribe una palabra ligur, con o sin acentos [zena encuentra Zêna], o una palabra italiana, española o inglesa: el diccionario muestra las entradas ligures que le corresponden. Un código como LIJ-7K3Q9MDXK abre su entrada.",
   searchLabel: "Palabra que buscar",
-  searchLanguage: "Idioma de la traducción",
-  searchAll: "todos",
-  searchNone: (query: string): string => `Ninguna entrada se traduce como «${query}».`,
+  searchLanguage: "Dónde buscar",
+  searchAll: "en todo",
+  searchLigurianOption: "ligur",
+  searchNone: (query: string): string => `Ninguna entrada ligur y ninguna traducción para «${query}».`,
+  searchLigurian: "Entradas ligures",
+  searchTranslations: "Traducciones",
+  searchLigurianNone: "Ninguna entrada ligur empieza así.",
+  searchTranslationsNone: "Ninguna traducción coincide.",
+  searchForm: (form: string): string => `forma ${form}`,
+  searchLookupCapped: (n: number): string => `Se muestran las primeras ${n} entradas ligures: escribe algunas letras más para ver las demás.`,
   searchTypo: "Parece un código, pero su último carácter no coincide: comprueba que esté bien escrito.",
   searchResults: (n: number): string => (n === 1 ? "1 entrada" : `${n} entradas`),
   searchCapped: (n: number): string => `Se muestran las primeras ${n} traducciones encontradas: precisa la búsqueda para ver las demás.`,
@@ -153,7 +172,9 @@ const ES: Messages = {
   entryOrthography: "Grafía",
   entryBase: "forma base",
   entryNotFound: "Ninguna entrada publicada tiene este código.",
-  entryBack: "← Índice",
+  entryLetter: (letter: string): string => `Letra ${letter}`,
+  entryPath: "Lugar en el índice",
+  entryToIndex: "Ir al índice",
   entryEdit: "Corregirla en el gestor del léxico",
   senseNumber: (n: number): string => `${n}.`,
 

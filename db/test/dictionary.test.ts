@@ -2,6 +2,9 @@
  * dictionary.test.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/18, 17:45:20, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/20, 02:31:10: the two dictionary functions of
+ *           migration 0011, dictionary_lookup[] and dictionary_stats[],
+ *           run as their owner too.
  * Purpose:  Prove migration 0009, the reading side of the dictionary:
  *           the initials of the index; the index in pages; the search by
  *           translation, folding accents and taking the query literally;
@@ -217,7 +220,8 @@ test("the public functions run as their owner, so their indexes can serve every 
     `select p.proname, p.prosecdef from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public' and p.proname like 'dictionary\\_%' order by 1`);
   assert.deepEqual(definers.map((r) => [r.proname, r.prosecdef]),
-    [["dictionary_entry", true], ["dictionary_index", true], ["dictionary_letters", true], ["dictionary_search", true]]);
+    [["dictionary_entry", true], ["dictionary_index", true], ["dictionary_letters", true], ["dictionary_lookup", true],
+      ["dictionary_search", true], ["dictionary_stats", true]]);
   for (const call of ["dictionary_letters()", "dictionary_index('a')", "dictionary_search('xyz')", "dictionary_entry('x')"]) {
     await rowsAs(db, "anon", `select * from public.${call}`);
   }

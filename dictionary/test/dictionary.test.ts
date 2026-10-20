@@ -8,16 +8,22 @@
  *           results grouped by entry, codes typed into the search field,
  *           and the three languages of its texts. The last test runs
  *           the page's grouping on rows the real database returns.
+ * Updated:  2026/10/20, 02:33:20: the search in Ligurian spellings
+ *           [#/cerca/lij/...], its rows from the real database, and the
+ *           letter of the index above an entry, the same as the
+ *           database's [decision 0035].
  * Decision: docs/decisions/0034-dictionary-for-readers.md
+ *           docs/decisions/0035-site-in-five-sections.md
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { USERS, asUser, createSeededDatabase, rowsAs } from "../../db/test/harness.ts";
 import { LANGUAGES, messagesFor, partOfSpeech, type Messages } from "../src/messages.ts";
+import { LIGURIAN_LETTERS } from "../../admin/src/forms.ts";
 import {
-  groupResults, orderLetters, parseRoute, readQuery, routeHash, senses, translationLine,
-  type GlossRow, type Route, type SearchRow,
+  OTHER_INITIAL, groupResults, initialOf, orderLetters, parseRoute, readQuery, routeHash, senses, translationLine,
+  type GlossRow, type LookupRow, type Route, type SearchRow,
 } from "../src/model.ts";
 
 const glosses: GlossRow[] = [
@@ -39,6 +45,7 @@ test("every view has an address, read back exactly, and a broken address falls b
   const routes: Route[] = [
     { view: "index", letter: "æ" }, { view: "index", letter: "#" }, { view: "index", letter: null },
     { view: "search", language: "es", query: "canción de cuna" }, { view: "search", language: null, query: "pen/ink" },
+    { view: "search", language: "lij", query: "zena" },
     { view: "entry", code: "LIJ-7K3Q9MDXK" },
   ];
   for (const route of routes) {
@@ -78,7 +85,7 @@ test("the search field opens a code, reports a mistyped one, and otherwise searc
 });
 
 test("every text exists in the three languages, keeps its placeholder, and Spanish is really translated", () => {
-  const sameByNature: Set<string> = new Set(["senseNumber", "entryBase"]);
+  const sameByNature: Set<string> = new Set(["senseNumber", "entryBase", "searchForm"]);
   const texts = (m: Messages): Map<string, string> => new Map(Object.entries(m).map(([k, v]) =>
     [k, typeof v === "function" ? String((v as (x: unknown) => string)("§7§")) : String(v)]));
   const it = texts(messagesFor("it"));
@@ -115,4 +122,38 @@ test("on rows from the real database, an entry's translations and a search are g
   assert.equal(translationLine(index[0]?.glosses ?? []), "it: penna · es: pluma");
   const found = groupResults(await rowsAs<SearchRow>(db, "anon", "select * from public.dictionary_search('pluma')"));
   assert.deepEqual(found.map((f) => [f.headword, f.matches.map((m) => m.sense_number)]), [["pénna", [1, 2]]]);
+});
+
+test("the letter above an entry is the letter the index lists it under, the same as the database's for every initial the spelling allows", async () => {
+  const db = await createSeededDatabase();
+  const headwords: string[] = [
+    "ægua", "Ægua", "çê", "Çittæ", "àrbo", "Ârbo", "éuvo", "zêna", "Zêna", "ñandú", "'na", "-ezzo", "1a", "ß", "œ", "",
+  ];
+  // Every letter the spelling allows, as a word of its own: the
+  // database's own list of the ligurian_form domain.
+  for (const letter of LIGURIAN_LETTERS.replace("a-z", "abcdefghijklmnopqrstuvwxyz").replace("A-Z", "ABCDEFGHIJKLMNOPQRSTUVWXYZ")) {
+    headwords.push(`${letter}a`);
+  }
+  const database = await rowsAs<{ initial: string }>(db, "anon",
+    "select private.index_initial(h) as initial from unnest($1::text[]) with ordinality as t(h, n) order by n", [headwords]);
+  assert.deepEqual(headwords.map(initialOf), database.map((r) => r.initial ?? OTHER_INITIAL));
+  assert.deepEqual(["ægua", "çê", "Ârbo", "'na"].map(initialOf), ["æ", "ç", "a", "#"]);
+});
+
+test("a Ligurian word typed without accents finds its entry, with the form that matched and the translations", async () => {
+  const db = await createSeededDatabase();
+  const admin = asUser(USERS.admin);
+  const lemma: number = (await rowsAs<{ id: number }>(db, admin,
+    "insert into lemmas (headword, status) values ('pénna', 'approved') returning id"))[0]?.id ?? -1;
+  await rowsAs(db, admin, "insert into wordforms (lemma_id, form, status) values ($1, 'pénne', 'approved')", [lemma]);
+  const sense: number = (await rowsAs<{ id: number }>(db, admin,
+    "insert into senses (lemma_id, status) values ($1, 'approved') returning id", [lemma]))[0]?.id ?? -1;
+  await rowsAs(db, admin, "insert into glosses (sense_id, language, gloss, status) values ($1, 'it', 'penna', 'approved')", [sense]);
+  const lookup = (query: string): Promise<LookupRow[]> =>
+    rowsAs<LookupRow>(db, "anon", "select * from public.dictionary_lookup($1)", [query]);
+  const byHeadword: LookupRow[] = await lookup("penna");
+  assert.deepEqual(byHeadword.map((r) => [r.headword, r.matched_form, translationLine(r.glosses ?? [])]), [["pénna", null, "it: penna"]]);
+  const byForm: LookupRow[] = await lookup("PENNE");
+  assert.deepEqual(byForm.map((r) => [r.headword, r.matched_form]), [["pénna", "pénne"]]);
+  assert.equal(typeof byForm[0]?.public_id, "string");
 });

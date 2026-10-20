@@ -1,0 +1,78 @@
+/*
+ * bar.css
+ * Author:   Eng. José Ignacio Castro de R. and contributors
+ * Date:     2026/10/20, 02:11:02, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Purpose:  The look of the bar of five sections on every page: large
+ *           buttons that cannot be missed, the current one filled, light
+ *           and dark, three and two in two rows on a phone, a long name
+ *           wrapping inside its button. Bundled by every app; copied
+ *           to the site's root as site-bar.css for the install page.
+ */
+
+.site-bar {
+  --bar-bg: #1f5f8b;
+  --bar-text: #ffffff;
+  --bar-button: rgba(255, 255, 255, 0.14);
+  --bar-button-border: rgba(255, 255, 255, 0.45);
+  --bar-current-bg: #ffffff;
+  --bar-current-text: #1f5f8b;
+  background: var(--bar-bg);
+  color: var(--bar-text);
+  padding: 10px 16px 8px;
+  font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  .site-bar {
+    --bar-bg: #0e2a3d;
+    --bar-text: #e8ebf0;
+    --bar-button: rgba(255, 255, 255, 0.08);
+    --bar-button-border: rgba(111, 177, 224, 0.55);
+    --bar-current-bg: #6fb1e0;
+    --bar-current-text: #0d1117;
+  }
+}
+
+.site-bar nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.site-bar .site-section {
+  flex: 1 1 auto;
+  padding: 10px 16px;
+  border: 2px solid var(--bar-button-border);
+  border-radius: 10px;
+  background: var(--bar-button);
+  color: var(--bar-text);
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-bar .site-section:hover { border-color: var(--bar-text); }
+.site-bar .site-section:focus-visible { outline: 3px solid var(--bar-text); outline-offset: 2px; }
+
+.site-bar .site-section.current {
+  background: var(--bar-current-bg);
+  color: var(--bar-current-text);
+  border-color: var(--bar-current-bg);
+}
+
+.site-bar .site-size {
+  max-width: 64rem;
+  margin: 6px auto 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .site-bar nav { gap: 6px; }
+  .site-bar .site-section { flex: 1 1 28%; padding: 8px 6px; font-size: 0.9rem; line-height: 1.2; white-space: normal; }
+}

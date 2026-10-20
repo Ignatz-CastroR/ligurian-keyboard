@@ -14,27 +14,161 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- 0.13.0: `import_entries()`, a structured import with a dry run and
-  authors, in the format of `db/templates/add-entries.sql`; repair
-  tools for entries loaded before it [splitting translations that
-  hold ";", moving translations between senses, changing a
-  translation's language]; the language of a translation required in
-  the forms.
-- 0.14.0: the site's structure: the same five sections on every page,
-  as clear buttons; the manager's own tabs; Users as a section of its
-  own, with each person's complete history; the size of the
-  dictionary on every page; the dictionary also searching Ligurian
-  words, with or without accents.
+- 0.14.0: repairs of the entries loaded by SQL before 0.12.1: a repair
+  page per entry, merging senses split one per translation by default
+  and allowing other groupings; the language of a translation
+  corrected by hand; translations that hold ";" split; possibly the
+  authors of those entries credited afterwards. `import_entries()`, a
+  structured import with a dry run and authors, in the format of
+  `db/templates/add-entries.sql`, and an enrichment format, keyed by
+  public code and sense, for translations and definitions prepared
+  outside the site.
 - 0.15.0: grammar for every form, base lemma included, in structured
-  fields; richer entries: etymology, examples, definitions in four
-  languages, usage labels, images uploaded to Supabase; the entry
-  page redesigned.
+  fields [gender, number, person, tense and mood]; richer entries:
+  etymology, examples, definitions in four languages, usage labels,
+  images uploaded to Supabase; pronunciation in IPA by form and
+  variety.
+- 0.16.0: recordings by native speakers, with their consent and a free
+  license.
 - Then: hardening, contributor documentation; a beta with native
   speakers in Genoa.
 - 1.0.0: when every criterion in the README's roadmap is met.
-- After the beta, without delaying 1.0.0: public entry pages by
-  public code, Spanish translations of the most common words, and
-  pronunciation [decision 0032].
+
+## [0.13.0] [2026/10/20] [the site in five sections]
+
+### Added
+- The same bar of five large buttons at the top of every page, the
+  current one filled: Write, Dictionary, Lexicon manager, Keyboard and
+  Users, with the size of the published dictionary beneath them
+  [decision 0035]. Until now each page linked a different set of the
+  others in small text, the install page did not link the manager at
+  all, and no page said how big the dictionary is. The names, order
+  and addresses live in one file, `site/sections.ts`, used by every
+  application; the static install page repeats them by hand and a
+  test keeps it identical. The size comes from `dictionary_stats()`
+  [migration 0011] and is shown only when it arrives, so a page
+  offline or without its build settings still shows the sections.
+  Verified by 4 tests of `site/` [order and names in three languages;
+  every section reaching every other by a relative address, as the
+  site build publishes them; numbers written as each language writes
+  them], 6 tests of the install page, a database test counting
+  published rows only for everyone, and every section photographed
+  in a headless browser against a stand in database, on a computer,
+  and the dictionary and the install page on a phone too.
+- The Users section, `/utenti/`, a section of its own [decision 0035].
+  One's profile and one's complete history; for reviewers and admins,
+  every person with their role, number of changes and time of the
+  last one, and anyone's complete history, the SQL Editor's changes
+  included. A history lists every change, newest first, a hundred at
+  a time until the first: date and time to the second, what it was
+  [an approval reads as "approved", not "edited: status"], the entry,
+  linked, the status it left and the fields an edit changed, after a
+  summary by kind. Until now the history could be seen only entry by
+  entry. Three functions of migration 0011 serve it,
+  `people_activity()`, `user_history()` and `user_summary()`, with one
+  index on the history by person; they decide themselves who sees
+  what. Built from the manager's modules, so the two share one
+  sign-in. Verified by 3 database tests [history complete and in
+  pages without gap or repeat; staff reading anyone's, everyone else
+  only their own, visitors nothing] and 4 tests of `users/`
+  [addresses; each change read as what it was, on rows the real
+  database writes; three languages].
+- The dictionary finds Ligurian words, typed with or without accents,
+  by headword or by any form: `zena` finds `Zêna`, `penne` finds
+  `pénna` and says which form matched [decision 0035, superseding in
+  part 0034]. One search field shows two groups, Ligurian entries and
+  translations, everywhere, in Ligurian only, or in one language of
+  translation. Readers type `zena` and expect `Zêna`; until now only
+  the editor and the manager could do that. Served by
+  `dictionary_lookup()` [migration 0011] through the search key
+  indexes of migration 0004; exact matches come first, so a whole word
+  typed is never pushed out by longer words that begin with it.
+  Verified by 3 database tests [accents, capitals and spaces; an exact
+  form before sixty headwords that begin with it; pending, rejected and
+  deleted rows never found, not even by a reviewer; query plans using
+  `lemmas_headword_key` and `wordforms_form_key` on 3,000 lemmas] and
+  a dictionary test on the real database.
+- A link from every published entry in the manager to the same entry
+  in the dictionary; for any other, the reason it is not there
+  [pending, rejected, deleted]. The dictionary linked to the manager,
+  but not the other way round. Verified by 2 tests, one comparing the
+  link with what the real database publishes for each status.
+- Translations several at a time: `penna; stilografica` typed in one
+  field becomes two rows, shown before saving, each once. On the live
+  data, 7 translations hold ";". Verified by a test of the splitter
+  [spaces, empty pieces, repeats, composed and decomposed accents,
+  commas and slashes kept, length].
+- Decision 0036, built for more than one language: one codebase with
+  the language as data, so that twin projects for other endangered
+  languages of Italy may follow after 1.0.0; nothing new hard-codes a
+  fact about Ligurian, and the facts already in the code move to a
+  single place as their code is next changed.
+
+### Changed
+- The manager has its own tabs under the site's bar: Search, New
+  lemma, To review and, for admins, Backups, the current one marked.
+  Its users page is gone: profiles and people moved to the Users
+  section, and the backup and restore cards, unchanged, to the
+  Backups tab [`admin/src/views/backups.ts`]. The old address
+  `#/users` opens `../utenti/`. The profile link next to one's name
+  leads there too.
+- The language of a new translation starts unchosen and must be
+  chosen; until now it started at Italian, and the live data holds
+  37,733 Italian translations against 24 Spanish and 16 English. An
+  edited translation may not hold ";".
+- Above an entry of the dictionary, its letter in the index, "Letter
+  Z › Zêna", replaces a second "← Index" link; the letter is computed
+  as the database computes it, which a test checks for every letter
+  the spelling allows.
+- The footer of the dictionary and the header of the manager no longer
+  carry links to the other sections; the bar does.
+- After signing in, the form returns to the first page of the section
+  it is in.
+- The editor's offline cache leaves `/utenti/` alone. The site build
+  has a fifth application, `users/`, assembled into `_site/utenti/`,
+  and copies the bar's stylesheet to `_site/site-bar.css` for the
+  install page; new commands `users:dev`, `users:build`, `test:users`
+  and `test:site`.
+- Two older tests follow the new functions: the dictionary's public
+  functions now number six, all running as their owner.
+- `README.md`, `db/README.md`, `admin/README.md`,
+  `dictionary/README.md`, `editor/README.md`, a new `users/README.md`,
+  decisions 0018, 0031 and 0034, and both decision tables: the five
+  sections, migration 0011, the roadmap in its agreed order, test
+  counts.
+- Keyboard version 0.13.0, following the project's; the keys are
+  unchanged.
+
+### Known issues
+- Migration 0011 must run before this version is pushed: the bar, the
+  dictionary's Ligurian search and the Users section call its
+  functions.
+- The data already loaded is not repaired: senses split one per
+  translation, translations holding ";" and translations whose
+  language is wrong wait for 0.14.0.
+- The install page shows the size of the keyboard's dictionary
+  package, not the live size of the dictionary.
+- When a run of several translations meets a refusal partway, the
+  translations before it are saved; the reloaded entry shows which.
+
+An independent review found no blocker and no hole in migration 0011
+[grants, the rule of who reads whose history, published rows only,
+dynamic SQL]. It found ten smaller problems, all fixed before release:
+an entry matching by a whole form could be pushed out of the 50
+Ligurian results by longer headwords; a run of translations refused
+partway did not show those already saved; the editor did not read the
+root `.env`, so its bar had no size in a local build; decision 0036
+claimed no new copy of a fact about Ligurian where there were two;
+the bar took three rows on a phone; a search limited to one kind said
+that neither kind had been found; following a tab moved the keyboard's
+focus away; table cells on a phone had no column names, and the
+people table's fields no accessible names; the browser's own message
+replaced the manager's when no language was chosen; and a test name
+promised more initials than it checked.
+
+Tests: 275, passing on Node.js 22 [engine 24, db 93, admin 65,
+editor 24, dictionary 9, users 4, site 4, keyman 32, corpus 15,
+docs 5].
 
 ## [0.12.1] [2026/10/19] [the review queue in pages]
 
@@ -1513,7 +1647,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.1...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.2...v0.12.0
 [0.11.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.11.1...v0.11.2

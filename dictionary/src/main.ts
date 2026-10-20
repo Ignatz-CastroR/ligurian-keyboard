@@ -2,27 +2,35 @@
  * main.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/18, 18:20:31, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/20, 01:41:05: the site's bar on top; the search
+ *           finds Ligurian words, typed with or without accents, as
+ *           well as translations, in two groups; above an entry, its
+ *           letter in the index instead of a second "Index" link.
  * Purpose:  The dictionary for readers, published under /dizionario/:
- *           the index by initial letter, the search by translation and
- *           one entry by its public code. Read only and open to all.
+ *           the index by initial letter, the search by Ligurian
+ *           spelling and by translation, and one entry by its public
+ *           code. Read only and open to all.
  * Routes:   #/indice/<letter>          the index [the first letter when
  *                                      none is given]
- *           #/cerca/<language>/<words> the search; language it, es, en
- *                                      or tutte
+ *           #/cerca/<where>/<words>    the search; where is lij for
+ *                                      Ligurian words, it, es or en for
+ *                                      translations, tutte for both
  *           #/voce/<code>              one entry
  * Contract: Text is always inserted with textContent [h[] from the
  *           editor], never innerHTML, so nothing typed by a contributor
  *           can become markup on a reader's page.
  * Decision: docs/decisions/0034-dictionary-for-readers.md
+ *           docs/decisions/0035-site-in-five-sections.md
  */
 
 import "./style.css";
 import { h } from "../../editor/src/dom.ts";
-import { PAGE, SEARCH_LIMIT, connect, entry, indexPage, letters, search } from "./db.ts";
+import { loadStats, mountSiteBar } from "../../site/bar.ts";
+import { LOOKUP_LIMIT, PAGE, SEARCH_LIMIT, connect, entry, indexPage, letters, lookup, search } from "./db.ts";
 import { LANGUAGES, isLang, messagesFor, partOfSpeech, type Lang, type Messages } from "./messages.ts";
 import {
-  OTHER_INITIAL, TRANSLATION_LANGUAGES, groupResults, orderLetters, parseRoute, readQuery, routeHash, senses,
-  translationLine, type Entry, type GlossRow, type IndexEntry, type Route,
+  LIGURIAN, OTHER_INITIAL, TRANSLATION_LANGUAGES, groupResults, initialOf, orderLetters, parseRoute, readQuery, routeHash,
+  senses, translationLine, type Entry, type FoundEntry, type GlossRow, type IndexEntry, type LookupRow, type Route,
 } from "./model.ts";
 
 // Same key as the editor and the lexicon manager: one language choice
@@ -89,9 +97,6 @@ function drawHeader(route: Route): void {
     h("div", { class: "tools" }, menu),
   );
   footer.replaceChildren(
-    h("a", { href: "../" }, t.navEditor), " · ",
-    h("a", { href: "../tastiera/" }, t.navKeyboard), " · ",
-    h("a", { href: "../admin/" }, t.navManager), " · ",
     h("a", { href: "https://github.com/Ignatz-CastroR/ligurian-keyboard" }, "ligurian-keyboard"), " · ",
     t.footer);
 }
@@ -173,11 +178,48 @@ async function drawIndex(route: Extract<Route, { view: "index" }>, mine: number)
   }
 }
 
+// Entries found by their Ligurian spelling, each with the form that
+// matched, when it is not the headword, and its translations.
+function ligurianList(rows: readonly LookupRow[]): HTMLElement {
+  const list: HTMLElement = h("ul", { class: "entries" });
+  for (const row of rows) {
+    const line: string = translationLine(row.glosses ?? []);
+    list.append(h("li", {},
+      h("a", { href: routeHash({ view: "entry", code: row.public_id }), class: "headword", lang: "lij" }, row.headword),
+      row.part_of_speech !== null && h("span", { class: "pos" }, ` ${partOfSpeech(lang, row.part_of_speech)}`),
+      row.matched_form !== null && h("span", { class: "muted" }, " [", h("span", { lang: "lij" }, t.searchForm(row.matched_form)), "]"),
+      line !== "" && h("span", { class: "line" }, line)));
+  }
+  return list;
+}
+
+// Entries found by a translation, each with the translations that
+// matched.
+function translationList(found: readonly FoundEntry[]): HTMLElement {
+  const list: HTMLElement = h("ul", { class: "entries" });
+  for (const item of found) {
+    const matches: HTMLElement = h("ul", { class: "matches" });
+    for (const m of item.matches) {
+      matches.append(h("li", {},
+        h("span", { class: "lang-tag" }, m.language), " ",
+        h("strong", { lang: m.language }, m.gloss),
+        h("span", { class: "muted" }, ` ${t.senseNumber(m.sense_number)}`),
+        m.definition_it !== null && h("span", { class: "muted", lang: "it" }, ` ${m.definition_it}`)));
+    }
+    list.append(h("li", {},
+      h("a", { href: routeHash({ view: "entry", code: item.public_id }), class: "headword", lang: "lij" }, item.headword),
+      item.part_of_speech !== null && h("span", { class: "pos" }, ` ${partOfSpeech(lang, item.part_of_speech)}`),
+      matches));
+  }
+  return list;
+}
+
 async function drawSearch(route: Extract<Route, { view: "search" }>, mine: number): Promise<void> {
   const input: HTMLInputElement = h("input", { type: "search", value: route.query, "aria-label": t.searchLabel,
     placeholder: t.searchLabel, autocomplete: "off", spellcheck: false, maxlength: 100 });
   const select: HTMLSelectElement = h("select", { "aria-label": t.searchLanguage, title: t.searchLanguage });
   select.append(h("option", { value: "", selected: route.language === null }, t.searchAll));
+  select.append(h("option", { value: LIGURIAN, selected: route.language === LIGURIAN }, t.searchLigurianOption));
   for (const code of TRANSLATION_LANGUAGES) {
     select.append(h("option", { value: code, selected: route.language === code }, code));
   }
@@ -221,29 +263,35 @@ async function drawSearch(route: Extract<Route, { view: "search" }>, mine: numbe
       results.setAttribute("aria-busy", "true");
       results.replaceChildren(h("p", { class: "muted" }, t.loading));
       try {
-        const rows = await search(read.query, current.language);
-        const found = groupResults(rows);
+        // Ligurian spellings, translations, or both at once.
+        const wantLigurian: boolean = current.language === null || current.language === LIGURIAN;
+        const wantTranslations: boolean = current.language !== LIGURIAN;
+        const [spelled, rows] = await Promise.all([
+          wantLigurian ? lookup(read.query) : Promise.resolve([] as LookupRow[]),
+          wantTranslations ? search(read.query, current.language) : Promise.resolve([]),
+        ]);
+        const found: FoundEntry[] = groupResults(rows);
         if (stillAsked()) {
-          const list: HTMLElement = h("ul", { class: "entries" });
-          for (const item of found) {
-            const matches: HTMLElement = h("ul", { class: "matches" });
-            for (const m of item.matches) {
-              matches.append(h("li", {},
-                h("span", { class: "lang-tag" }, m.language), " ",
-                h("strong", { lang: m.language }, m.gloss),
-                h("span", { class: "muted" }, ` ${t.senseNumber(m.sense_number)}`),
-                m.definition_it !== null && h("span", { class: "muted", lang: "it" }, ` ${m.definition_it}`)));
+          const parts: HTMLElement[] = [];
+          if (spelled.length === 0 && found.length === 0 && wantLigurian && wantTranslations) {
+            parts.push(h("p", { class: "muted" }, t.searchNone(read.query)));
+          } else {
+            if (wantLigurian) {
+              parts.push(h("h2", {}, t.searchLigurian, h("span", { class: "muted count" }, ` ${t.searchResults(spelled.length)}`)),
+                spelled.length === 0 ? h("p", { class: "muted" }, t.searchLigurianNone) : ligurianList(spelled));
+              if (spelled.length >= LOOKUP_LIMIT) {
+                parts.push(h("p", { class: "muted" }, t.searchLookupCapped(LOOKUP_LIMIT)));
+              }
             }
-            list.append(h("li", {},
-              h("a", { href: routeHash({ view: "entry", code: item.public_id }), class: "headword", lang: "lij" }, item.headword),
-              item.part_of_speech !== null && h("span", { class: "pos" }, ` ${partOfSpeech(lang, item.part_of_speech)}`),
-              matches));
+            if (wantTranslations) {
+              parts.push(h("h2", {}, t.searchTranslations, h("span", { class: "muted count" }, ` ${t.searchResults(found.length)}`)),
+                found.length === 0 ? h("p", { class: "muted" }, t.searchTranslationsNone) : translationList(found));
+              if (rows.length >= SEARCH_LIMIT) {
+                parts.push(h("p", { class: "muted" }, t.searchCapped(SEARCH_LIMIT)));
+              }
+            }
           }
-          const summary: HTMLElement = found.length === 0
-            ? h("p", { class: "muted" }, t.searchNone(read.query))
-            : h("p", { class: "muted" }, t.searchResults(found.length));
-          const capped: HTMLElement[] = rows.length >= SEARCH_LIMIT ? [h("p", { class: "muted" }, t.searchCapped(SEARCH_LIMIT))] : [];
-          results.replaceChildren(summary, ...capped, list);
+          results.replaceChildren(...parts);
           results.setAttribute("aria-busy", "false");
         }
       } catch (error: unknown) {
@@ -263,10 +311,16 @@ async function drawEntry(route: Extract<Route, { view: "entry" }>, mine: number)
   if (mine !== ticket) {
     return;
   }
-  const back: HTMLElement = h("p", {}, h("a", { href: "#/indice" }, t.entryBack));
   if (found === null) {
-    main.replaceChildren(back, h("p", { class: "muted" }, t.entryNotFound));
+    main.replaceChildren(h("p", { class: "muted" }, t.entryNotFound),
+      h("p", {}, h("a", { href: routeHash({ view: "index", letter: null }) }, t.entryToIndex)));
   } else {
+    // Where the entry sits in the index: its letter, then itself.
+    const letter: string = initialOf(found.headword);
+    const path: HTMLElement = h("nav", { class: "breadcrumb", "aria-label": t.entryPath },
+      h("a", { href: routeHash({ view: "index", letter }) }, t.entryLetter(letter === OTHER_INITIAL ? t.indexOther : letter.toUpperCase())),
+      h("span", { class: "muted", "aria-hidden": "true" }, " › "),
+      h("span", { lang: "lij", "aria-current": "page" }, found.headword));
     const facts: HTMLElement = h("dl", { class: "facts" },
       h("dt", {}, t.entryCode), h("dd", { class: "mono" }, found.public_id),
       h("dt", {}, t.entryVariety), h("dd", {}, found.variety),
@@ -277,7 +331,7 @@ async function drawEntry(route: Extract<Route, { view: "entry" }>, mine: number)
         form.grammatical_tag !== null && h("span", { class: "muted" }, ` ${form.grammatical_tag}`),
         form.is_base && h("span", { class: "tag" }, t.entryBase)));
     }
-    main.replaceChildren(back,
+    main.replaceChildren(path,
       h("h1", { class: "entry-title", lang: "lij" }, found.headword,
         found.part_of_speech !== null && h("span", { class: "pos" }, ` ${partOfSpeech(lang, found.part_of_speech)}`)),
       facts,
@@ -294,6 +348,7 @@ async function render(): Promise<void> {
   const route: Route = parseRoute(window.location.hash);
   document.documentElement.lang = lang;
   document.title = t.appTitle;
+  mountSiteBar("dictionary", lang, loadStats(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY));
   drawHeader(route);
   main.replaceChildren(h("p", { class: "muted" }, t.loading));
   try {

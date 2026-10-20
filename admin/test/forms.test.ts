@@ -8,6 +8,8 @@
  *           the grafîa ofiçiâ [decision 0028].
  * Updated:  2026/10/17, 12:44:30: the warning before an elided particle
  *           and a word are saved as one form [decision 0029].
+ * Updated:  2026/10/20, 02:40:30: several translations typed in one
+ *           field, split on ";" [decision 0035].
  * Purpose:  The checks the lexicon manager runs before sending anything,
  *           and their agreement with the database's own rules.
  */
@@ -16,8 +18,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createDatabase, domainLetters, rowsAs } from "../../db/test/harness.ts";
 import {
-  LIGURIAN_LETTERS, OFICIA, SPECIAL_LETTERS, changedFields, checkForm, checkFreq,
-  cleanForm, cleanOptionalText, enyeUnderOficia, formatDateTime, joinedElisions, searchKeyFilter,
+  LIGURIAN_LETTERS, MAX_TRANSLATION_LENGTH, OFICIA, SPECIAL_LETTERS, changedFields, checkForm, checkFreq,
+  cleanForm, cleanOptionalText, enyeUnderOficia, formatDateTime, joinedElisions, searchKeyFilter, splitTranslations,
 } from "../src/forms.ts";
 
 test("the letters accepted here are exactly the database domain's", async () => {
@@ -109,4 +111,19 @@ test("a form joining an elided particle and a word is found, with its parts", ()
   assert.deepEqual(joinedElisions(["quell’òmmo"]), ["quell'òmmo [quell' + òmmo]"], "cleaned as when saved");
   assert.deepEqual(joinedElisions(["d'", "'na", "pe'", "canpànn-a"]), [], "particles and edge apostrophes are fine");
   assert.deepEqual(joinedElisions(["d'ægua", " d'ægua "]), ["d'ægua [d' + ægua]"], "each form named once");
+});
+
+test("several translations typed in one field become one row each, in the order typed, each once", () => {
+  assert.deepEqual(splitTranslations("penna; stilografica ;piuma"), { ok: true, items: ["penna", "stilografica", "piuma"] });
+  assert.deepEqual(splitTranslations("  penna  "), { ok: true, items: ["penna"] });
+  assert.deepEqual(splitTranslations("penna;;penna; ;"), { ok: true, items: ["penna"] });
+  assert.deepEqual(splitTranslations("fountain   pen; pen"), { ok: true, items: ["fountain pen", "pen"] });
+  // Commas and slashes stay: "bianco, candido" may be one translation.
+  assert.deepEqual(splitTranslations("acqua, liquido / bevanda"), { ok: true, items: ["acqua, liquido / bevanda"] });
+  // Composed and decomposed accents are the same translation.
+  assert.deepEqual(splitTranslations("canci\u00f3n; cancio\u0301n"), { ok: true, items: ["canci\u00f3n"] });
+  assert.deepEqual(splitTranslations(" ; ;"), { ok: false, reason: "empty" });
+  assert.deepEqual(splitTranslations(""), { ok: false, reason: "empty" });
+  assert.deepEqual(splitTranslations(`ok; ${"a".repeat(MAX_TRANSLATION_LENGTH + 1)}`), { ok: false, reason: "too_long" });
+  assert.equal(splitTranslations("a".repeat(MAX_TRANSLATION_LENGTH)).ok, true);
 });

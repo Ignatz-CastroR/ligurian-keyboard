@@ -10,8 +10,9 @@
 |---|---|---|
 | **Web editor**: write Ligurian in the browser, on a computer or a phone | <https://ignatz-castror.github.io/ligurian-keyboard/> | nothing |
 | **Android keyboard**: write Ligurian in every app | install page: <https://ignatz-castror.github.io/ligurian-keyboard/tastiera/> | the free Keyman app, then two packages |
-| **Dictionary**: browse it letter by letter, or find a Ligurian word from its Italian, Spanish or English translation | <https://ignatz-castror.github.io/ligurian-keyboard/dizionario/> | nothing |
+| **Dictionary**: browse it letter by letter, look up a Ligurian word typed with or without accents, or find it from its Italian, Spanish or English translation | <https://ignatz-castror.github.io/ligurian-keyboard/dizionario/> | nothing |
 | **Lexicon manager**: search by plain letters, propose and review words | <https://ignatz-castror.github.io/ligurian-keyboard/admin/> | nothing; an account to propose |
+| **Users**: your profile and everything you wrote; for reviewers, everyone's complete history | <https://ignatz-castror.github.io/ligurian-keyboard/utenti/> | an account |
 | **Source code** of every version | <https://github.com/Ignatz-CastroR/ligurian-keyboard/releases> | Node.js, to build it |
 
 See [Downloads and versions](#downloads-and-versions) for exactly what can be downloaded, and which version to choose.
@@ -29,23 +30,26 @@ See [Downloads and versions](#downloads-and-versions) for exactly what can be do
 7. [The parts of the project](#the-parts-of-the-project)
 8. [The shared dictionary](#the-shared-dictionary)
 9. [How a word travels from the dictionary to your screen](#how-a-word-travels-from-the-dictionary-to-your-screen)
-10. [The web editor](#the-web-editor)
-11. [The Android keyboard](#the-android-keyboard)
-12. [The lexicon manager](#the-lexicon-manager)
-13. [Where the words come from](#where-the-words-come-from)
-14. [Privacy](#privacy)
-15. [Getting started as a developer](#getting-started-as-a-developer)
-16. [Repository layout](#repository-layout)
-17. [Tests](#tests)
-18. [Automation](#automation)
-19. [Design decisions](#design-decisions)
-20. [Open questions](#open-questions)
-21. [Roadmap and the road to 1.0.0](#roadmap-and-the-road-to-100)
-22. [What is new in each version](#what-is-new-in-each-version)
-23. [Contributing](#contributing)
-24. [Licenses](#licenses)
-25. [Acknowledgements and independence](#acknowledgements-and-independence)
-26. [Riassunto in italiano](#riassunto-in-italiano)
+10. [The site in five sections](#the-site-in-five-sections)
+11. [The web editor](#the-web-editor)
+12. [The Android keyboard](#the-android-keyboard)
+13. [The dictionary for readers](#the-dictionary-for-readers)
+14. [The lexicon manager](#the-lexicon-manager)
+15. [The Users section](#the-users-section)
+16. [Where the words come from](#where-the-words-come-from)
+17. [Privacy](#privacy)
+18. [Getting started as a developer](#getting-started-as-a-developer)
+19. [Repository layout](#repository-layout)
+20. [Tests](#tests)
+21. [Automation](#automation)
+22. [Design decisions](#design-decisions)
+23. [Open questions](#open-questions)
+24. [Roadmap and the road to 1.0.0](#roadmap-and-the-road-to-100)
+25. [What is new in each version](#what-is-new-in-each-version)
+26. [Contributing](#contributing)
+27. [Licenses](#licenses)
+28. [Acknowledgements and independence](#acknowledgements-and-independence)
+29. [Riassunto in italiano](#riassunto-in-italiano)
 
 ---
 
@@ -269,10 +273,12 @@ Both lists live in the database, so adding a variety or a spelling system is a s
 | Conversion engine | `engine/` | Computes skeletons, loads the word list, converts typed words and elided words, builds the menu | working, 24 tests |
 | Word counts | `corpus/` | Counts the words of the Ligurian Wikipedia, so the most used spelling comes first | working, 15 tests |
 | Terminal demo | `engine/src/demo.ts` | Try the engine from the command line | working |
-| Shared dictionary | `db/` | Words, meanings, translations, roles, review, history | working and deployed, 86 tests |
+| Shared dictionary | `db/` | Words, meanings, translations, roles, review, history | working and deployed, 93 tests |
 | Export | `db/` [`export_lexicon_tsv()`] | Writes the approved words in the engine's format | working |
-| Lexicon manager | `admin/` | Web page to search, propose and review words, in Italian, English and Spanish | working, 62 tests |
-| Dictionary for readers | `dictionary/` | Public page: the index by initial letter, the search by translation, one page per entry, in Italian, English and Spanish | working, 7 tests |
+| Lexicon manager | `admin/` | Web page to search, propose and review words, in Italian, English and Spanish | working, 65 tests |
+| Dictionary for readers | `dictionary/` | Public page: the index by initial letter, the search by Ligurian spelling and by translation, one page per entry, in Italian, English and Spanish | working, 9 tests |
+| Users section | `users/` | Profiles, the people of the dictionary, each person's complete history | working, 4 tests |
+| Site sections | `site/` | The bar of five sections and the dictionary's size, shared by every page | working, 4 tests |
 | Web editor | `editor/` | Web page where anyone types Ligurian with the engine and the published dictionary, in Italian, English and Spanish | working, 24 tests |
 | Android keyboard | `keyman/` | Keyman keyboard and dictionary for Android phones and tablets, rebuilt daily | working, 32 tests; to be tested on real phones |
 | Other exports | `export/` | Further formats of the dictionary | planned |
@@ -332,6 +338,10 @@ Accounts are created by an admin; there is no self sign up.
 8. People see the new word **the next time they open the editor**, or **after they install the new dictionary package**. Keyman does not update a package downloaded from a website by itself; installing it again replaces it.
 
 So a word approved today reaches everyone within a day, and at once if a maintainer runs the site workflow by hand.
+
+## The site in five sections
+
+Every page of the site begins with the same bar of five large buttons, the current one filled: **Write** [the web editor], **Dictionary**, **Lexicon manager**, **Keyboard** [the Android install page] and **Users**. Beneath them, the size of the published dictionary: lemmas, forms and translations. Each section has its own tabs below the bar: the dictionary its index and search, the manager its search, new lemma, review and backups. An entry in the dictionary links to the same entry in the manager, and the other way round. Design: decision [0035](docs/decisions/0035-site-in-five-sections.md).
 
 ## The web editor
 
@@ -393,9 +403,9 @@ Keyman pairs the two packages through their language code, `lij`, the ISO 639-3 
 <https://ignatz-castror.github.io/ligurian-keyboard/dizionario/> · full reference: [dictionary/README.md](dictionary/README.md) · design: decision [0034](docs/decisions/0034-dictionary-for-readers.md)
 
 * **The index, as on Wiktionary:** choose a letter and see every entry that begins with it, with its translations. Accented vowels are listed under their letter; `æ` and `ç` have letters of their own.
-* **The search by translation:** type a word in Italian, Spanish or English, with or without accents, and find the Ligurian entries that translate it, grouped by entry. One language or all three.
-* **A page for every entry** at a permanent address built from its public code: senses, Italian definitions, translations by language, and forms.
-* **Published words only,** for everyone, without an account. Looking up a Ligurian word typed in plain letters remains the job of the editor and the lexicon manager.
+* **One search, two kinds of results:** type a Ligurian word, with or without accents, and find its entry by headword or by any of its forms [`zena` finds `Zêna`; `penne` finds `pénna`, saying which form matched]; or type a word in Italian, Spanish or English and find the Ligurian entries that translate it, grouped by entry. Search everywhere, in Ligurian only, or in one language of translation [decision [0035](docs/decisions/0035-site-in-five-sections.md)].
+* **A page for every entry** at a permanent address built from its public code: senses, Italian definitions, translations by language, and forms. Above it, the letter of the index it belongs to.
+* **Published words only,** for everyone, without an account.
 
 ## The lexicon manager
 
@@ -405,12 +415,23 @@ Keyman pairs the two packages through their language code, `lij`, the ISO 639-3 
 * **Latest additions:** while the search field is empty, the 20 approved entries added most recently are listed below it, newest first, with the date and time each was added.
 * **Entry pages** with forms, senses, translations, the public code of the lemma and of every form, and, for reviewers, the full history of every change.
 * **Search by public code:** typing `LIJ-7K3Q9MDXK` finds its entry; a code with a wrong check symbol is reported as a typing mistake.
-* **Backups and restore,** for admins: the whole dictionary as one JSON file, and a restore into an empty dictionary.
+* **Its own tabs** under the site's bar: Search, New lemma, To review and, for admins, Backups.
+* **Backups and restore,** for admins, in the Backups tab: the whole dictionary as one JSON file, and a restore into an empty dictionary.
+* **A link to the dictionary** on every published entry, and on any other the reason it is not there yet: pending, rejected or deleted.
+* **Translations several at a time:** type `penna; stilografica` and each becomes its own translation, shown before saving; the language is always chosen, never assumed.
 * **Proposals** with buttons for the special letters, `ñ` included, and a warning when a lemma with the same skeleton already exists.
 * **A review queue grouped by entry**, oldest proposals first: each lemma with its pending forms, senses and translations beneath it, every sense labelled by its number and definition. Reviewers tick rows, a whole entry or everything, Shift+click for a range, and approve or reject them in one database call; approving an entry approves all its pending parts. A row changed by someone else meanwhile is reported, not overwritten, and the rest of the batch still goes through [decision [0033](docs/decisions/0033-batch-review.md)].
-* **Roles and profiles**, managed by admins.
+* **Roles and profiles** are now in the Users section.
 * **Downloads** of the approved dictionary: **TSV**, the engine's format, and **CSV** for spreadsheets [separated by semicolons, as Excel set to Italian or Spanish expects, so a double click opens it in columns; with a byte order mark so that Excel shows the Ligurian letters; with Excel set to English, open it through Data, From Text/CSV]. Each file is named by the local date and time of the download, such as `ligurian-lexicon-20261018-123107.csv`, so downloads never overwrite each other and sort in the order they were made.
 * **Interface in Italian**, the contributors' language, **English** and **Spanish**, chosen from a menu in the header.
+
+## The Users section
+
+<https://ignatz-castror.github.io/ligurian-keyboard/utenti/> · full reference: [users/README.md](users/README.md) · design: decision [0035](docs/decisions/0035-site-in-five-sections.md)
+
+* **Your profile** and your display name, and **your complete history:** every change you made, newest first, with its date and time to the second, what it was [created, edited, approved, rejected, deleted, restored], the entry it belongs to, the status it left and, for an edit, the fields it changed. A summary counts your changes by kind.
+* **For reviewers and admins, everyone:** every person with their role, how many changes they made and when the last one was, and anyone's complete history; also the changes written from Supabase's SQL Editor with no person named. Admins rename people and change roles here.
+* **One sign-in** with the lexicon manager: signed in to one, you are signed in to the other.
 
 ## Where the words come from
 
@@ -446,7 +467,7 @@ npm install
 npm run check
 ```
 
-`npm run check` type checks the whole project and runs all 255 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
+`npm run check` type checks the whole project and runs all 275 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
 
 Inside this repository, use `npm run typecheck` or `npx tsc`, never a globally installed `tsc`: the project pins its own TypeScript version.
 
@@ -491,6 +512,8 @@ Both packages appear in `keyman/dist/`. Copy them to an Android phone and instal
 | `npm run test:keyman` | Android keyboard tests |
 | `npm run test:corpus` | Word counting tests |
 | `npm run test:docs` | Decision record and text file tests |
+| `npm run test:users` | Users section tests |
+| `npm run test:site` | Tests of the site's five sections |
 | `npm run demo` | Terminal demo of the input method |
 | `npm run admin:dev` | Lexicon manager on your computer, reloading on every change |
 | `npm run admin:build` | Build the lexicon manager into `admin/dist/` |
@@ -498,6 +521,8 @@ Both packages appear in `keyman/dist/`. Copy them to an Android phone and instal
 | `npm run dictionary:dev` | Dictionary for readers on your computer, reloading on every change [needs `.env`] |
 | `npm run dictionary:build` | Build the dictionary for readers into `dictionary/dist/` |
 | `npm run test:dictionary` | Dictionary for readers tests |
+| `npm run users:dev` | Users section on your computer, reloading on every change [needs `.env`] |
+| `npm run users:build` | Build the Users section into `users/dist/` |
 | `npm run lexicon:fixture` | Use the test dictionary as the snapshot |
 | `npm run lexicon:snapshot` | Take a snapshot of the real dictionary, ranked by the frequency list when one is committed [needs `.env`] |
 | `npm run frequencies:count -- --source "..." <dump.xml>` | Count the words of an uncompressed Wikipedia dump into `data/frequencies/lijwiki.tsv` |
@@ -518,19 +543,28 @@ engine/                 the conversion engine
   src/demo.ts             terminal demo
   test/                   24 tests
 db/                     the shared dictionary
-  migrations/             0001 to 0010, run in order on Supabase
+  migrations/             0001 to 0011, run in order on Supabase
   templates/              SQL Editor templates: adding whole entries, measuring earlier loads
-  test/                   86 tests on PGlite; the Supabase stand in is for tests only
+  test/                   93 tests on PGlite; the Supabase stand in is for tests only
   README.md               data model, roles, client rules, deployment
 admin/                  the lexicon manager, published under /admin/
   src/                    TypeScript, one file per page under views/
-  test/                   62 tests
+  test/                   65 tests
   README.md               pages, accounts, downloads, codes, backups, publishing
 dictionary/             the dictionary for readers, published under /dizionario/
   src/model.ts            letters, addresses, grouping; pure functions
   src/main.ts             the page
-  test/                   7 tests
+  test/                   9 tests
   README.md               views, data, local runs
+users/                  the Users section, published under /utenti/
+  src/model.ts            addresses, what each change was; pure functions
+  src/views/              the people and one person's history
+  test/                   4 tests
+  README.md               views, permissions, local runs
+site/                   what every section shares
+  sections.ts             the five sections, their names and addresses
+  bar.ts, bar.css         the bar of five buttons and the dictionary's size
+  test/                   4 tests
 editor/                 the web editor, the front page of the site
   src/ime.ts              the input method's decisions, pure functions
   src/main.ts             the page
@@ -564,12 +598,14 @@ export/                 further dictionary formats, planned
 
 ## Tests
 
-255 tests guard the project, and every one runs on every push to `main` before anything is published:
+275 tests guard the project, and every one runs on every push to `main` before anything is published:
 
 * **Engine [24]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows; elided words split after the inner apostrophe and converted part by part, with each part's casing, the menu of combinations and its limit, and the whole word winning over its parts.
-* **Database [86]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Ten of them guard the search keys: the database's own folding equals the engine's on every test word and on every letter the database accepts, a list read from the database itself; the engine loads a word holding any of those letters; and `ñ` is accepted and found by typing `n`. Thirteen more guard the public codes and backups: every code valid, unique across lemmas and forms, out of every client's reach and never reused; the database and the manager computing the same check symbols; old entries receiving codes with a line of history; and a backup restored into a fresh database giving back an identical backup and export, while a restore into a dictionary that is not empty, or from an incomplete file, is refused; a restore works into the same project after its data was lost, and leaves nothing behind when it fails halfway. Sixteen guard batch review: migration 0007 applied to a database with pending rows keeps the queue's original columns row for row; the queue carries each row's version, lemma and sense and leaves out rows of a deleted lemma or sense; a whole entry approved in one call writes one line of history per row; rows changed, missing or deleted since the queue was read, or refused by a rule, are reported while the rest of the batch goes through; even an admin's batch never touches a deleted row; only pending rows are changed; contributors, members, anonymous visitors and a token without a user are refused before any row is touched; a malformed request changes nothing. Seven guard the queue in pages: every caller gets the rows the view shows them and no parent they could not read, entries come oldest first and whole, one API row each, position and totals stay right while others review, and a page answers many times faster than the view at the live dictionary's size. Six run the SQL templates exactly as committed, fourteen wrong entries among them. Three more guard the backup's time limit of 60 seconds, which leaves every other setting of the backup and restore functions as it was. Ten guard the dictionary for readers: the initials of the index, published rows only for a visitor, a reviewer and a contributor alike, the index in pages, the search folding accents, capitals and punctuation with exact matches first, never treating a query as a pattern and cutting a very long one, an entry found by the code of its lemma or of any form, and query plans that use the indexes.
-* **Lexicon manager [62]:** input checks, the warning before a particle and a word are saved as one form, with a letter list identical to the real database's; the warning before `ñ` is saved under grafîa ofiçiâ, compared with the database's own spelling system codes; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180 with semicolons, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy; public codes, whose check symbol catches every single wrong character and every swap of neighbours, read forgivingly when typed; and backup files, every wrong one refused with its reason before it reaches the database, and assembled from small reads into a file identical to the database's own, losing no row when the server sends short pages, starting again when the dictionary changes meanwhile, and retrying a failed read; download names stamped with the local date and time, sorting in time order; the review queue grouped by entry, its labels in three languages never showing a sense as a bare number, the selection by row, Shift+click range, entry and everything, cleared after each batch, and a real queue from the database approved whole in one call.
-* **Dictionary for readers [7]:** the order of the index's letters, every view's address read back exactly, translations grouped by sense and language, search results grouped by entry, codes typed into the search field, its three languages, and the page's grouping run on rows from the real database.
+* **Database [93]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Ten of them guard the search keys: the database's own folding equals the engine's on every test word and on every letter the database accepts, a list read from the database itself; the engine loads a word holding any of those letters; and `ñ` is accepted and found by typing `n`. Thirteen more guard the public codes and backups: every code valid, unique across lemmas and forms, out of every client's reach and never reused; the database and the manager computing the same check symbols; old entries receiving codes with a line of history; and a backup restored into a fresh database giving back an identical backup and export, while a restore into a dictionary that is not empty, or from an incomplete file, is refused; a restore works into the same project after its data was lost, and leaves nothing behind when it fails halfway. Sixteen guard batch review: migration 0007 applied to a database with pending rows keeps the queue's original columns row for row; the queue carries each row's version, lemma and sense and leaves out rows of a deleted lemma or sense; a whole entry approved in one call writes one line of history per row; rows changed, missing or deleted since the queue was read, or refused by a rule, are reported while the rest of the batch goes through; even an admin's batch never touches a deleted row; only pending rows are changed; contributors, members, anonymous visitors and a token without a user are refused before any row is touched; a malformed request changes nothing. Seven guard the queue in pages: every caller gets the rows the view shows them and no parent they could not read, entries come oldest first and whole, one API row each, position and totals stay right while others review, and a page answers many times faster than the view at the live dictionary's size. Six run the SQL templates exactly as committed, fourteen wrong entries among them. Three more guard the backup's time limit of 60 seconds, which leaves every other setting of the backup and restore functions as it was. Ten guard the dictionary for readers: the initials of the index, published rows only for a visitor, a reviewer and a contributor alike, the index in pages, the search folding accents, capitals and punctuation with exact matches first, never treating a query as a pattern and cutting a very long one, an entry found by the code of its lemma or of any form, and query plans that use the indexes. Seven guard the site's sections: the dictionary's size counting published rows only, the same for everyone; a Ligurian word found with or without accents, by headword or by form, published entries only, through the search key indexes, a whole word typed never pushed out by longer words that begin with it; and each person's history complete and in pages, readable by reviewers and admins for anyone, the SQL Editor's changes included, by everyone else for themselves only, and by visitors not at all.
+* **Lexicon manager [65]:** input checks, the warning before a particle and a word are saved as one form, with a letter list identical to the real database's; the warning before `ñ` is saved under grafîa ofiçiâ, compared with the database's own spelling system codes; a comparison of every button the page shows with what the real database actually accepts, for every role; the CSV conversion against RFC 4180 with semicolons, with a round trip; and the three languages, with no empty text, lost placeholder or untranslated copy; public codes, whose check symbol catches every single wrong character and every swap of neighbours, read forgivingly when typed; and backup files, every wrong one refused with its reason before it reaches the database, and assembled from small reads into a file identical to the database's own, losing no row when the server sends short pages, starting again when the dictionary changes meanwhile, and retrying a failed read; download names stamped with the local date and time, sorting in time order; the review queue grouped by entry, its labels in three languages never showing a sense as a bare number, the selection by row, Shift+click range, entry and everything, cleared after each batch, and a real queue from the database approved whole in one call; several translations typed in one field split on ";", each once; and the link from an entry to the dictionary offered exactly for the entries the real database publishes.
+* **Dictionary for readers [9]:** the order of the index's letters, every view's address read back exactly, translations grouped by sense and language, search results grouped by entry, codes typed into the search field, its three languages, and the page's grouping run on rows from the real database; the letter shown above an entry equal to the database's own for every letter the spelling allows; and a Ligurian word typed without accents finding its entry, with the form that matched.
+* **Users section [4]:** the addresses of its views, any other falling back to the first page; each change of a history read as what it was, on rows the real database writes; and its three languages.
+* **The site's sections [4]:** five sections in one order with their names in three languages; every section reaching every other by a relative address, as the site build publishes them; and the dictionary's size written as each language writes numbers.
 * **Web editor [24]:** finishing a word, replacing, an elided word typed in a sentence, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages; its three languages, the same as the manager's, with Spanish really translated; and the install page's own script, run against a stand in for the browser, translating its links to the editor and the dictionary into the language being read, and keeping them in view at the top of the screen.
 * **Android keyboard [32]:** a real build with Keyman's compiler; the model's own word breaker, which splits words exactly where the engine does and keeps hyphenated words whole, in the source and in the compiled model; the compiled dictionary loaded and inspected, proving that its search keys equal the engine's on every character up to U+02FF, every test word in four forms and 5,000 pseudo-random strings whose coverage is itself tested; exactly the Ligurian letters on the layout, in both cases; rows of equal width by Keyman's own arithmetic; the layer rules; the contents of both packages; the refusal of a bad snapshot or a failing compiler, keeping earlier packages; error reporting always off.
 * **Word counts [15]:** the choice of the dump from Wikimedia's own status files, refusing unfinished, unsigned or unreadable runs and any address but Wikimedia's; what a word is, in capitals, with elision and with foreign letters; markup stripped from written-for-the-test wikitext, unclosed markup included; the dump read in pieces cut anywhere, articles only; the frequency list written, read back, and refused line by line when damaged; and, end to end, the corpus deciding which spelling of `penna` the editor offers first.
@@ -625,6 +661,8 @@ Every important decision is recorded in [docs/decisions/](docs/decisions/README.
 | [0032](docs/decisions/0032-dictionary-second-purpose.md) | The dictionary as a second purpose, for the diaspora first |
 | [0033](docs/decisions/0033-batch-review.md) | Batch review, the queue grouped by entry |
 | [0034](docs/decisions/0034-dictionary-for-readers.md) | The dictionary for readers, an index and a search by translation |
+| [0035](docs/decisions/0035-site-in-five-sections.md) | The site in five sections |
+| [0036](docs/decisions/0036-built-for-more-than-one-language.md) | Built for more than one language |
 
 ## Open questions
 
@@ -655,20 +693,24 @@ Version 1.0.0 is a promise of stability, given when these criteria are met, not 
 | 0.10 | Done: public codes for lemmas and forms; backups downloaded from the lexicon manager, with a tested restore |
 | 0.11 | Done: batch review, the queue grouped by entry; downloads named by date and time; the install page links the editor and the dictionary in the language being read |
 | 0.12 | Done: the dictionary for readers, a public section with an index by initial letter, a search by translation in Italian, Spanish and English, and a page for every entry |
-| 0.13 | A structured import with a dry run and authors; repair tools for entries loaded by SQL before it |
-| 0.14 | The site's structure: five sections on every page as clear buttons, the manager's own tabs, Users as a section with each person's history, the dictionary's size everywhere, Ligurian words searchable in the dictionary |
-| 0.15 | Grammar for every form in structured fields; etymology, examples, definitions in four languages, usage labels and images in every entry |
-| 0.16 | Hardening, contributor documentation; beta with speakers in Genoa |
+| 0.13 | Done: the site in five sections, as clear buttons on every page; the manager's own tabs; Users as a section with each person's complete history; the dictionary's size everywhere; Ligurian words searchable in the dictionary; translations several at once, their language always chosen |
+| 0.14 | Repairs of the entries loaded by SQL before 0.12.1: a repair page per entry, merging split senses and correcting languages; a structured import with a dry run and authors |
+| 0.15 | Grammar for every form in structured fields; etymology, examples, definitions in four languages, usage labels and images in every entry; pronunciation in IPA by variety |
+| 0.16 | Recordings by native speakers, with their consent and a free license |
+| 0.17 | Hardening, contributor documentation; beta with speakers in Genoa |
 | 1.0 | All criteria met |
 
 Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought throughout.
 
 **The dictionary, a second purpose.** The same database is the framework of a trilingual Ligurian dictionary, whose first audience is the diaspora, above all in Latin America: people who often know Ligurian words by ear and read Spanish rather than Italian. Its first part arrived in 0.12, before the beta: a public section with an index by initial letter, a search by translation and a page for every entry at the address of its public code [decision [0034](docs/decisions/0034-dictionary-for-readers.md)]. After the keyboard's beta, without delaying 1.0.0, come Spanish translations of the most common words, and pronunciation [decision [0032](docs/decisions/0032-dictionary-second-purpose.md)].
 
+**Other languages of Italy.** Once this project is mature, twin projects may serve other endangered languages of Italy, such as Lombard, Piedmontese or Friulian. So that one codebase can serve them, no new code states a fact about Ligurian where a fact about another language would have to be written instead; the facts already in the code move to a single place, one by one, as their code is next changed [decision [0036](docs/decisions/0036-built-for-more-than-one-language.md)]. Nothing in this delays the beta or 1.0.0.
+
 ## What is new in each version
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.13.0, 2026/10/20: the site in five sections.** The same five large buttons on every page, the current one filled: Write, Dictionary, Lexicon manager, Keyboard and Users, with the dictionary's size beneath them. The manager has its own tabs, Backups among them. Users is a section of its own, `/utenti/`, with each person's complete history to the second. The dictionary finds Ligurian words typed with or without accents, and each entry links to its other face in the manager and back. Translations can be added several at a time, separated by ";", and their language is always chosen.
 * **0.12.1, 2026/10/19:** the review queue opens again after a load of thousands of entries: it comes in pages of 50 entries, with the totals, and reads only the pending rows. A tested SQL template adds entries in the right shape from the SQL Editor.
 * **0.12.0, 2026/10/18: the dictionary for readers.** A public section, <https://ignatz-castror.github.io/ligurian-keyboard/dizionario/>, open to everyone: an index by initial letter as on Wiktionary, a search by translation in Italian, Spanish or English that ignores accents, and a page for every entry at the address of its public code. The editor, the install page and the manager link to it.
 * **0.11.2, 2026/10/18:** the backup button works on a dictionary of any size: the lexicon manager assembles the file from small reads instead of one long request, and shows how many rows it has read.
@@ -750,8 +792,9 @@ Questo repository resta un metodo di scrittura, il modo di scrivere in ligure ne
 |---|---|---|
 | **Editor web**: scrivere in ligure nel browser, su computer o telefono | <https://ignatz-castror.github.io/ligurian-keyboard/> | niente |
 | **Tastiera Android**: scrivere in ligure in tutte le app | <https://ignatz-castror.github.io/ligurian-keyboard/tastiera/> | l'app gratuita Keyman, poi due pacchetti |
-| **Dizionario**: sfogliarlo lettera per lettera, o trovare una parola ligure dalla sua traduzione italiana, spagnola o inglese | <https://ignatz-castror.github.io/ligurian-keyboard/dizionario/> | niente |
+| **Dizionario**: sfogliarlo lettera per lettera, cercare una parola ligure scritta con o senza accenti, o trovarla dalla sua traduzione italiana, spagnola o inglese | <https://ignatz-castror.github.io/ligurian-keyboard/dizionario/> | niente |
 | **Gestore del lessico**: cercare per lettere semplici, proporre e revisionare parole | <https://ignatz-castror.github.io/ligurian-keyboard/admin/> | niente; un account per proporre |
+| **Utenti**: il proprio profilo e tutto ciò che si è scritto; per i revisori, la cronologia completa di tutti | <https://ignatz-castror.github.io/ligurian-keyboard/utenti/> | un account |
 | **Codice sorgente** di ogni versione | <https://github.com/Ignatz-CastroR/ligurian-keyboard/releases> | Node.js, per compilarlo |
 
 ### Che cosa si può scaricare

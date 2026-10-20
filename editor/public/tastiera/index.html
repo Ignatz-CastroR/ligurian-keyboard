@@ -17,6 +17,13 @@
             they are in view in every section.
   Updated:  2026/10/18, 18:38:20: the dictionary link leads to the
             dictionary for readers, /dizionario/ [decision 0034].
+  Updated:  2026/10/20, 02:21:15: the site's bar of five sections at the
+            top, as on every other page, this one marked: the editor,
+            the dictionary, the lexicon manager, which this page did not
+            link before, the keyboard and the Users section. Its look is
+            the site's own stylesheet, site-bar.css; its names are those
+            of site/sections.ts, kept identical by a test [decision
+            0035]. The language links stay at the top of the screen.
   Purpose:  How to install the Ligurian keyboard and dictionary on an
             Android phone, with the two packages to download. Italian
             first, then English and Spanish, reached from links at the
@@ -24,9 +31,10 @@
   Contract: Static page, copied as it is by Vite [editor/public/]; the
             site build puts ligurian_keyboard.kmp,
             ignatzcastror.lij.ligurian_keyboard.model.kmp and
-            packages.json next to it [tools/assemble-site.ts]. The
-            script fills in versions from packages.json and translates
-            the two links; without it the page still works, in Italian.
+            packages.json next to it, and site-bar.css one folder up
+            [tools/assemble-site.ts]. The script fills in versions from
+            packages.json and translates the five sections; without it
+            the page still works, in Italian.
 -->
 <html lang="it">
 <head>
@@ -34,6 +42,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Tastiera ligure per Android, con suggerimenti in grafîa ofiçiâ. Ligurian keyboard for Android. Teclado ligur para Android.">
   <title>Tastiera ligure</title>
+  <link rel="stylesheet" href="../site-bar.css">
   <style>
     :root {
       --bg: #fbfaf7;
@@ -92,7 +101,7 @@
       z-index: 1;
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-between;
+      justify-content: flex-end;
       gap: 4px 16px;
       margin: -24px -16px 16px;
       padding: 10px 16px;
@@ -107,11 +116,17 @@
   </style>
 </head>
 <body>
+<div class="site-bar">
+  <nav id="site-links" aria-label="Sezioni del sito">
+    <a href="../" class="site-section" data-link="editor">Scrivi</a>
+    <a href="../dizionario/" class="site-section" data-link="dictionary">Dizionario</a>
+    <a href="../admin/" class="site-section" data-link="manager">Gestore del lessico</a>
+    <a href="../tastiera/" class="site-section current" data-link="keyboard" aria-current="page">Tastiera</a>
+    <a href="../utenti/" class="site-section" data-link="users">Utenti</a>
+  </nav>
+</div>
 <main>
   <div class="topbar">
-    <nav id="site-links" aria-label="Lessico ligure">
-      <a href="../" data-link="editor">← Scrivi in ligure</a> · <a href="../dizionario/" data-link="dictionary">Dizionario</a>
-    </nav>
     <p class="languages"><a href="#it" lang="it">Italiano</a> · <a href="#en" lang="en">English</a> · <a href="#es" lang="es">Español</a></p>
   </div>
 
@@ -205,16 +220,18 @@
   </footer>
 </main>
 <script>
-  // The two links at the top, in the language being read: the section
-  // the address names [#it, #en, #es], else the language chosen in the
-  // editor or the lexicon manager [same storage key], else Italian.
-  // Following a link from a section the address names makes that the
-  // site's language, so the editor or dictionary opens in it.
+  // The five sections at the top, in the language being read: the
+  // section of this page the address names [#it, #en, #es], else the
+  // language chosen elsewhere on the site [same storage key], else
+  // Italian. Following a link from a section the address names makes
+  // that the site's language, so the next page opens in it. The names
+  // are those of site/sections.ts.
   var SITE_LINKS = {
-    it: { nav: "Lessico ligure", editor: "← Scrivi in ligure", dictionary: "Dizionario" },
-    en: { nav: "Ligurian lexicon", editor: "← Write in Ligurian", dictionary: "Dictionary" },
-    es: { nav: "Léxico ligur", editor: "← Escribe en ligur", dictionary: "Diccionario" }
+    it: { nav: "Sezioni del sito", editor: "Scrivi", dictionary: "Dizionario", manager: "Gestore del lessico", keyboard: "Tastiera", users: "Utenti" },
+    en: { nav: "Sections of the site", editor: "Write", dictionary: "Dictionary", manager: "Lexicon manager", keyboard: "Keyboard", users: "Users" },
+    es: { nav: "Secciones del sitio", editor: "Escribir", dictionary: "Diccionario", manager: "Gestor del léxico", keyboard: "Teclado", users: "Usuarios" }
   };
+  var SECTION_IDS = ["editor", "dictionary", "manager", "keyboard", "users"];
   var LANG_KEY = "ligurian-keyboard.lang";
   var hashLang = function () {
     var code = window.location.hash.replace("#", "");
@@ -231,8 +248,9 @@
     var nav = document.getElementById("site-links");
     nav.setAttribute("lang", lang);
     nav.setAttribute("aria-label", texts.nav);
-    nav.querySelector('[data-link="editor"]').textContent = texts.editor;
-    nav.querySelector('[data-link="dictionary"]').textContent = texts.dictionary;
+    SECTION_IDS.forEach(function (id) {
+      nav.querySelector('[data-link="' + id + '"]').textContent = texts[id];
+    });
   };
   document.getElementById("site-links").addEventListener("click", function (event) {
     var chosen = hashLang();

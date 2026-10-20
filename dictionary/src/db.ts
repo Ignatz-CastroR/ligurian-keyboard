@@ -2,8 +2,11 @@
  * db.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/18, 18:12:15, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
- * Purpose:  The dictionary page's four questions to the database, the
- *           functions of migration 0009, asked as an anonymous visitor.
+ * Updated:  2026/10/20, 01:36:40: a fifth question, dictionary_lookup[]
+ *           of migration 0011, Ligurian words by their spelling.
+ * Purpose:  The dictionary page's five questions to the database, the
+ *           functions of migrations 0009 and 0011, asked as an anonymous
+ *           visitor.
  * Contract: The client never uses a stored session, not even that of a
  *           reviewer signed in to the lexicon manager on the same site:
  *           the dictionary shows what every visitor sees. The functions
@@ -12,10 +15,11 @@
  */
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Entry, IndexEntry, SearchRow } from "./model.ts";
+import type { Entry, IndexEntry, LookupRow, SearchRow } from "./model.ts";
 
 export const PAGE: number = 100;
 export const SEARCH_LIMIT: number = 200;
+export const LOOKUP_LIMIT: number = 50;
 
 let client: SupabaseClient | null = null;
 
@@ -61,4 +65,10 @@ export function search(query: string, language: string | null): Promise<SearchRo
 
 export function entry(code: string): Promise<Entry | null> {
   return call<Entry | null>("dictionary_entry", { p_public_id: code });
+}
+
+// Published entries whose headword or a form begins with the query,
+// typed with or without accents; the best matches first.
+export function lookup(query: string): Promise<LookupRow[]> {
+  return call<LookupRow[]>("dictionary_lookup", { p_query: query, p_limit: LOOKUP_LIMIT });
 }

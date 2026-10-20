@@ -16,6 +16,11 @@
  *           particle and a word [decision 0029].
  * Updated:  2026/10/18, 09:14:22: the public code of the lemma and of
  *           every form, and in each line of history [decision 0030].
+ * Updated:  2026/10/20, 01:45:50: a link to the same entry in the
+ *           dictionary for readers, or why it is not there yet; several
+ *           translations added at once, separated by ";", each its own
+ *           row, and a language always chosen, never assumed; an edited
+ *           translation may not hold ";" [decision 0035].
  */
 
 import type { Context } from "../context.ts";
@@ -28,7 +33,10 @@ import {
 import {
   canAddChild, canChangeStatus, canDeleteRow, canEdit, isStaff,
 } from "../permissions.ts";
-import { changedFields, checkForm, checkFreq, cleanOptionalText, formatDateTime, shortId } from "../forms.ts";
+import { dictionaryLink } from "../links.ts";
+import {
+  MAX_TRANSLATION_LENGTH, changedFields, checkForm, checkFreq, cleanOptionalText, formatDateTime, shortId, splitTranslations,
+} from "../forms.ts";
 import {
   appendAll, clear, confirmForms, describeError, field, formWarning, h, letterPalette, posLabel, refItems,
   runAction, select, replaceAll, showError, showInfo, statusBadge,
@@ -158,6 +166,18 @@ function formRow(...children: (HTMLElement | null | false)[]): HTMLElement {
    The lemma
    ==================================================================== */
 
+// The same entry as readers see it, or why they cannot yet.
+function inDictionary(ctx: Context, lemma: Entry["lemma"]): HTMLElement {
+  const link = dictionaryLink(lemma);
+  return link.kind === "published"
+    ? h("p", { class: "to-dictionary" }, h("a", { href: link.href, class: "button-link" }, `${ctx.t.entryInDictionary} →`))
+    : h("p", { class: "muted to-dictionary" }, {
+      pending: ctx.t.entryNotInDictionaryPending,
+      rejected: ctx.t.entryNotInDictionaryRejected,
+      deleted: ctx.t.entryNotInDictionaryDeleted,
+    }[link.reason]);
+}
+
 function lemmaSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
   const { t } = ctx;
   const lemma = entry.lemma;
@@ -173,6 +193,7 @@ function lemmaSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
       h("p", { class: "muted" },
         `${posLabel(t, lemma.part_of_speech)} · ${lemma.variety} · ${lemma.orthography} · ${t.entryVersion(lemma.version)} · `,
         h("span", { class: "mono", title: t.publicIdNote }, `${t.fieldPublicId} ${lemma.public_id}`)),
+      inDictionary(ctx, lemma),
       lemma.note !== null && h("p", { class: "note" }, lemma.note),
     );
   };
@@ -414,9 +435,11 @@ function glossItem(ctx: Context, gloss: Gloss, reload: Reload): HTMLElement {
     );
     editor.addEventListener("submit", (event: Event) => {
       event.preventDefault();
-      const newText = readOptional(ctx, text, 500);
+      const newText = readOptional(ctx, text, MAX_TRANSLATION_LENGTH);
       if (newText.ok && newText.value === null) {
         showError(t.errFormEmpty);
+      } else if (newText.ok && newText.value !== null && newText.value.includes(";")) {
+        showError(t.errGlossSemicolon);
       } else if (newText.ok) {
         void changeAndReload(ctx, saveButton,
           () => updateRow("glosses", gloss.id, gloss.version, { language: language.value, gloss: newText.value }), reload);
@@ -452,27 +475,58 @@ function addSenseForm(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
   return editor;
 }
 
+/* Translations of one sense, one or several at once, separated by
+   ";". The language starts unchosen and must be chosen: until 0.13.0 it
+   started at Italian, and words loaded in a hurry kept it whatever
+   their language was. */
 function addGlossForm(ctx: Context, sense: Sense, reload: Reload): HTMLElement {
   const { t } = ctx;
-  const language: HTMLSelectElement = select(refItems(ctx.refs.languages), "it");
-  const text: HTMLInputElement = h("input", { type: "text", maxlength: 500 });
+  const language: HTMLSelectElement = select(
+    [{ value: "", label: t.glossLanguageChoose }, ...refItems(ctx.refs.languages)], "");
+  // Checked on submit with the manager's own message, in the page's
+  // language, rather than by the browser's.
+  language.setAttribute("aria-required", "true");
+  const text: HTMLInputElement = h("input", { type: "text", maxlength: 2000, title: t.glossSplitNote });
+  const preview: HTMLElement = h("p", { class: "muted small-text", "aria-live": "polite" }, t.glossSplitNote);
   const approveNow: HTMLInputElement | null = approveNowBox(ctx);
   const addButton: HTMLButtonElement = h("button", { type: "submit", class: "small" }, t.add);
   const editor: HTMLFormElement = h("form", { class: "edit-form inline add-form" },
     field(t.fieldLanguage, language), field(t.fieldGloss, text),
     approveNow !== null && h("label", { class: "check" }, approveNow, t.approveNow),
     h("div", { class: "buttons" }, addButton),
+    preview,
   );
   editor.setAttribute("aria-label", t.entryAddGloss);
+  text.addEventListener("input", () => {
+    const split = splitTranslations(text.value);
+    preview.textContent = split.ok && split.items.length > 1 ? t.glossPreview(split.items.join(" · ")) : t.glossSplitNote;
+  });
   editor.addEventListener("submit", (event: Event) => {
     event.preventDefault();
-    const newText = readOptional(ctx, text, 500);
-    if (newText.ok && newText.value === null) {
-      showError(t.errFormEmpty);
-    } else if (newText.ok && newText.value !== null) {
-      const gloss: string = newText.value;
+    const split = splitTranslations(text.value);
+    if (language.value === "") {
+      showError(t.errGlossLanguage);
+      language.focus();
+    } else if (!split.ok) {
+      showError(split.reason === "empty" ? t.errFormEmpty : t.errTextTooLong(MAX_TRANSLATION_LENGTH));
+    } else {
+      const chosen: string = language.value;
+      // One row each, in the order typed. A refusal stops the rest; when
+      // some were saved before it, the entry is reloaded first, so the
+      // page shows which, and the error is reported over it.
       void changeAndReload(ctx, addButton, async () => {
-        await createGloss(sense.id, language.value, gloss, statusFrom(approveNow));
+        let saved: number = 0;
+        try {
+          for (const gloss of split.items) {
+            await createGloss(sense.id, chosen, gloss, statusFrom(approveNow));
+            saved += 1;
+          }
+        } catch (error: unknown) {
+          if (saved > 0) {
+            await reload();
+          }
+          throw error;
+        }
       }, reload);
     }
   });

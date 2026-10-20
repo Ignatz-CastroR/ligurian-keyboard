@@ -4,6 +4,9 @@
  * Date:     2026/10/11, 20:18:59, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Sign in with email and password. There is no sign up:
  *           accounts are created by an admin [admin/README.md].
+ * Updated:  2026/10/20, 01:56:10: after signing in, the first page of
+ *           the section the form is in: the lexicon manager and the
+ *           Users section both use this view [decision 0035].
  */
 
 import type { Context } from "../context.ts";
@@ -30,7 +33,7 @@ export async function renderSignIn(ctx: Context, root: HTMLElement): Promise<voi
     hideMessage();
     // On success the session listener in main.ts redraws the page.
     signIn(email.value.trim(), password.value)
-      .then(() => ctx.navigate("#/search/"))
+      .then(() => ctx.navigate("#/"))
       .catch(() => showError(t.signInFailed))
       .finally(() => {
         submit.disabled = false;

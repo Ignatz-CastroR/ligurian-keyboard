@@ -5,6 +5,8 @@
  * Updated:  2026/10/17, 08:23:03: the language menu, with Spanish.
  * Updated:  2026/10/18, 18:41:15: the header links the dictionary for
  *           readers and, apart, the lexicon manager [decision 0034].
+ * Updated:  2026/10/20, 02:14:02: the site's bar of five sections at the
+ *           top of the page replaces the header's links [decision 0035].
  * Purpose:  The web editor in the browser: load the dictionary snapshot,
  *           watch the text area, apply the decisions of ime.ts, draw the
  *           candidate menu, and offer copy, download and clear.
@@ -18,6 +20,7 @@
  *           Decision: docs/decisions/0020-web-editor-design.md
  */
 
+import { loadStats, mountSiteBar } from "../../site/bar.ts";
 import "./style.css";
 import type { LookupFilter } from "../../engine/src/lexicon.ts";
 import { h } from "./dom.ts";
@@ -503,14 +506,11 @@ function drawPage(): void {
     }
   });
 
+  mountSiteBar("editor", state.lang, loadStats(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY));
   header.replaceChildren(
     h("div", { class: "brand" },
       h("span", { class: "brand-title" }, t.appTitle),
       h("span", { class: "muted" }, t.appSubtitle)),
-    h("nav", {},
-      h("a", { href: "./tastiera/", class: "nav-link" }, t.navKeyboard),
-      h("a", { href: "./dizionario/", class: "nav-link" }, t.navDictionary),
-      h("a", { href: "./admin/", class: "nav-link" }, t.navManager)),
     h("div", { class: "tools" }, langMenu),
   );
 

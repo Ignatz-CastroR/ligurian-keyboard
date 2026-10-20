@@ -4,6 +4,7 @@
 * **Date:** 2026/10/18
 * **Decided by:** Eng. José Ignacio Castro de R.
 * **Refines:** [0012](0012-never-hard-delete.md), on keeping the whole history
+* **Refined by:** [0035](0035-site-in-five-sections.md), on the Backups tab of the manager, where backups are now made
 
 ## Context
 

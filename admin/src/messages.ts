@@ -22,6 +22,12 @@
  * Updated:  2026/10/19, 23:31:05: the pages and totals of the queue; a
  *           timeout message that no longer speaks of backups, which
  *           have their own.
+ * Updated:  2026/10/20, 01:45:10: the link from an entry to the
+ *           dictionary for readers, or why the entry is not there yet;
+ *           the manager's own tabs, Backups among them; the links to
+ *           the other sections left for the site's bar; several
+ *           translations at once, and their language always chosen
+ *           [decision 0035].
  * Purpose:  Every text the lexicon manager shows, in Italian [default,
  *           for the Genoese contributors], English and Spanish.
  * Contract: EN and ES have exactly the type of IT, so the compiler
@@ -46,14 +52,12 @@ const IT = {
   appTitle: "Lessico ligure",
   appSubtitle: "Gestore del dizionario condiviso",
 
-  navEditor: "Scrivi",
-  navKeyboard: "Tastiera Android",
-  navReaders: "Dizionario",
+  tabsLabel: "Sezioni del gestore del lessico",
   navSearch: "Cerca",
   navNew: "Nuovo lemma",
   navReview: "Da revisionare",
-  navUsers: "Utenti",
-  navAccount: "Profilo",
+  navBackups: "Copie di sicurezza",
+  navAccount: "Il mio profilo, nella sezione Utenti",
   signIn: "Accedi",
   signOut: "Esci",
   exportTsv: "Scarica TSV",
@@ -108,6 +112,11 @@ const IT = {
   fieldTag: "Etichetta grammaticale",
   fieldDefinition: "Definizione in italiano [facoltativa]",
   fieldLanguage: "Lingua",
+  glossLanguageChoose: "[scegli la lingua]",
+  glossSplitNote: "Più traduzioni dello stesso significato? Separale con «;»: ognuna diventa una traduzione a sé.",
+  glossPreview: (list: string): string => `Saranno aggiunte come traduzioni a sé: ${list}`,
+  errGlossLanguage: "Scegli la lingua della traduzione.",
+  errGlossSemicolon: "Una traduzione non contiene «;»: lascia qui una sola traduzione e aggiungi le altre con il modulo «Aggiungi».",
   fieldGloss: "Traduzione",
   fieldDisplayName: "Nome visualizzato",
   fieldRole: "Ruolo",
@@ -120,6 +129,10 @@ const IT = {
   fieldUserId: "ID utente",
   fieldPublicId: "Codice",
   publicIdNote: "Codice pubblico: identifica questa voce per sempre e non cambia mai.",
+  entryInDictionary: "Vedi nel dizionario",
+  entryNotInDictionaryPending: "Non ancora nel dizionario: vi entra quando il lemma è approvato.",
+  entryNotInDictionaryRejected: "Non nel dizionario: il lemma è stato rifiutato.",
+  entryNotInDictionaryDeleted: "Non nel dizionario: il lemma è stato eliminato.",
   approveNow: "Approva subito [solo revisori e amministratori]",
 
   searchPlaceholder: "Scrivi in ASCII semplice: zena, citae, penna…",
@@ -181,8 +194,6 @@ const IT = {
   senseWithoutDefinition: (n: number): string => `Significato ${n}, senza definizione`,
   glossOfSense: (n: number): string => `del significato ${n}`,
 
-  usersTitle: "Utenti",
-  usersIntro: "I nuovi account sono creati da un amministratore nel pannello di Supabase e partono come membri.",
   usersYou: "[tu]",
   accountTitle: "Il mio profilo",
   accountRole: (role: string): string => `Il tuo ruolo: ${role}`,
@@ -259,14 +270,12 @@ const EN: Messages = {
   appTitle: "Ligurian lexicon",
   appSubtitle: "Manager of the shared dictionary",
 
-  navEditor: "Write",
-  navKeyboard: "Android keyboard",
-  navReaders: "Dictionary",
+  tabsLabel: "Parts of the lexicon manager",
   navSearch: "Search",
   navNew: "New lemma",
   navReview: "To review",
-  navUsers: "Users",
-  navAccount: "Profile",
+  navBackups: "Backups",
+  navAccount: "My profile, in the Users section",
   signIn: "Sign in",
   signOut: "Sign out",
   exportTsv: "Download TSV",
@@ -321,6 +330,11 @@ const EN: Messages = {
   fieldTag: "Grammatical tag",
   fieldDefinition: "Definition in Italian [optional]",
   fieldLanguage: "Language",
+  glossLanguageChoose: "[choose the language]",
+  glossSplitNote: "Several translations of the same sense? Separate them with \";\": each becomes a translation of its own.",
+  glossPreview: (list: string): string => `To be added as separate translations: ${list}`,
+  errGlossLanguage: "Choose the language of the translation.",
+  errGlossSemicolon: "A translation holds no \";\": keep one translation here and add the others with the \"Add\" form.",
   fieldGloss: "Translation",
   fieldDisplayName: "Display name",
   fieldRole: "Role",
@@ -333,6 +347,10 @@ const EN: Messages = {
   fieldUserId: "User ID",
   fieldPublicId: "Code",
   publicIdNote: "Public code: it names this entry for good and never changes.",
+  entryInDictionary: "See it in the dictionary",
+  entryNotInDictionaryPending: "Not in the dictionary yet: it appears there once the lemma is approved.",
+  entryNotInDictionaryRejected: "Not in the dictionary: the lemma was rejected.",
+  entryNotInDictionaryDeleted: "Not in the dictionary: the lemma was deleted.",
   approveNow: "Approve at once [reviewers and admins only]",
 
   searchPlaceholder: "Type plain ASCII: zena, citae, penna…",
@@ -394,8 +412,6 @@ const EN: Messages = {
   senseWithoutDefinition: (n: number): string => `Sense ${n}, no definition`,
   glossOfSense: (n: number): string => `of sense ${n}`,
 
-  usersTitle: "Users",
-  usersIntro: "New accounts are created by an admin in the Supabase dashboard and start as members.",
   usersYou: "[you]",
   accountTitle: "My profile",
   accountRole: (role: string): string => `Your role: ${role}`,
@@ -470,14 +486,12 @@ const ES: Messages = {
   appTitle: "Léxico ligur",
   appSubtitle: "Gestor del diccionario compartido",
 
-  navEditor: "Escribir",
-  navKeyboard: "Teclado Android",
-  navReaders: "Diccionario",
+  tabsLabel: "Partes del gestor del léxico",
   navSearch: "Buscar",
   navNew: "Nuevo lema",
   navReview: "Por revisar",
-  navUsers: "Usuarios",
-  navAccount: "Perfil",
+  navBackups: "Copias de seguridad",
+  navAccount: "Mi perfil, en la sección Usuarios",
   signIn: "Iniciar sesión",
   signOut: "Cerrar sesión",
   exportTsv: "Descargar TSV",
@@ -532,6 +546,11 @@ const ES: Messages = {
   fieldTag: "Etiqueta gramatical",
   fieldDefinition: "Definición en italiano [opcional]",
   fieldLanguage: "Idioma",
+  glossLanguageChoose: "[elige el idioma]",
+  glossSplitNote: "¿Varias traducciones de la misma acepción? Sepáralas con «;»: cada una se convierte en una traducción propia.",
+  glossPreview: (list: string): string => `Se añadirán como traducciones propias: ${list}`,
+  errGlossLanguage: "Elige el idioma de la traducción.",
+  errGlossSemicolon: "Una traducción no contiene «;»: deja aquí una sola traducción y añade las demás con el formulario «Añadir».",
   fieldGloss: "Traducción",
   fieldDisplayName: "Nombre visible",
   fieldRole: "Rol",
@@ -544,6 +563,10 @@ const ES: Messages = {
   fieldUserId: "ID de usuario",
   fieldPublicId: "Código",
   publicIdNote: "Código público: identifica esta entrada para siempre y nunca cambia.",
+  entryInDictionary: "Verla en el diccionario",
+  entryNotInDictionaryPending: "Todavía no está en el diccionario: aparece allí cuando el lema se aprueba.",
+  entryNotInDictionaryRejected: "No está en el diccionario: el lema fue rechazado.",
+  entryNotInDictionaryDeleted: "No está en el diccionario: el lema fue eliminado.",
   approveNow: "Aprobar de inmediato [solo revisores y administradores]",
 
   searchPlaceholder: "Escribe en ASCII simple: zena, citae, penna…",
@@ -605,8 +628,6 @@ const ES: Messages = {
   senseWithoutDefinition: (n: number): string => `Acepción ${n}, sin definición`,
   glossOfSense: (n: number): string => `de la acepción ${n}`,
 
-  usersTitle: "Usuarios",
-  usersIntro: "Las cuentas nuevas las crea un administrador en el panel de Supabase y empiezan como miembros.",
   usersYou: "[tú]",
   accountTitle: "Mi perfil",
   accountRole: (role: string): string => `Tu rol: ${role}`,

@@ -39,7 +39,9 @@ A decision is never edited away. If it changes, a new record replaces it, and th
 | [0031](0031-backups.md) | Backups from the lexicon manager | 2026/10/18 | accepted |
 | [0032](0032-dictionary-second-purpose.md) | The dictionary as a second purpose, for the diaspora first | 2026/10/18 | accepted; superseded in part by [0034](0034-dictionary-for-readers.md) |
 | [0033](0033-batch-review.md) | Batch review, the queue grouped by entry | 2026/10/18 | accepted |
-| [0034](0034-dictionary-for-readers.md) | The dictionary for readers, an index and a search by translation | 2026/10/18 | accepted |
+| [0034](0034-dictionary-for-readers.md) | The dictionary for readers, an index and a search by translation | 2026/10/18 | accepted; superseded in part by [0035](0035-site-in-five-sections.md) |
+| [0035](0035-site-in-five-sections.md) | The site in five sections | 2026/10/20 | accepted |
+| [0036](0036-built-for-more-than-one-language.md) | Built for more than one language | 2026/10/20 | accepted |
 
 ## Still open
 

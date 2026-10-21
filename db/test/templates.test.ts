@@ -17,6 +17,11 @@
  *           agreement with sense_review_queue[] [migration 0012].
  * Updated:  2026/10/21, 09:30:23: the check's two new measures, with a
  *           lemma reviewed and kept as it is.
+ * Updated:  2026/10/21, 12:40:15: grammar on the lemma and its forms,
+ *           the base form taking the lemma's; a wrong value refused with
+ *           its list [migration 0013].
+ * Updated:  2026/10/21, 14:29:33: readings on forms, several on one form, and
+ *           more on the base form through the headword's spelling.
  * Contract: The template's placeholder user id is replaced with a test
  *           user's, as a person following its Usage would do.
  */
@@ -180,6 +185,64 @@ test("the check measures what a load that made a sense per translation leaves be
     "select total_items::int as total_items from public.review_queue_page() limit 1");
   assert.equal(queue[0]?.total_items, measures.get("rows waiting for review"));
   assert.deepEqual(await rowsAs(db, "trusted", "select count(*) from audit_log"), before);
+});
+
+test("the template writes grammar on the lemma and readings on its forms, the base form taking the lemma's; a wrong value names its list", async () => {
+  const db = await createSeededDatabase();
+  const verb: string = `{ "headword": "lavâse", "part_of_speech": "verb", "verb_form": "inf",
+    "conjugation": "-â", "auxiliary": "êse", "pronominal": true,
+    "forms": [ {"form": "lava", "readings": [{"verb_form": "ind_pres", "person": "3", "number": "sg"},
+                                             {"verb_form": "imp", "person": "2", "number": "sg"}]} ] }`;
+  const noun: string = `{ "headword": "pénna", "part_of_speech": "noun", "gender": "f", "number": "sg", "invariable": false,
+    "forms": [ {"form": "pénne", "tag": "pl.", "readings": [{"gender": "f", "number": "pl"}]} ] }`;
+  // The headword's own spelling adds readings to the base form.
+  const city: string = `{ "headword": "çittæ", "part_of_speech": "noun", "gender": "f", "number": "sg", "invariable": true,
+    "forms": [ {"form": "çittæ", "tag": "inv.", "readings": [{"gender": "f", "number": "sg"}, {"gender": "f", "number": "pl"}]} ] }`;
+  await runAs(db, filled(USERS.contributor, [verb, noun, city]));
+  const lemmas = await rowsAs(db, "trusted",
+    `select headword, gender, number, person, verb_form, invariable, conjugation, auxiliary, pronominal
+       from lemmas order by id`);
+  assert.deepEqual(lemmas, [
+    { headword: "lavâse", gender: null, number: null, person: null, verb_form: "inf", invariable: false,
+      conjugation: "-â", auxiliary: "êse", pronominal: true },
+    { headword: "pénna", gender: "f", number: "sg", person: null, verb_form: null, invariable: false,
+      conjugation: null, auxiliary: null, pronominal: false },
+    { headword: "çittæ", gender: "f", number: "sg", person: null, verb_form: null, invariable: true,
+      conjugation: null, auxiliary: null, pronominal: false },
+  ]);
+  const forms = await rowsAs(db, "trusted", "select form, is_base, grammatical_tag, readings from wordforms order by id");
+  const r = (gender: string | null, number: string | null, person: string | null, verb_form: string | null) =>
+    ({ gender, number, person, verb_form });
+  assert.deepEqual(forms, [
+    { form: "lavâse", is_base: true, grammatical_tag: null, readings: [r(null, null, null, "inf")] },
+    { form: "lava", is_base: false, grammatical_tag: null,
+      readings: [r(null, "sg", "3", "ind_pres"), r(null, "sg", "2", "imp")] },
+    { form: "pénna", is_base: true, grammatical_tag: null, readings: [r("f", "sg", null, null)] },
+    { form: "pénne", is_base: false, grammatical_tag: "pl.", readings: [r("f", "pl", null, null)] },
+    { form: "çittæ", is_base: true, grammatical_tag: "inv.", readings: [r("f", "sg", null, null), r("f", "pl", null, null)] },
+  ]);
+
+  const cases: [string, RegExp][] = [
+    [`{"headword": "cà", "gender": "x"}`, /entry "cà", the lemma: "gender" must be one of: "m", "f", "mf"/u],
+    [`{"headword": "cà", "person": 3}`, /entry "cà", the lemma: "person" must be one of: "1", "2", "3"/u],
+    [`{"headword": "cà", "invariable": "yes"}`, /entry "cà", the lemma: "invariable" must be true or false/u],
+    [`{"headword": "cà", "part_of_speech": "noun", "conjugation": "-â"}`, /entry "cà", the lemma: .*lemmas_verb_grammar/u],
+    [`{"headword": "cà", "forms": [{"form": "cæ", "readings": [{"number": "pl"}, {"verb_form": "ind_perf"}]}]}`,
+      /entry "cà", the form "cæ": reading 2: "verb_form" must be one of: "inf", "ptcp_pres", .*"imp"/u],
+    [`{"headword": "cà", "forms": [{"form": "cæ", "readings": [{"mood": "ind"}]}]}`,
+      /entry "cà", the form "cæ": reading 1: unknown key: mood/u],
+    [`{"headword": "cà", "forms": [{"form": "cæ", "readings": {"number": "pl"}}]}`,
+      /entry "cà", the form "cæ": "readings" must be a list/u],
+    [`{"headword": "cà", "forms": [{"form": "cæ", "readings": [{"number": null}]}]}`,
+      /entry "cà", the form "cæ": reading 1: it gives no value/u],
+    [`{"headword": "cà", "forms": [{"form": "cæ", "number": "pl"}]}`, /entry "cà", the form .*: unknown key: number/u],
+  ];
+  for (const [entry, message] of cases) {
+    const fresh = await createSeededDatabase();
+    await assert.rejects(runAs(fresh, filled(USERS.reviewer, [entry, CE])), message, entry);
+    await fresh.exec("rollback").catch(() => undefined);
+    assert.deepEqual(await rowsAs(fresh, "trusted", "select id from lemmas"), [], entry);
+  }
 });
 
 interface SplitRow { headword: string | null; translation: string | null; pieces: string[] | null; action: string; reason: string | null }

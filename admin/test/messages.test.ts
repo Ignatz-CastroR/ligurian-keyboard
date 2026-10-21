@@ -8,6 +8,8 @@
  *           copies and broken placeholders.
  * Updated:  2026/10/18, 09:27:10: the example code in the search hint
  *           must be a valid code [decision 0030].
+ * Updated:  2026/10/21, 12:57:30: grammar's words alike in Spanish and
+ *           Italian or English allowed as such [decision 0039].
  */
 
 import { test } from "node:test";
@@ -60,6 +62,8 @@ test("Spanish is really translated, not a copy of Italian or English", () => {
   const sameByNature: Set<string> = new Set([
     "posVerb", "posNumeral", "fieldForm", "fieldNote", "fieldKind", "kindWordform",
     "entryBase", "errGeneric",
+    // Grammar's own words, alike in Spanish and Italian or English.
+    "posDeterminer", "fieldPerson", "fieldInvariable", "fieldPronominal", "grammarInvariable", "grammarPronominal",
   ]);
   const copies: string[] = [...es].filter(([key, text]) =>
     !sameByNature.has(key) && (text === it.get(key) || text === en.get(key))).map(([key]) => key);

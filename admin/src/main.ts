@@ -18,6 +18,8 @@
  * Updated:  2026/10/20, 23:49:12: the repairs of the senses: the tab
  *           Significati da rivedere, for reviewers and admins, and the
  *           repair page of one lemma [decision 0038].
+ * Updated:  2026/10/21, 12:29:53: the grammar's lists start empty, until the
+ *           reference data arrives [decision 0039].
  * Purpose:  Start the lexicon manager: connect to Supabase, follow the
  *           session, draw the header and send each address to its view.
  * Routes:   #/search/<query>   search [everyone]
@@ -40,6 +42,7 @@ import { isLang, LANGUAGES, messagesFor } from "./messages.ts";
 import type { Profile, ReferenceData } from "./types.ts";
 import { connect, currentSession, exportTsv, myProfile, onSessionChange, referenceData, signOut } from "./db.ts";
 import { tsvToCsv } from "./export.ts";
+import { EMPTY_LISTS } from "./grammar.ts";
 import { lexiconFileName } from "./file-names.ts";
 import { canBackup, canPropose, isStaff } from "./permissions.ts";
 import { loadStats, mountSiteBar } from "../../site/bar.ts";
@@ -273,7 +276,7 @@ async function start(): Promise<void> {
       lang,
       session: await currentSession(),
       profile: null,
-      refs: { varieties: [], orthographies: [], languages: [] },
+      refs: { varieties: [], orthographies: [], languages: [], grammar: EMPTY_LISTS },
       pendingNotice: null,
     };
     try {

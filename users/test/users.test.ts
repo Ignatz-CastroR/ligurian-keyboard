@@ -6,6 +6,8 @@
  *           addresses of its views, what each change of a history was,
  *           read from rows the real database writes, the link to the
  *           entry, and the three languages of its texts.
+ * Updated:  2026/10/21, 12:40:15: a review date cleared reads as the
+ *           senses sent back to review, not as a review [migration 0013].
  * Decision: docs/decisions/0035-site-in-five-sections.md
  */
 
@@ -68,6 +70,26 @@ test("on the real database, a person's history reads as what they did, in order,
   assert.deepEqual(verbs.filter((v) => v !== "approve"), ["restore", "soft_delete"]);
   assert.ok(verbs.includes("approve"));
   assert.ok(reviews.every((c) => entryHref(c.lemma_id) === `../admin/#/entry/${lemma}`));
+});
+
+test("a review date set reads as senses reviewed, the same date cleared as senses sent back, on the real database too", async () => {
+  const c = (cleared: string[] | null) => ({ action: "update" as const, status: "approved" as const, changed: ["senses_reviewed_at"], cleared });
+  assert.deepEqual(describeChange(c([])), { verb: "review_senses", fields: [] });
+  assert.deepEqual(describeChange(c(null)), { verb: "review_senses", fields: [] });
+  assert.deepEqual(describeChange(c(["senses_reviewed_at"])), { verb: "unreview_senses", fields: [] });
+
+  const db = await createSeededDatabase();
+  const reviewer = asUser(USERS.reviewer);
+  const lemma: number = (await rowsAs<{ id: number }>(db, "trusted",
+    "insert into lemmas (headword, status) values ('béllo', 'approved') returning id"))[0]?.id ?? -1;
+  await rowsAs(db, reviewer, "update lemmas set senses_reviewed_at = now() where id = $1", [lemma]);
+  await rowsAs(db, reviewer, "update lemmas set senses_reviewed_at = null where id = $1", [lemma]);
+  const history: Change[] = await rowsAs<Change>(db, reviewer, "select * from public.user_history($1)", [USERS.reviewer]);
+  assert.deepEqual(history.map((h) => describeChange(h).verb), ["unreview_senses", "review_senses"]);
+  for (const lang of LANGUAGES) {
+    const verbs = userMessagesFor(lang.code).verbs;
+    assert.notEqual(verbs.unreview_senses, verbs.review_senses, lang.code);
+  }
 });
 
 test("every text exists in the three languages, keeps its placeholder, and Spanish is really translated", () => {

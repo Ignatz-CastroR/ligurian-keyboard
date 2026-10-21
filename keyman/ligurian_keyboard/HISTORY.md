@@ -1,5 +1,9 @@
 # Lìgure, grafîa ofiçiâ: keyboard history
 
+## 0.16.0 2026/10/21
+
+* No change to the keyboard; its version follows the project's.
+
 ## 0.15.0 2026/10/21
 
 * No change to the keyboard; its version follows the project's.

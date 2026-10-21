@@ -20,6 +20,10 @@
  *           0011, decision 0035].
  * Updated:  2026/10/20, 23:49:12: senseReviewQueue[] and regroupSenses[],
  *           the repairs of the senses [migration 0012, decision 0038].
+ * Updated:  2026/10/21, 12:26:04: the grammar's lists among the
+ *           reference data; a new lemma and a new form carry their
+ *           grammar [migration 0013].
+ * Updated:  2026/10/21, 14:29:33: a new form carries its list of readings.
  * Purpose:  Every conversation between the lexicon manager and the
  *           database. Views never call Supabase directly; they call
  *           these functions, so the queries live in one place.
@@ -35,6 +39,7 @@ import { searchKeyFilter } from "./forms.ts";
 import type { BackupSource, RestoreReport, Row } from "./backup.ts";
 import { AppError, sqlStateKind } from "./errors.ts";
 import type { Group, QueueKey, Seen } from "./repair.ts";
+import type { GrammarValue, LemmaGrammar, Reading } from "./grammar.ts";
 import {
   BATCH_SIZE, chunks, mergeResults, type BatchItem, type BatchOutcome, type BatchResult, type ReviewStatus,
 } from "./queue.ts";
@@ -105,20 +110,29 @@ export async function myProfile(userId: string): Promise<Profile | null> {
    ==================================================================== */
 
 export async function referenceData(): Promise<ReferenceData> {
-  const [varieties, orthographies, languages] = await Promise.all([
-    db().from("varieties").select("code, name").order("code"),
-    db().from("orthographies").select("code, name").order("code"),
-    db().from("gloss_languages").select("code, name").order("code"),
-  ]);
-  for (const result of [varieties, orthographies, languages]) {
+  const list = (table: string) => db().from(table).select("code, name, position").order("position");
+  const [varieties, orthographies, languages, genders, numbers, persons, verbForms, conjugations, auxiliaries] =
+    await Promise.all([
+      db().from("varieties").select("code, name").order("code"),
+      db().from("orthographies").select("code, name").order("code"),
+      db().from("gloss_languages").select("code, name").order("code"),
+      list("grammar_genders"), list("grammar_numbers"), list("grammar_persons"),
+      list("verb_forms"), list("conjugation_classes"), list("auxiliaries"),
+    ]);
+  for (const result of [varieties, orthographies, languages, genders, numbers, persons, verbForms, conjugations, auxiliaries]) {
     if (result.error !== null) {
       throw toAppError(result.error);
     }
   }
+  const values = (result: { data: unknown }): GrammarValue[] => (result.data ?? []) as GrammarValue[];
   return {
     varieties: (varieties.data ?? []) as RefItem[],
     orthographies: (orthographies.data ?? []) as RefItem[],
     languages: (languages.data ?? []) as RefItem[],
+    grammar: {
+      genders: values(genders), numbers: values(numbers), persons: values(persons),
+      verbForms: values(verbForms), conjugations: values(conjugations), auxiliaries: values(auxiliaries),
+    },
   };
 }
 
@@ -278,7 +292,7 @@ export async function lemmasWithKey(headword: string): Promise<Lemma[]> {
    and forces contributors' rows to pending.
    ==================================================================== */
 
-export interface NewLemma {
+export interface NewLemma extends LemmaGrammar {
   headword: string;
   variety: string;
   orthography: string;
@@ -299,8 +313,9 @@ export function createLemma(lemma: NewLemma): Promise<number> {
   return insertReturningId("lemmas", { ...lemma });
 }
 
-export function createWordform(lemmaId: number, form: string, tag: string | null, freq: number, status: Status): Promise<number> {
-  return insertReturningId("wordforms", { lemma_id: lemmaId, form, grammatical_tag: tag, freq, status });
+export function createWordform(lemmaId: number, form: string, tag: string | null, freq: number, status: Status,
+  readings: Reading[]): Promise<number> {
+  return insertReturningId("wordforms", { lemma_id: lemmaId, form, grammatical_tag: tag, freq, status, readings });
 }
 
 export function createSense(lemmaId: number, definitionIt: string | null, status: Status): Promise<number> {
@@ -554,6 +569,8 @@ export interface Change {
   status: Status | null;
   lemma_id: number | null;
   changed: string[] | null;
+  // From migration 0013: the changed fields the update set to null.
+  cleared: string[] | null;
 }
 
 export interface ChangeCount {

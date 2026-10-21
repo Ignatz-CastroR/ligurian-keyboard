@@ -10,14 +10,20 @@
  *           senses to review; a change of the review date reads as a
  *           review even when it clears it, since the history's summary
  *           names the fields, not their values.
+ * Updated:  2026/10/21, 12:22:52: a review date cleared reads as the senses sent
+ *           back to review, from the fields user_history[] now names as
+ *           emptied [migration 0013].
+ * Updated:  2026/10/21, 14:29:33: "cleared" described as the fields an update
+ *           set to null, which is what it holds.
  * Purpose:  The Users section's logic, apart from the page: the
  *           addresses of its views, what each change in a person's
  *           history was [an approval reads better as "approved" than as
  *           "edited: status"], and where its entry is. Pure functions,
  *           no DOM, tested in Node.
  * Contract: The changes are the rows of user_history[] of migration
- *           0011: "changed" lists the fields an update changed, without
- *           version and updated_at.
+ *           0013: "changed" lists the fields an update changed, without
+ *           version and updated_at; "cleared" those of them it set to
+ *           null.
  * Decision: docs/decisions/0035-site-in-five-sections.md
  *           docs/decisions/0038-senses-reviewed-one-by-one.md
  */
@@ -61,7 +67,8 @@ export function routeHash(route: Route): string {
 }
 
 export type Verb =
-  "insert" | "update" | "approve" | "reject" | "unreview" | "review_senses" | "list_senses" | "soft_delete" | "restore";
+  | "insert" | "update" | "approve" | "reject" | "unreview" | "review_senses" | "unreview_senses" | "list_senses"
+  | "soft_delete" | "restore";
 
 export interface Described {
   verb: Verb;
@@ -73,12 +80,18 @@ export interface Described {
    nothing else is a review: approved, rejected, or sent back to wait.
    One that changed only senses_reviewed_at, a lemma's column, is a
    review of its senses [migration 0012]. */
-export function describeChange(change: { action: AuditEntry["action"]; status: Status | null; changed: string[] | null }): Described {
+export function describeChange(change: {
+  action: AuditEntry["action"];
+  status: Status | null;
+  changed: string[] | null;
+  cleared?: string[] | null;
+}): Described {
   const fields: string[] = change.changed ?? [];
   let described: Described = { verb: change.action, fields: [] };
   if (change.action === "update") {
     if (fields.length === 1 && fields[0] === "senses_reviewed_at") {
-      described = { verb: "review_senses", fields: [] };
+      const cleared: boolean = (change.cleared ?? []).includes("senses_reviewed_at");
+      described = { verb: cleared ? "unreview_senses" : "review_senses", fields: [] };
     } else if (fields.length === 1 && fields[0] === "senses_review_needed") {
       described = { verb: "list_senses", fields: [] };
     } else if (fields.length === 1 && fields[0] === "status") {

@@ -4,6 +4,9 @@
  * Date:     2026/10/20, 02:00:40, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/20, 23:49:12: "significati rivisti", the review of a
  *           lemma's senses [decision 0038].
+ * Updated:  2026/10/21, 12:22:52: "significati rimessi in attesa", a review
+ *           date cleared [migration 0013]; the verbs one or two to a
+ *           line.
  * Purpose:  The texts of the Users section that the lexicon manager does
  *           not already have, in Italian [default], English and Spanish.
  *           Profiles, roles, statuses and errors keep the manager's own
@@ -52,8 +55,11 @@ const IT = {
   openEntry: "Apri la voce nel gestore del lessico",
   kinds: { lemmas: "lemma", wordforms: "forma", senses: "significato", glosses: "traduzione" } as Record<LexiconTable, string>,
   verbs: {
-    insert: "creato", update: "modificato", approve: "approvato", reject: "rifiutato",
-    unreview: "rimesso in attesa", review_senses: "significati rivisti", list_senses: "messo fra i significati da rivedere", soft_delete: "eliminato", restore: "ripristinato",
+    insert: "creato", update: "modificato",
+    approve: "approvato", reject: "rifiutato",
+    unreview: "rimesso in attesa", review_senses: "significati rivisti",
+    unreview_senses: "significati rimessi in attesa", list_senses: "messo fra i significati da rivedere",
+    soft_delete: "eliminato", restore: "ripristinato",
   } as Record<Verb, string>,
 };
 
@@ -93,8 +99,11 @@ const EN: UserMessages = {
   openEntry: "Open the entry in the lexicon manager",
   kinds: { lemmas: "lemma", wordforms: "form", senses: "sense", glosses: "translation" },
   verbs: {
-    insert: "created", update: "edited", approve: "approved", reject: "rejected",
-    unreview: "sent back to review", review_senses: "senses reviewed", list_senses: "put on the senses to review", soft_delete: "deleted", restore: "restored",
+    insert: "created", update: "edited",
+    approve: "approved", reject: "rejected",
+    unreview: "sent back to review", review_senses: "senses reviewed",
+    unreview_senses: "senses sent back to review", list_senses: "put on the senses to review",
+    soft_delete: "deleted", restore: "restored",
   },
 };
 
@@ -132,8 +141,11 @@ const ES: UserMessages = {
   openEntry: "Abrir la entrada en el gestor del léxico",
   kinds: { lemmas: "lema", wordforms: "forma", senses: "acepción", glosses: "traducción" },
   verbs: {
-    insert: "creado", update: "editado", approve: "aprobado", reject: "rechazado",
-    unreview: "devuelto a revisión", review_senses: "acepciones revisadas", list_senses: "puesto entre las acepciones por revisar", soft_delete: "eliminado", restore: "restaurado",
+    insert: "creado", update: "editado",
+    approve: "aprobado", reject: "rechazado",
+    unreview: "devuelto a revisión", review_senses: "acepciones revisadas",
+    unreview_senses: "acepciones devueltas a revisión", list_senses: "puesto entre las acepciones por revisar",
+    soft_delete: "eliminado", restore: "restaurado",
   },
 };
 

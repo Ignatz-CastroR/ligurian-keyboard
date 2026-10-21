@@ -5,6 +5,7 @@
 * **Decided by:** Eng. José Ignacio Castro de R.
 * **Refines:** [0001](0001-input-method-not-editor.md), on what the project is for; [0002](0002-one-dictionary-database.md), on what the one database serves
 * **Superseded in part by:** [0034](0034-dictionary-for-readers.md), on when the dictionary for readers begins and how its first pages are served
+* **Refined by:** [0039](0039-grammar-in-structured-fields.md), on the controlled vocabulary of grammar, which replaces a controlled `grammatical_tag`
 
 ## Context
 

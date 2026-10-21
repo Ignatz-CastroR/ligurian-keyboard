@@ -14,26 +14,158 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- 0.16.0: grammar for every form, base lemma included, in structured
-  fields chosen by part of speech: gender, number, person, tense and
-  mood, with the conjugation class, the auxiliary and the pronominal
-  mark on a verb's lemma; an "invariable" mark; the fields shown in the
-  form for a new lemma, on the entry page and in the review queue. The
-  same list of values will tag the forms an inflection generator
-  writes. The enrichment format published as a document. Moved before
-  the import, so that the import carries grammar from its first day.
 - 0.17.0: `import_entries()`, a structured import with a dry run and
   authors, in the format of `db/templates/add-entries.sql` with the
   grammar fields, and the enrichment format, keyed by public code and
-  sense, for translations and definitions prepared outside the site;
-  richer entries: etymology, examples, definitions in four languages,
-  usage labels, images uploaded to Supabase; pronunciation in IPA by
-  form and variety.
+  sense, for translations and definitions prepared outside the site
+  [`docs/enrichment-format.md`, a draft until then]; richer entries:
+  etymology, examples, definitions in four languages, usage labels,
+  images uploaded to Supabase; pronunciation in IPA by form and
+  variety.
+- After 0.16.0: the generator of inflections, which reads the grammar
+  fields, tested against paradigms written by native speakers; its own
+  decision record first.
 - 0.18.0: recordings by native speakers, with their consent and a free
   license.
 - Then: hardening, contributor documentation; a beta with native
   speakers in Genoa.
 - 1.0.0: when every criterion in the README's roadmap is met.
+
+## [0.16.0] [2026/10/21] [grammar in fields]
+
+### Added
+- Grammar in structured fields, asked for more than once [decision
+  0039, migration 0013]:
+  - six lists, as tables that everyone reads and only the SQL Editor
+    changes: genders [m, f, mf], numbers [sg, pl], persons [1, 2, 3],
+    verb forms [the twelve simple forms, the past historic among them;
+    compound tenses are never stored], conjugation classes [-â, -ê,
+    -î, -éi] and auxiliaries [avéi, êse]. Another value is one insert.
+  - On lemmas: gender, number, person, verb form, invariable, and for
+    verbs only conjugation class, auxiliary and pronominal, which a
+    check refuses on any other word, a lemma with no part of speech
+    included.
+  - On forms: `readings`, a list of readings, each a gender, number,
+    person and verb form, since one spelling may stand for several
+    [`parla`: present indicative, third person singular, and
+    imperative, second person singular]. One row and one public code
+    per form; the list is reviewed, versioned and kept in the history
+    with it. Every code is checked when written, a malformed list is
+    refused naming the reading and the reason, and a code a reading
+    uses may not leave its list.
+  - The base form's first reading is its lemma's, when the lemma has
+    one, taken when it is created and whenever the lemma's changes; a
+    direct change of it is refused as a conflict, as a page read before
+    the lemma changed would send it. Further readings of the same
+    spelling follow it, added by hand, such as an invariable noun's
+    plural, and stay; when the lemma's new reading is already one of
+    them, the two change places, so that a change and its undo lose
+    nothing.
+  - The part of speech "determiner".
+- The lexicon manager: a group **Grammatica** under the part of speech,
+  in the form for a new lemma and the lemma's edit, its fields
+  following the part of speech as it is chosen; in each form's edit and
+  in the form to add one, **Analisi grammaticali**, one block per
+  reading, added and removed with a button; the base form shows its
+  lemma's reading first, changed in the lemma. A value already stored
+  stays shown whatever the part of speech, so that a save never empties
+  a value nobody saw; a save empties the fields not shown and drops a
+  reading left empty; a lemma that becomes a verb is given the
+  infinitive, and one that stops being a verb loses it. The entry shows
+  each row's grammar in one line, a form's readings separated by ";",
+  the review queue in brackets after each lemma and form. The free tag
+  is named "Nota grammaticale [testo libero]", with no example of
+  grammar in it any more.
+- `db/templates/add-entries.sql` takes the grammar keys on the lemma
+  and `readings` on each form, a form spelled as the headword adding
+  them to the base form; a wrong value is refused with the codes its
+  list holds, each in quotes.
+- `docs/enrichment-format.md`: the format of 0.17.0's import, as a
+  draft, so that scripts can be written against it. Settled: one JSON
+  object per line; new entries, and existing ones named by public code
+  and headword, their senses by number; enrichment adds, never
+  replaces.
+- `user_history()` returns `cleared`, the fields an update set to null.
+
+### Fixed
+- The restore card of the Backups tab read "Seleccionar archivo / Sin
+  archivos seleccionados" whatever the page's language: the browser's
+  own file chooser speaks the browser's language. It is hidden, still
+  reached by the keyboard and by screen readers, which name it by the
+  field's title and the page's button, and a button and a line of the
+  page's own name the file in Italian, English or Spanish.
+- The Users section read a review date cleared as "significati
+  rivisti"; it reads "significati rimessi in attesa", for clearings
+  made before 0.16.0 too [decision 0040].
+- A kept sense that a regrouping renumbered wrote two lines of history,
+  the second from a temporary number. The rule that two live senses of
+  a lemma never share a number is now an exclusion constraint, checked
+  at the end of each statement, where the index checked each row, and
+  inside `regroup_senses()` at its end, so each kept sense moves
+  straight to its final number, with one line of history [decision
+  0040]. One statement that swaps two numbers is now accepted.
+- An element the manager hid still showed when its class displayed
+  it: the review page's batch bar and pager were never hidden. One rule
+  of the stylesheet keeps every hidden element hidden.
+- `db/README.md` sent admins to the people page for backups and roles;
+  they are in the Backups tab and in the Users section since 0.13.0.
+- The README counted 93 database tests, 66 of the manager and 33 of
+  the Android keyboard, left behind by earlier releases; the counts are
+  those of this one.
+
+### Changed
+- `review_queue_page()` carries a lemma's whole grammar with its base
+  form's readings, which are approved with it, and a form's readings;
+  the manager shows a lemma's as "femminile, singolare; anche:
+  femminile, plurale".
+- `restore_backup()` refuses a backup whose base form does not begin
+  with its lemma's reading.
+- Backups carry the six lists and the new columns. A backup made before
+  0.16.0 restores with no grammar. A code the backup holds and the
+  target's list lacks is added after that list's last value, since its
+  place may be taken there by another value. `restore_backup()`
+  refuses a grammar list that is not a list. Both backup functions get
+  their time limit of 60 seconds again.
+- The lexicon manager reads SQLSTATE 23P01 as a duplicate, as it read
+  23505 from the index the constraint replaces.
+- Decisions 0014 and 0032 are refined by 0039, and 0038 by 0040.
+- Version 0.16.0; keyboard version 0.16.0, its keys unchanged.
+
+### Verified
+- Two independent reviews, by reviewers who had not seen the release
+  made. The first found one major point: a form could carry only one
+  reading, so a spelling that stands for several slots [`parla`] could
+  hold only one of them. Readings became a list, as the maintainer
+  chose; its five smaller points and six nits are fixed, one of them,
+  the caller's setting of the sense-number rule, by documenting it.
+  The second,
+  of the readings, found two more: a lemma's change and its undo could
+  lose a reading added by hand to its base form, now kept by the rule
+  the maintainer chose [the two change places]; and a base form's
+  extra readings were approved with their lemma without being shown,
+  now shown on the lemma's row. Its smaller points are fixed but two,
+  documented: a base form full with 32 readings refuses a lemma's first
+  reading, and `cleared` names only the fields an update set to null.
+- In Chromium, on the real pages built against a stand-in for the
+  database: the fields of each part of speech; the infinitive given to
+  a new verb and taken from a lemma that stops being one; a form's
+  readings added, removed and renumbered, each a named group for
+  screen readers; the base form's first reading shown as the lemma's;
+  exactly the grammar shown sent by every save; the review queue's
+  lines. Started in Spanish, the restore card shows none of the
+  browser's words, and its hidden chooser is named in the page's
+  language. The batch bar and pager of the review page, displayed
+  although hidden under 0.15.0's stylesheet, are hidden under this one.
+- Speed at the live dictionary's size [a synthetic dictionary of 28,475
+  lemmas, 42,562 forms and 148,048 lines of history]: migration 0013
+  170 ms; a page of the review queue 20 ms; a regrouping that
+  renumbers every sense 31 to 87 ms; a lemma's grammar with its base
+  form following 8 ms; a form saved with two readings 21 ms.
+- Run migration 0013 before pushing this code; download a backup first.
+
+Tests: 371, passing on Node.js 22 [engine 54, db 130, admin 90,
+editor 24, dictionary 9, users 5, site 4, keyman 34, corpus 16,
+docs 5].
 
 ## [0.15.0] [2026/10/21] [the senses reviewed one by one]
 
@@ -1968,7 +2100,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.3...v0.15.0
 [0.14.3]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.2...v0.14.3
 [0.14.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.1...v0.14.2

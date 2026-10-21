@@ -14,6 +14,9 @@
  * Updated:  2026/10/21, 10:57:43: 40P01, a statement PostgreSQL stopped
  *           because it waited for another that waited for it, is a
  *           conflict too: the page reloads and the person tries again.
+ * Updated:  2026/10/21, 12:34:15: 23P01, two live senses of a lemma with
+ *           one number, is a duplicate, as 23505 was before the rule
+ *           became a constraint [migration 0013].
  * Contract: Every code raised by our migrations has a kind here; any
  *           other code is "generic".
  */
@@ -35,7 +38,7 @@ export function sqlStateKind(code: string): AppErrorKind {
   let kind: AppErrorKind = "generic";
   if (code === "42501") {
     kind = "permission";
-  } else if (code === "23505") {
+  } else if (code === "23505" || code === "23P01") {
     kind = "duplicate";
   } else if (code === "23503") {
     kind = "parent";

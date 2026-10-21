@@ -1,6 +1,6 @@
 # admin: the lexicon manager
 
-A web page where people search the shared Ligurian dictionary, propose words and review proposals; admins also make backups. Profiles, people and roles live in the site's Users section, [users/](../users/README.md), built from this manager's own modules. Plain TypeScript, built with [Vite](https://vite.dev), talking directly to the Supabase database. Design: decisions [0018](../docs/decisions/0018-lexicon-manager-design.md), [0023](../docs/decisions/0023-lexicon-manager-spanish-history-csv.md), [0025](../docs/decisions/0025-csv-semicolon.md), [0030](../docs/decisions/0030-public-identifiers.md), [0031](../docs/decisions/0031-backups.md), [0033](../docs/decisions/0033-batch-review.md), [0035](../docs/decisions/0035-site-in-five-sections.md) and [0038](../docs/decisions/0038-senses-reviewed-one-by-one.md).
+A web page where people search the shared Ligurian dictionary, propose words and review proposals; admins also make backups. Profiles, people and roles live in the site's Users section, [users/](../users/README.md), built from this manager's own modules. Plain TypeScript, built with [Vite](https://vite.dev), talking directly to the Supabase database. Design: decisions [0018](../docs/decisions/0018-lexicon-manager-design.md), [0023](../docs/decisions/0023-lexicon-manager-spanish-history-csv.md), [0025](../docs/decisions/0025-csv-semicolon.md), [0030](../docs/decisions/0030-public-identifiers.md), [0031](../docs/decisions/0031-backups.md), [0033](../docs/decisions/0033-batch-review.md), [0035](../docs/decisions/0035-site-in-five-sections.md), [0038](../docs/decisions/0038-senses-reviewed-one-by-one.md) and [0039](../docs/decisions/0039-grammar-in-structured-fields.md).
 
 The interface is in **Italian**, the default, **English** and **Spanish**; the menu in the header switches between them and the choice is remembered in the browser.
 
@@ -23,14 +23,36 @@ At the top of every page, the site's bar of five sections [`site/`]; below the m
 | Address | Page |
 |---|---|
 | `#/search/<query>` | Search by ASCII key: typing `zena` finds `Zêna`, typing `penne` finds the lemma `pénna` through its form. A public code such as `LIJ-7K3Q9MDXK` finds its lemma, or the lemma of its form. While the field is empty, the 20 approved lemmas added most recently are listed below it |
-| `#/entry/<id>` | One entry: lemma, forms, numbered senses with translations, history; the public code of the lemma and of every form; a link to the same entry in the dictionary for readers when it is published, otherwise the reason it is not [pending, rejected, deleted]. Translations are added one or several at a time: `penna; stilografica` becomes two rows, shown before saving; the language starts unchosen and must be chosen; an edited translation may not hold ";" |
-| `#/new` | Propose a new lemma; lemmas with the same ASCII key are shown while typing, to avoid duplicates |
+| `#/entry/<id>` | One entry: lemma, forms, numbered senses with translations, history; the grammar of the lemma and of each form in one line, edited in fields of their own [see Grammar below]; the public code of the lemma and of every form; a link to the same entry in the dictionary for readers when it is published, otherwise the reason it is not [pending, rejected, deleted]. Translations are added one or several at a time: `penna; stilografica` becomes two rows, shown before saving; the language starts unchosen and must be chosen; an edited translation may not hold ";" |
+| `#/new` | Propose a new lemma, with its grammar; lemmas with the same ASCII key are shown while typing, to avoid duplicates |
 | `#/review` | Everything pending, oldest first, grouped by entry; for staff, batch approval and rejection [see Reviewing below] |
 | `#/senses` | For reviewers and admins: the lemmas whose senses wait to be reviewed, fewest senses first, 50 a page [see Repairing the senses below] |
 | `#/repair/<id>` | For reviewers and admins: the senses of one lemma, regrouped with a key |
 | `#/backups` | For admins: download a backup, restore one into an empty dictionary |
 | `#/signin` | Sign in |
 | `#/users` | Moved in 0.13.0: opens the Users section, `../utenti/` |
+
+## Grammar
+
+Under the part of speech, a group **Grammatica** holds the grammar of a lemma, in the form for a new lemma and in the lemma's edit. A form, in its edit and in the form to add one, has **Analisi grammaticali**: one block per reading, "Analisi 1", "Analisi 2" and so on, each with the fields of a form, **Aggiungi un'analisi** to add one and **Togli** to remove one, since one spelling may stand for several readings [`parla`: present indicative, third person singular, and imperative, second person singular]. A new form starts with one empty reading. Every field is optional. Which fields show follows the part of speech as it is chosen [`src/grammar.ts`]:
+
+| Part of speech | The lemma | Each reading of its forms |
+|---|---|---|
+| noun, proper noun, adjective, numeral | gender, number, invariable | gender, number |
+| article | gender, number | gender, number |
+| pronoun, determiner | person, gender, number | person, gender, number |
+| verb | verb form, conjugation, auxiliary, pronominal | verb form, person, gender, number |
+| adverb, preposition, conjunction, interjection | none | every field of a form |
+| none, other | every field of a form | every field of a form |
+
+* A field that already holds a value, in the lemma or in any reading of the form, stays shown whatever the part of speech, so that a save never empties a value nobody saw; a verb's own three are the exception, since the database accepts them on verbs only.
+* A save sends the fields shown and empties the others: a verb that becomes a noun loses its conjugation, auxiliary and pronominal mark, as the database requires. A reading left with no value is dropped, and one given twice is kept once.
+* A lemma that becomes a verb with no verb form yet is given the infinitive, its lemma's form; one that stops being a verb loses the infinitive.
+* The base form's first reading is its lemma's, when the lemma has one: its edit shows it, "Analisi 1, quella del lemma", and offers no field for it; the database keeps it in step. Further readings of the same spelling are added there by hand, such as the plural reading of an invariable noun; they stay when the lemma's reading changes, and if the lemma's new reading is one of them, the two change places. A page read before the lemma changed is told to reload, as for any conflict.
+* The menus list the values of the database's lists in their order. Gender, number, person and verb form are named in the page's language; conjugation classes and auxiliaries are Ligurian words, shown as written. A value added to a list in the database appears the next time the manager is opened or reloaded, with its Italian name.
+* The entry shows the grammar in one line, such as "femminile, singolare, invariabile", a form's readings separated by ";"; the review queue shows it in brackets after each lemma and form, a lemma's followed by the readings its base form adds, which are approved with it: "femminile, singolare, invariabile; anche: femminile, plurale".
+* Each reading is a group named by its number for screen readers, and its button says which reading it removes.
+* The free text field of a form is now named **Nota grammaticale [testo libero]**, for what the fields do not say [decision [0039](../docs/decisions/0039-grammar-in-structured-fields.md)].
 
 ## Repairing the senses
 
@@ -46,7 +68,7 @@ The page of a lemma, `#/repair/<id>`, lists its translations, each with its curr
 
 What a field shows is what is sent: what was typed, or else the definition of the sense holding exactly its translations. A definition shown in a field that the chosen action would not use stops the action, with a message, so that no definition is lost by a key press: clear the field first, or use **Raggruppa**. A field that disappears, because no translation is left in its group, takes its typed text with it.
 
-Each action is one call to `regroup_senses()` [migration 0012], with the lemma, every sense and every translation at the version the page read. A sense whose translations stay together is kept, with its id and history; the others are recreated, their translations copied and the originals removed, and the numbers never collide. The lemma is marked reviewed, and the next lemma of the queue opens, or the first still waiting, with a summary of what changed; when none waits, the queue says it is finished. If anyone changed the lemma meanwhile, another reviewer's "Lascia così" included, nothing is saved: the page reloads and says so. **Salta** opens the next lemma without saving; a link opens the entry, where a translation's text or language is corrected. A lemma with a sense that has no translation cannot be regrouped until the sense gets a translation in the entry, or an admin removes it; a lemma with no sense left is closed with **Lascia così**. The entry page links to the repair page for reviewers and admins, and says when the senses were last reviewed [decision [0038](../docs/decisions/0038-senses-reviewed-one-by-one.md)].
+Each action is one call to `regroup_senses()` [migration 0012], with the lemma, every sense and every translation at the version the page read. A sense whose translations stay together is kept, with its id and history; the others are recreated, their translations copied and the originals removed, and the numbers never collide; since 0.16.0 a renumbered sense writes one line of history [decision [0040](../docs/decisions/0040-two-limits-of-the-sense-review-lifted.md)]. The lemma is marked reviewed, and the next lemma of the queue opens, or the first still waiting, with a summary of what changed; when none waits, the queue says it is finished. If anyone changed the lemma meanwhile, another reviewer's "Lascia così" included, nothing is saved: the page reloads and says so. **Salta** opens the next lemma without saving; a link opens the entry, where a translation's text or language is corrected. A lemma with a sense that has no translation cannot be regrouped until the sense gets a translation in the entry, or an admin removes it; a lemma with no sense left is closed with **Lascia così**. The entry page links to the repair page for reviewers and admins, and says when the senses were last reviewed [decision [0038](../docs/decisions/0038-senses-reviewed-one-by-one.md)].
 
 ## Reviewing
 
@@ -78,7 +100,7 @@ Every lemma and every form shows its **public code**, such as `LIJ-7K3Q9MDXK`, g
 In the Backups tab, admins find two cards [decision [0031](../docs/decisions/0031-backups.md)]:
 
 * **Download a backup:** the whole dictionary as one JSON file, named by date and time, such as `ligurian-backup-20261018-085840.json`. The page assembles it from many small reads, a thousand rows at most each, showing how many rows it has read, so no single request can meet the database's time limit however large the dictionary grows; at the end it checks that the history did not grow meanwhile, since every change writes a line of it, and starts again otherwise, up to three times, so the file always restores; the file is identical in format to the one `export_backup()` writes in the SQL Editor. It holds every row, pending and deleted ones included, the whole history and every profile [name and role; no email and no password]: keep it private and away from Supabase.
-* **Restore from a backup:** only into a newly created dictionary with no entries and no history; the database refuses anything else. The file is checked before it is sent, and the page reports what was restored. The full procedure is in [db/README.md](../db/README.md).
+* **Restore from a backup:** only into a newly created dictionary with no entries and no history; the database refuses anything else. The file is chosen with the page's own button, **Scegli il file**, and its name is shown in the page's language: the browser's own chooser, which speaks the browser's language, is hidden, though still reached by the keyboard and named for screen readers by the field's title and the button. The file is checked before it is sent, and the page reports what was restored. The full procedure is in [db/README.md](../db/README.md).
 
 The **frequency** of a form is a weight, 1 by default. The daily snapshot adds to it the number of times the Ligurian Wikipedia uses the form [decision [0027](../docs/decisions/0027-real-frequencies.md)], so there is usually no need to change it; raise it only to put a form ahead of what the corpus says. The TSV and CSV downloads show the stored value.
 
@@ -98,6 +120,8 @@ The **frequency** of a form is a weight, 1 by default. The daily snapshot adds t
 | `src/file-names.ts` | Download names stamped with the local date and time, for the TSV, the CSV and backups; pure functions |
 | `src/queue.ts` | The review queue grouped by entry, its labels, the selection and the items of a batch; pure functions |
 | `src/repair.ts` | The repair page's logic: the rows, what was seen, the definition fields, the groups each action sends, the keys; pure functions |
+| `src/grammar.ts` | Grammar: the fields each part of speech shows, what a save sends, a form's readings, the names of the values in three languages, the one line that sums a row up; pure functions |
+| `src/grammar-fields.ts` | The grammar's fields in a form: a lemma's, following the part of speech, and a form's list of readings |
 | `src/errors.ts` | The kinds of failure, and how a PostgreSQL error code becomes one |
 | `src/messages.ts` | Every text, in Italian, English and Spanish; the language menu's entries |
 | `src/ui.ts` | Page building helpers; never `innerHTML` |
@@ -110,10 +134,11 @@ The **frequency** of a form is a weight, 1 by default. The daily snapshot adds t
 | `test/export.test.ts` | The CSV conversion, against RFC 4180 with semicolons, and in a round trip |
 | `test/messages.test.ts` | The three languages: no empty text, no lost placeholder, no untranslated copy; the example code in the search hint is valid |
 | `test/public-id.test.ts` | Public codes: both directions of base 32, the check symbol catching every single wrong character and every swap of neighbours, and the forgiving reading of a typed code |
-| `test/backup.test.ts` | Backup file names, summaries, every reason a wrong file is refused, and a real backup written by the database passing the check |
+| `test/backup.test.ts` | Backup file names, summaries, every reason a wrong file is refused, and a real backup written by the database passing the check; no file chooser of the browser's shown, every one named by the page in its own language |
 | `test/backup-assembly.test.ts` | The backup assembled from small reads equals `export_backup()`'s on a real database, loses no row when the server sends short pages, starts again when the dictionary changes meanwhile and refuses a dictionary that never rests, retries a failed read, and restores exactly |
 | `test/file-names.test.ts` | Download names: padded, digits only, sorting in time order; no fixed name left in the page |
 | `test/queue.test.ts` | Grouping by entry, labels in three languages, ranges, entry and "select all" selection, batch items, failure reasons, and a real queue approved whole by the database |
+| `test/grammar.test.ts` | The fields of each part of speech, every part the manager offers decided, a value held kept in view, what a save sends, a form's readings and a base form's first, the infinitive given to a new verb and taken from a lemma that stops being one, every value of the real database's lists named in three languages, the menus' order, the one line of a row's grammar; 23P01 read as a duplicate |
 | `test/repair.test.ts` | The repair page's logic: rows, what was seen, definition fields that follow their translations, a definition shown that an action would lose, the keys, the queue's rule; then on the real database, the five entries a speaker grouped and definitions kept through a reordering |
 | `vite.config.ts` | Build settings |
 

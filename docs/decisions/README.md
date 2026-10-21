@@ -44,6 +44,8 @@ A decision is never edited away. If it changes, a new record replaces it, and th
 | [0036](0036-built-for-more-than-one-language.md) | Built for more than one language | 2026/10/20 | accepted |
 | [0037](0037-lowercase-first-and-ligurian-names.md) | The Android keyboard: lowercase first, Ligurian names, Keyman 19 | 2026/10/20 | accepted |
 | [0038](0038-senses-reviewed-one-by-one.md) | The senses reviewed one by one | 2026/10/20 | accepted |
+| [0039](0039-grammar-in-structured-fields.md) | Grammar in structured fields | 2026/10/21 | accepted |
+| [0040](0040-two-limits-of-the-sense-review-lifted.md) | Two limits of the sense review lifted | 2026/10/21 | accepted |
 
 ## Still open
 

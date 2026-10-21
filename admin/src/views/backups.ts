@@ -7,6 +7,12 @@
  *           an empty dictionary [decision 0031]. Moved here from the
  *           users page, which became the site's own Users section
  *           [decision 0035]; the two cards are unchanged.
+ * Updated:  2026/10/21, 12:16:57: the file to restore is chosen with a
+ *           button and a file name drawn by the page, in its language;
+ *           the browser's own file chooser, which the browser labels in
+ *           its own language, is hidden but still reached by Tab.
+ * Updated:  2026/10/21, 14:29:33: the hidden chooser is named for screen
+ *           readers by the field's title and the button.
  * Contract: The database checks the role and the emptiness again. The
  *           backup is assembled from small reads, with its progress
  *           shown, and started again when the dictionary changes
@@ -21,10 +27,10 @@ import { backupSource, restoreBackup } from "../db.ts";
 import { AppError } from "../errors.ts";
 import { canBackup } from "../permissions.ts";
 import {
-  BackupBusyError, assembleBackup, backupFileName, checkBackupText, countsSummary,
+  BackupBusyError, assembleBackup, backupFileName, checkBackupText, chosenFileText, countsSummary,
   type BackupCheck, type CountLabels, type RestoreReport, type Row,
 } from "../backup.ts";
-import { downloadText, field, h, runAction, showError, showInfo } from "../ui.ts";
+import { downloadText, h, runAction, showError, showInfo } from "../ui.ts";
 
 export async function renderBackups(ctx: Context, root: HTMLElement): Promise<void> {
   if (canBackup(ctx.role)) {
@@ -71,7 +77,19 @@ function backupCard(ctx: Context): HTMLElement {
 // Rebuild an empty dictionary from a backup file.
 function restoreCard(ctx: Context): HTMLElement {
   const { t } = ctx;
-  const file: HTMLInputElement = h("input", { type: "file", accept: ".json,application/json" });
+  /* The browser labels its own file chooser in the browser's language,
+     whatever the page's; it stays in the page, hidden but focusable, and
+     a label of the page's own, in the page's language, opens it. A
+     screen reader names it by the field's title and that label. */
+  const file: HTMLInputElement = h("input", {
+    type: "file", accept: ".json,application/json", id: "restore-file", class: "visually-hidden",
+    "aria-labelledby": "restore-file-title restore-file-choose",
+  });
+  const choose: HTMLLabelElement = h("label", { for: "restore-file", id: "restore-file-choose", class: "file-button" }, t.restoreChoose);
+  const chosen: HTMLElement = h("span", { class: "muted", "aria-live": "polite" }, chosenFileText(t, null));
+  file.addEventListener("change", () => {
+    chosen.textContent = chosenFileText(t, file.files?.[0]?.name ?? null);
+  });
   const button: HTMLButtonElement = h("button", { type: "button", class: "danger" }, t.restoreButton);
   const reasons: Record<Exclude<BackupCheck, { ok: true }>["reason"], string> = {
     json: t.restoreBadJson, format: t.restoreBadFormat, version: t.restoreBadVersion, tables: t.restoreBadTables,
@@ -109,6 +127,8 @@ function restoreCard(ctx: Context): HTMLElement {
 
   return h("section", { class: "card" },
     h("h2", {}, t.restoreTitle), h("p", { class: "muted" }, t.restoreIntro),
-    field(t.restoreFile, file),
+    h("div", { class: "field" },
+      h("span", { id: "restore-file-title" }, t.restoreFile),
+      h("div", { class: "file-choice" }, file, choose, chosen)),
     h("div", { class: "buttons" }, button));
 }

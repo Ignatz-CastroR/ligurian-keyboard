@@ -6,13 +6,19 @@
  *           counts, and the check that refuses a wrong file before it
  *           reaches the database. A real backup written by the
  *           database must pass it.
+ * Updated:  2026/10/21, 12:16:57: the restore card names the chosen file
+ *           in the page's language; no file chooser of the browser's is
+ *           shown.
+ * Updated:  2026/10/21, 14:29:33: the hidden chooser named by the page's own
+ *           words for screen readers.
  * Decision: docs/decisions/0031-backups.md
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { USERS, asUser, createSeededDatabase, rowsAs } from "../../db/test/harness.ts";
-import { BACKUP_TABLES, backupFileName, checkBackupText, countsSummary } from "../src/backup.ts";
+import { readdirSync, readFileSync } from "node:fs";
+import { BACKUP_TABLES, backupFileName, checkBackupText, chosenFileText, countsSummary } from "../src/backup.ts";
 import { messagesFor } from "../src/messages.ts";
 
 const it = messagesFor("it");
@@ -70,5 +76,30 @@ test("a backup written by the database passes, with its counts", async () => {
     assert.equal(check.summary.counts["wordforms"], 1);
     assert.equal(check.summary.counts["profiles"], 5);
     assert.equal(check.summary.counts["audit_log"], 2);
+  }
+});
+
+/* The browser labels its own file chooser in the browser's language,
+   whatever the page's: on a computer set to Spanish, the restore card
+   read "Seleccionar archivo" under an English or Italian page. Every
+   file chooser of the manager is therefore hidden, and a label of the
+   page's own, in the page's language, stands in for it. */
+test("no file chooser is shown in the browser's language: the page names the file in its own", () => {
+  for (const lang of ["it", "en", "es"] as const) {
+    const t = messagesFor(lang);
+    assert.equal(chosenFileText(t, null), t.restoreNoneChosen);
+    assert.equal(chosenFileText(t, ""), t.restoreNoneChosen);
+    assert.equal(chosenFileText(t, "ligurian-backup-20261021-121657.json"), "ligurian-backup-20261021-121657.json");
+  }
+  assert.deepEqual([messagesFor("it").restoreChoose, messagesFor("en").restoreChoose, messagesFor("es").restoreChoose],
+    ["Scegli il file", "Choose file", "Elegir archivo"]);
+  const dir: URL = new URL("../src/views/", import.meta.url);
+  const sources: string[] = readdirSync(dir).filter((f) => f.endsWith(".ts")).map((f) => readFileSync(new URL(f, dir), "utf8"));
+  const fileInputs: string[] = sources.flatMap((text) => [...text.matchAll(/h\("input", \{[^}]*type: "file"[^}]*\}/gu)].map((m) => m[0]));
+  assert.ok(fileInputs.length > 0, "the scan finds the restore card's chooser");
+  for (const input of fileInputs) {
+    assert.match(input, /class: "visually-hidden"/u, input);
+    assert.match(input, /id: "/u, "a label of the page's own reaches it by id");
+    assert.match(input, /"aria-labelledby": "/u, "a screen reader names it by the page's own words");
   }
 });

@@ -21,11 +21,18 @@
  *           translations added at once, separated by ";", each its own
  *           row, and a language always chosen, never assumed; an edited
  *           translation may not hold ";" [decision 0035].
-
  * Updated:  2026/10/20, 23:49:12: "[senza definizione]" instead of a dash
  *           for a sense with no definition; for reviewers and admins, a
  *           link to the repair page of the senses, and when they were
- *           last reviewed [decision 0038]. */
+ *           last reviewed [decision 0038].
+ * Updated:  2026/10/21, 12:34:15: the grammar of the lemma and of each
+ *           form, shown in one line and edited in fields of their own
+ *           that follow the part of speech; the base form's is the
+ *           lemma's, changed in the lemma [decision 0039].
+ * Updated:  2026/10/21, 14:29:33: a form's grammar is a list of readings,
+ *           edited one block each; the base form's first is the lemma's,
+ *           the others its own; no example of grammar in the free note.
+ */
 
 import type { Context } from "../context.ts";
 import type { AuditEntry, Entry, Gloss, LexiconTable, Profile, Sense, Status, Tracked, Wordform } from "../types.ts";
@@ -38,6 +45,10 @@ import {
   canAddChild, canChangeStatus, canDeleteRow, canEdit, isStaff,
 } from "../permissions.ts";
 import { dictionaryLink } from "../links.ts";
+import {
+  grammarSummary, lemmaReading, readingsOf, readingsSummary, splitBaseReadings, type GrammarRow, type Reading,
+} from "../grammar.ts";
+import { lemmaGrammarEditor, readingsEditor, type LemmaGrammarEditor, type ReadingsEditor } from "../grammar-fields.ts";
 import {
   MAX_TRANSLATION_LENGTH, changedFields, checkForm, checkFreq, cleanOptionalText, formatDateTime, shortId, splitTranslations,
 } from "../forms.ts";
@@ -166,6 +177,11 @@ function formRow(...children: (HTMLElement | null | false)[]): HTMLElement {
   return h("div", { class: "edit-form" }, ...children);
 }
 
+// A row's grammar in one line, in the interface's language; "" if none.
+function grammarOf(ctx: Context, row: GrammarRow): string {
+  return grammarSummary(ctx.lang, ctx.t, ctx.refs.grammar, row);
+}
+
 /* ====================================================================
    The lemma
    ==================================================================== */
@@ -188,6 +204,7 @@ function lemmaSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
   const section: HTMLElement = h("section", { class: "card" });
 
   const show = (): void => {
+    const grammar: string = grammarOf(ctx, lemma);
     replaceAll(section,
       h("div", { class: "entry-head" },
         h("h2", { class: "headword big" }, lemma.headword),
@@ -197,6 +214,7 @@ function lemmaSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
       h("p", { class: "muted" },
         `${posLabel(t, lemma.part_of_speech)} · ${lemma.variety} · ${lemma.orthography} · ${t.entryVersion(lemma.version)} · `,
         h("span", { class: "mono", title: t.publicIdNote }, `${t.fieldPublicId} ${lemma.public_id}`)),
+      grammar !== "" && h("p", { class: "grammar-line" }, h("span", { class: "muted" }, `${t.grammarTitle}: `), grammar),
       inDictionary(ctx, lemma),
       lemma.note !== null && h("p", { class: "note" }, lemma.note),
     );
@@ -208,6 +226,8 @@ function lemmaSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
       [{ value: "", label: t.posNone }, ...PARTS_OF_SPEECH.map((p) => ({ value: p, label: posLabel(t, p) }))],
       lemma.part_of_speech ?? "",
     );
+    const grammar: LemmaGrammarEditor = lemmaGrammarEditor(ctx, lemma, lemma.part_of_speech);
+    pos.addEventListener("change", () => grammar.setPos(pos.value === "" ? null : pos.value));
     const variety: HTMLSelectElement = select(refItems(ctx.refs.varieties), lemma.variety);
     const orthography: HTMLSelectElement = select(refItems(ctx.refs.orthographies), lemma.orthography);
     const note: HTMLTextAreaElement = h("textarea", { rows: 3 });
@@ -223,7 +243,8 @@ function lemmaSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
 
     const form: HTMLFormElement = h("form", { class: "edit-form" },
       field(t.fieldHeadword, headword), letterPalette(t, headword),
-      field(t.fieldPos, pos), field(t.fieldVariety, variety), field(t.fieldOrthography, orthography),
+      field(t.fieldPos, pos), grammar.element,
+      field(t.fieldVariety, variety), field(t.fieldOrthography, orthography),
       warning.element,
       field(t.fieldNote, note),
       h("div", { class: "buttons" }, saveButton, h("button", { type: "button", onclick: show }, t.cancel)),
@@ -239,6 +260,7 @@ function lemmaSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
           variety: variety.value,
           orthography: orthography.value,
           note: newNote.value,
+          ...grammar.value(),
         }), reload);
       }
     });
@@ -259,7 +281,7 @@ function formsSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
   const { t } = ctx;
   const list: HTMLElement = h("ul", { class: "item-list" });
   for (const wordform of entry.wordforms) {
-    list.append(wordformItem(ctx, wordform, entry.lemma.orthography, reload));
+    list.append(wordformItem(ctx, wordform, entry.lemma, reload));
   }
 
   return h("section", { class: "card" },
@@ -269,14 +291,20 @@ function formsSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
   );
 }
 
-function wordformItem(ctx: Context, wordform: Wordform, orthography: string, reload: Reload): HTMLElement {
+// The lemma's spelling system and part of speech decide the warnings and
+// the readings' fields; its own reading is its base form's first.
+function wordformItem(ctx: Context, wordform: Wordform, lemma: Entry["lemma"], reload: Reload): HTMLElement {
   const { t } = ctx;
   const item: HTMLElement = h("li", {});
+  const orthography: string = lemma.orthography;
+  const readings: Reading[] = readingsOf(wordform.readings);
 
   const show = (): void => {
+    const grammar: string = readingsSummary(ctx.lang, t, ctx.refs.grammar, readings);
     replaceAll(item,
       h("span", { class: "headword" }, wordform.form),
       wordform.is_base && h("span", { class: "tag", title: t.entryBaseNote }, t.entryBase),
+      grammar !== "" && h("span", {}, ` ${grammar}`),
       wordform.grammatical_tag !== null && h("span", { class: "muted" }, ` ${wordform.grammatical_tag}`),
       h("span", { class: "muted" }, ` · ${t.fieldFreq.toLowerCase()} ${wordform.freq} · `),
       h("span", { class: "muted mono", title: t.publicIdNote }, `${wordform.public_id} `),
@@ -292,9 +320,15 @@ function wordformItem(ctx: Context, wordform: Wordform, orthography: string, rel
     const saveButton: HTMLButtonElement = h("button", { type: "submit", class: "primary" }, t.save);
     const warning = formWarning(t);
     form.addEventListener("input", () => warning.update([form.value], orthography));
+    // A base form's first reading is its lemma's, kept in step by the
+    // database; its other readings are edited here, as any form's are.
+    const head: Reading | null = wordform.is_base ? lemmaReading(lemma) : null;
+    const grammar: ReadingsEditor = readingsEditor(ctx, wordform.is_base ? splitBaseReadings(readings, head) : readings,
+      lemma.part_of_speech, head, wordform.is_base);
     const editor: HTMLFormElement = h("form", { class: "edit-form" },
       field(t.fieldForm, form), !wordform.is_base && letterPalette(t, form), !wordform.is_base && warning.element,
       wordform.is_base && h("p", { class: "muted" }, t.entryBaseNote),
+      grammar.element,
       field(t.fieldTag, tag), field(t.fieldFreq, freq),
       h("div", { class: "buttons" }, saveButton, h("button", { type: "button", onclick: show }, t.cancel)),
     );
@@ -306,7 +340,7 @@ function wordformItem(ctx: Context, wordform: Wordform, orthography: string, rel
       if (newFreq === null) {
         showError(t.errFreq);
       } else if (newForm !== null && newTag.ok && (wordform.is_base || confirmForms(t, [newForm], orthography))) {
-        const patch: Record<string, unknown> = { grammatical_tag: newTag.value, freq: newFreq };
+        const patch: Record<string, unknown> = { grammatical_tag: newTag.value, freq: newFreq, readings: grammar.value() };
         if (!wordform.is_base) {
           patch["form"] = newForm;
         }
@@ -323,16 +357,20 @@ function wordformItem(ctx: Context, wordform: Wordform, orthography: string, rel
 function addWordformForm(ctx: Context, entry: Entry, reload: Reload): HTMLElement {
   const { t } = ctx;
   const form: HTMLInputElement = h("input", { type: "text", spellcheck: "false" });
-  const tag: HTMLInputElement = h("input", { type: "text", maxlength: 40, placeholder: "pl., f. sg., 3 sg. pres." });
+  // No example: the grammar has fields of its own now, and the note is
+  // for what they do not say.
+  const tag: HTMLInputElement = h("input", { type: "text", maxlength: 40 });
   const freq: HTMLInputElement = h("input", { type: "number", min: 0, step: 1, value: 1 });
   const approveNow: HTMLInputElement | null = approveNowBox(ctx);
   const addButton: HTMLButtonElement = h("button", { type: "submit" }, t.add);
   const warning = formWarning(t);
   form.addEventListener("input", () => warning.update([form.value], entry.lemma.orthography));
+  const grammar: ReadingsEditor = readingsEditor(ctx, [], entry.lemma.part_of_speech);
 
   const editor: HTMLFormElement = h("form", { class: "edit-form add-form" },
     h("h4", {}, t.entryAddForm),
     field(t.fieldForm, form), letterPalette(t, form), warning.element,
+    grammar.element,
     field(t.fieldTag, tag), field(t.fieldFreq, freq),
     approveNow !== null && h("label", { class: "check" }, approveNow, t.approveNow),
     h("div", { class: "buttons" }, addButton),
@@ -346,7 +384,7 @@ function addWordformForm(ctx: Context, entry: Entry, reload: Reload): HTMLElemen
       showError(t.errFreq);
     } else if (newForm !== null && newTag.ok && confirmForms(t, [newForm], entry.lemma.orthography)) {
       void changeAndReload(ctx, addButton, async () => {
-        await createWordform(entry.lemma.id, newForm, newTag.value, newFreq, statusFrom(approveNow));
+        await createWordform(entry.lemma.id, newForm, newTag.value, newFreq, statusFrom(approveNow), grammar.value());
       }, reload);
     }
   });

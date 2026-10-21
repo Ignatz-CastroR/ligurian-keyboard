@@ -2,15 +2,18 @@
  * sense-repairs.test.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/20, 23:49:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
- * Updated:  2026/10/21, 10:57:43: a piece repeated across translations
- *           counted once in both runs of the split; every kind of space
- *           trimmed.
  * Updated:  2026/10/21, 09:30:23: the list of lemmas frozen when 0012
  *           runs; the lemma's own version in what was seen; a change made
  *           meanwhile always a conflict; the best reviewed duplicate kept;
  *           temporary numbers above every number in use; a lemma with no
  *           sense left; the split of a lemma on the list; one test for
  *           each rule an independent review found untested.
+ * Updated:  2026/10/21, 10:57:43: a piece repeated across translations
+ *           counted once in both runs of the split; every kind of space
+ *           trimmed.
+ * Updated:  2026/10/21, 13:34:21: no temporary number since migration
+ *           0013, whose own tests prove one line of history per
+ *           renumbered sense; the words of two tests follow.
  * Purpose:  Prove migration 0012: the five entries a speaker grouped by
  *           hand come out exactly as he grouped them; the list holds the
  *           lemmas split when the migration ran, and no later edit adds
@@ -281,7 +284,7 @@ test("the five entries a speaker grouped by hand come out exactly as he grouped 
   }
   assert.deepEqual(await queue(db, reviewer), [], "the queue is empty");
 
-  // Every lemma counts 1, 2, 3, with no temporary number left.
+  // Every lemma counts 1, 2, 3, without a gap.
   await actAs(db, "trusted");
   const numbers = (await db.query<{ lemma_id: number; numbers: number[] }>(
     `select lemma_id, array_agg(sense_number order by sense_number) as numbers
@@ -627,7 +630,7 @@ test("duplicates are merged into the best reviewed copy; a new sense is approved
     { gloss: "stecchino", status: "approved" }, { gloss: "stecco", status: "approved" }]);
 });
 
-test("senses numbered above 100, even where temporary numbers once went, are renumbered without collision", async () => {
+test("senses numbered above 100 are renumbered without collision", async () => {
   const db = await createSeededDatabase();
   const entry = await loaded(db, "béllo", ["bello", "carino", "grazioso"]);
   await markSplit(db);

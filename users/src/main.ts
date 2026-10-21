@@ -2,6 +2,8 @@
  * main.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/20, 02:10:30, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/21, 12:29:53: the grammar's lists, empty: the Users
+ *           pages show no grammar [decision 0039].
  * Purpose:  The Users section of the site, published under /utenti/:
  *           each person's profile, the people of the dictionary with
  *           their changes, and each person's complete history. Built
@@ -23,6 +25,7 @@ import type { Session } from "@supabase/supabase-js";
 import type { Context } from "../../admin/src/context.ts";
 import { LANGUAGES, isLang, messagesFor, type Lang } from "../../admin/src/messages.ts";
 import type { Profile } from "../../admin/src/types.ts";
+import { EMPTY_LISTS } from "../../admin/src/grammar.ts";
 import { connect, currentSession, myProfile, onSessionChange, signOut } from "../../admin/src/db.ts";
 import { attachMessageBar, clear, describeError, h, hideMessage, roleLabel, showError, showInfo } from "../../admin/src/ui.ts";
 import { renderSignIn } from "../../admin/src/views/sign-in.ts";
@@ -73,7 +76,7 @@ function makeContext(state: State): Context {
     userId,
     role: userId === null ? null : state.profile?.role ?? null,
     profile: state.profile,
-    refs: { varieties: [], orthographies: [], languages: [] },
+    refs: { varieties: [], orthographies: [], languages: [], grammar: EMPTY_LISTS },
     navigate: (hash: string, notice?: string): void => {
       state.pendingNotice = notice ?? null;
       if (window.location.hash === hash) {

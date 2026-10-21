@@ -15,6 +15,12 @@
  *           the position and totals the database counts with each page
  *           [review_queue_page[], migration 0010]; the whole queue at
  *           once no longer opened after a load of thousands of entries.
+ * Updated:  2026/10/21, 12:34:15: the grammar of each lemma and form, in
+ *           brackets after it, so that a reviewer sees what is approved
+ *           [decision 0039].
+ * Updated:  2026/10/21, 14:29:33: a form's readings; a lemma's line adds the
+ *           readings its base form holds beyond its own, approved with
+ *           it.
  * Purpose:  The review queue: everything pending, oldest first, grouped
  *           by entry. Reviewers and admins approve or reject from here;
  *           contributors see their own proposals still waiting.
@@ -36,6 +42,7 @@ import {
   type BatchOutcome, type BatchResult, type QueueGroup, type ReviewStatus, type Selection,
 } from "../queue.ts";
 import { appendAll, clear, describeError, h, hideMessage, runAction, showError, showInfo, statusLabel } from "../ui.ts";
+import { lemmaQueueSummary, readingsOf, readingsSummary } from "../grammar.ts";
 
 // Entries a page of the queue shows.
 export const QUEUE_PAGE: number = 50;
@@ -315,13 +322,17 @@ export async function renderReview(ctx: Context, root: HTMLElement): Promise<voi
         for (const item of items) {
           const author: string = item.created_by === null ? "SQL" : (page.names.get(item.created_by) || shortId(item.created_by));
           const context: string = itemContext(t, item);
+          const grammar: string = item.kind === "wordform"
+            ? readingsSummary(ctx.lang, t, ctx.refs.grammar, readingsOf(item.readings))
+            : lemmaQueueSummary(ctx.lang, t, ctx.refs.grammar, item);
           const flagged: boolean = page.flagged.has(itemKey(item));
           section.append(h("tr", { class: `kind-row-${item.kind}${flagged ? " flagged" : ""}` },
             staff && rowBox(item),
             h("td", {}, h("span", { class: `tag kind-${item.kind}` }, kindLabels[item.kind])),
             h("td", {},
               h("a", { href: `#/entry/${item.lemma_id}`, class: item.kind === "lemma" ? "headword" : "" }, label(item)),
-              context !== "" && h("span", { class: "muted" }, ` ${context}`)),
+              context !== "" && h("span", { class: "muted" }, ` ${context}`),
+              grammar !== "" && h("span", { class: "muted" }, ` [${grammar}]`)),
             h("td", { class: "muted" }, staff ? author : ""),
             h("td", { class: "muted nowrap" }, formatDateTime(item.created_at)),
             h("td", { class: "nowrap" }, staff && actionButtons(() => [item], t.approve, t.reject)),

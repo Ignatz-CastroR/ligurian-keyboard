@@ -7,6 +7,8 @@
  *           downloadText[], moved here from main.ts.
  * Updated:  2026/10/18, 16:24:30: the message for a statement stopped
  *           at the database's time limit.
+ * Updated:  2026/10/21, 12:26:04: the part of speech "determiner"
+ *           [decision 0039].
  * Purpose:  Small helpers to build the page without a framework.
  * Contract: Text is always inserted with textContent, never innerHTML,
  *           so a word or a note typed by anyone can never inject markup
@@ -156,7 +158,7 @@ export function roleLabel(t: Messages, role: Role): string {
 export function posLabel(t: Messages, pos: string | null): string {
   const labels: Record<string, string> = {
     noun: t.posNoun, verb: t.posVerb, adjective: t.posAdjective, adverb: t.posAdverb,
-    pronoun: t.posPronoun, article: t.posArticle, preposition: t.posPreposition,
+    pronoun: t.posPronoun, determiner: t.posDeterminer, article: t.posArticle, preposition: t.posPreposition,
     conjunction: t.posConjunction, interjection: t.posInterjection, numeral: t.posNumeral,
     proper_noun: t.posProperNoun, other: t.posOther,
   };

@@ -2,12 +2,14 @@
  * repair.test.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/20, 23:49:12, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
- * Updated:  2026/10/21, 10:57:43: key 1 sends the definition field 1
- *           shows; a definition shown elsewhere stops it.
  * Updated:  2026/10/21, 09:30:23: definitions that follow their
  *           translations, through a reordering too; a typed definition an
  *           action would not use; the lemma's version in what was seen;
  *           the list of migration 0012 as the queue's rule.
+ * Updated:  2026/10/21, 10:57:43: key 1 sends the definition field 1
+ *           shows; a definition shown elsewhere stops it.
+ * Updated:  2026/10/21, 12:29:53: test lemmas carry the grammar of migration
+ *           0013, empty.
  * Purpose:  Tests of admin/src/repair.ts, the logic of the repair page:
  *           the rows it shows, what it says it saw, its definition
  *           fields, the groups each of its three actions sends, its keys,
@@ -31,6 +33,7 @@ import {
   planFor, queueKey, repairRows, seenOf, tooLongDefinition, type Group,
 } from "../src/repair.ts";
 import type { Entry, Gloss, Lemma, Sense } from "../src/types.ts";
+import { NO_LEMMA_GRAMMAR } from "../src/grammar.ts";
 import { describeChange } from "../../users/src/model.ts";
 
 const reviewer = asUser(USERS.reviewer);
@@ -42,7 +45,7 @@ function lemma(fields: Partial<Lemma> = {}): Lemma {
   return {
     id: nextId++, public_id: "LIJ-0000000000", headword: "béllo", headword_key: "bello", variety: "zeneize",
     orthography: "ofiçiâ", part_of_speech: null, note: null, senses_review_needed: true, senses_reviewed_at: null,
-    status: "approved", version: 1, deleted_at: null, ...stamp, ...fields,
+    status: "approved", version: 1, deleted_at: null, ...NO_LEMMA_GRAMMAR, ...stamp, ...fields,
   };
 }
 

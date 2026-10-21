@@ -16,6 +16,11 @@
  * Updated:  2026/10/18, 16:48:20: assembleBackup[] builds the same file
  *           from many small reads, so that no single statement can meet
  *           the database's time limit, however large the dictionary.
+ * Updated:  2026/10/21, 12:16:57: chosenFileText[], the file name
+ *           the restore card shows beside its own file button.
+ * Updated:  2026/10/21, 12:22:52: the grammar's six lists in every
+ *           backup [migration 0013]; a file made before them is still
+ *           accepted.
  * Decision: docs/decisions/0031-backups.md
  */
 
@@ -27,6 +32,18 @@ export const BACKUP_FORMAT_VERSION: number = 1;
 // The tables a backup must hold, in the order a restore loads them.
 export const BACKUP_TABLES: readonly string[] = [
   "varieties", "orthographies", "gloss_languages", "profiles",
+  "lemmas", "wordforms", "senses", "glosses", "audit_log",
+];
+
+/* The grammar's lists [migration 0013], written in every backup since
+   0.16.0; a file made before has none, and still restores. */
+export const GRAMMAR_TABLES: readonly string[] = [
+  "grammar_genders", "grammar_numbers", "grammar_persons", "verb_forms", "conjugation_classes", "auxiliaries",
+];
+
+// Every table a backup writes, in the order of its file.
+export const WRITTEN_TABLES: readonly string[] = [
+  "varieties", "orthographies", "gloss_languages", ...GRAMMAR_TABLES, "profiles",
   "lemmas", "wordforms", "senses", "glosses", "audit_log",
 ];
 
@@ -54,6 +71,12 @@ export interface RestoreReport {
   restored: Record<string, number>;
   profiles_skipped: number;
   authors_unknown: number;
+}
+
+// The text beside the restore card's own file button: the name of the
+// file chosen, or that none is.
+export function chosenFileText(t: { restoreNoneChosen: string }, name: string | null): string {
+  return name === null || name === "" ? t.restoreNoneChosen : name;
 }
 
 /* "12 lemmi · 1 forma · 4 significati · 8 traduzioni · 120 righe di
@@ -98,11 +121,14 @@ export function checkBackupText(text: string): BackupCheck {
   } else {
     const tables: unknown = parsed["tables"];
     const complete: boolean = isRecord(tables)
-      && BACKUP_TABLES.every((name) => Array.isArray(tables[name]));
+      && BACKUP_TABLES.every((name) => Array.isArray(tables[name]))
+      && GRAMMAR_TABLES.every((name) => tables[name] === undefined || Array.isArray(tables[name]));
     if (complete && isRecord(tables)) {
       const counts: Record<string, number> = {};
-      for (const name of BACKUP_TABLES) {
-        counts[name] = (tables[name] as unknown[]).length;
+      for (const name of WRITTEN_TABLES) {
+        if (Array.isArray(tables[name])) {
+          counts[name] = (tables[name] as unknown[]).length;
+        }
       }
       result = {
         ok: true,
@@ -160,6 +186,7 @@ const SMALL_TABLES: readonly [string, readonly string[]][] = [
   ["varieties", ["code"]],
   ["orthographies", ["code"]],
   ["gloss_languages", ["code"]],
+  ...GRAMMAR_TABLES.map((name): [string, readonly string[]] => [name, ["code"]]),
   ["profiles", ["created_at", "user_id"]],
 ];
 
@@ -229,7 +256,7 @@ async function assembleOnce(source: BackupSource, now: Date, onProgress: (rows: 
   }
 
   const counts: Record<string, number> = {};
-  for (const name of BACKUP_TABLES) {
+  for (const name of WRITTEN_TABLES) {
     counts[name] = (tables[name] ?? []).length;
   }
   return {

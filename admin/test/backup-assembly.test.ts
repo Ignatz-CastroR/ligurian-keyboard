@@ -10,6 +10,8 @@
  *           no row; a change while the backup runs makes it start
  *           again, so the file always restores; a dictionary that never
  *           rests is refused; a failed read is tried again.
+ * Updated:  2026/10/21, 12:57:30: the tables written include the six
+ *           grammar lists of migration 0013 [WRITTEN_TABLES].
  * Method:   The source reads as an admin, as the page does; rows come
  *           back as to_jsonb[], the same JSON the API sends.
  * Decision: docs/decisions/0031-backups.md
@@ -20,7 +22,7 @@ import assert from "node:assert/strict";
 import type { PGlite } from "@electric-sql/pglite";
 import { USERS, asUser, createSeededDatabase, rowsAs } from "../../db/test/harness.ts";
 import {
-  ATTEMPTS, BACKUP_TABLES, BOUND_ORDER, BackupBusyError, PAGE_SIZE, READ_TRIES, assembleBackup, checkBackupText,
+  ATTEMPTS, BOUND_ORDER, WRITTEN_TABLES, BackupBusyError, PAGE_SIZE, READ_TRIES, assembleBackup, checkBackupText,
   type BackupSource, type Row,
 } from "../src/backup.ts";
 
@@ -99,7 +101,7 @@ test("the assembled backup holds exactly the tables export_backup writes, and pa
   const reference: Backup = await exported(db);
   assert.deepEqual(assembled.tables, reference.tables);
   assert.deepEqual(assembled.counts, reference.counts);
-  assert.deepEqual(Object.keys(assembled.tables), [...BACKUP_TABLES]);
+  assert.deepEqual(Object.keys(assembled.tables), [...WRITTEN_TABLES]);
   assert.deepEqual([assembled.format, assembled.format_version], [reference.format, reference.format_version]);
   assert.ok(checkBackupText(JSON.stringify(assembled, null, 1)).ok);
   assert.deepEqual([...progress].sort((a, b) => a - b), progress, "progress only grows");

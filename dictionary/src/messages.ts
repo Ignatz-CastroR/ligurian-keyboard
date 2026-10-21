@@ -8,6 +8,8 @@
  * Updated:  2026/10/20, 04:14:30: the subtitle names each language in
  *           itself, Ligurian as "lìgure", the same in every interface
  *           language.
+ * Updated:  2026/10/21, 12:26:04: the part of speech "determiner"
+ *           [decision 0039].
  * Purpose:  Every text of the dictionary for readers, in Italian
  *           [default], English and Spanish: the same three languages,
  *           and the same stored choice, as the editor and the lexicon
@@ -203,7 +205,7 @@ export function partOfSpeech(lang: Lang, pos: string | null): string {
   const m = managerMessages(lang);
   const labels: Record<string, string> = {
     noun: m.posNoun, verb: m.posVerb, adjective: m.posAdjective, adverb: m.posAdverb,
-    pronoun: m.posPronoun, article: m.posArticle, preposition: m.posPreposition,
+    pronoun: m.posPronoun, determiner: m.posDeterminer, article: m.posArticle, preposition: m.posPreposition,
     conjunction: m.posConjunction, interjection: m.posInterjection, numeral: m.posNumeral,
     proper_noun: m.posProperNoun, other: m.posOther,
   };

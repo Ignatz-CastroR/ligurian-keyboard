@@ -10,6 +10,10 @@
  *           [decision 0028].
  * Updated:  2026/10/17, 12:40:02: also when the headword joins an elided
  *           particle and a word [decision 0029].
+ * Updated:  2026/10/21, 12:34:15: the lemma's grammar, under the part of
+ *           speech, its fields following the part of speech chosen
+ *           [decision 0039].
+ * Updated:  2026/10/21, 14:29:33: the lemma's grammar editor by its own type.
  */
 
 import type { Context } from "../context.ts";
@@ -18,6 +22,7 @@ import { PARTS_OF_SPEECH } from "../types.ts";
 import { createLemma, lemmasWithKey } from "../db.ts";
 import { canPropose, isStaff } from "../permissions.ts";
 import { checkForm, cleanOptionalText } from "../forms.ts";
+import { lemmaGrammarEditor, type LemmaGrammarEditor } from "../grammar-fields.ts";
 import {
   confirmForms, field, formWarning, h, letterPalette, posLabel, refItems, runAction, select, showError,
   statusBadge,
@@ -33,6 +38,8 @@ export async function renderNewLemma(ctx: Context, root: HTMLElement): Promise<v
     const headword: HTMLInputElement = h("input", { type: "text", spellcheck: "false", autocomplete: "off" });
     const pos: HTMLSelectElement = select(
       [{ value: "", label: t.posNone }, ...PARTS_OF_SPEECH.map((p) => ({ value: p, label: posLabel(t, p) }))], "");
+    const grammar: LemmaGrammarEditor = lemmaGrammarEditor(ctx, {}, null);
+    pos.addEventListener("change", () => grammar.setPos(pos.value === "" ? null : pos.value));
     const variety: HTMLSelectElement = select(refItems(ctx.refs.varieties), "zeneize");
     const orthography: HTMLSelectElement = select(refItems(ctx.refs.orthographies), "ofiçiâ");
     const note: HTMLTextAreaElement = h("textarea", { rows: 3 });
@@ -46,7 +53,8 @@ export async function renderNewLemma(ctx: Context, root: HTMLElement): Promise<v
       h("h2", {}, t.newTitle),
       h("p", { class: "muted" }, t.newIntro),
       field(t.fieldHeadword, headword), letterPalette(t, headword), similar,
-      field(t.fieldPos, pos), field(t.fieldVariety, variety), field(t.fieldOrthography, orthography),
+      field(t.fieldPos, pos), grammar.element,
+      field(t.fieldVariety, variety), field(t.fieldOrthography, orthography),
       warning.element,
       field(t.fieldNote, note),
       approveNow !== null && h("label", { class: "check" }, approveNow, t.approveNow),
@@ -79,6 +87,7 @@ export async function renderNewLemma(ctx: Context, root: HTMLElement): Promise<v
             part_of_speech: pos.value === "" ? null : pos.value,
             note: cleanNote.value,
             status: approveNow !== null && approveNow.checked ? "approved" : "pending",
+            ...grammar.value(),
           });
           ctx.navigate(`#/entry/${id}`, t.newCreated);
         });

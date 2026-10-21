@@ -3,6 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/11
 * **Decided by:** Eng. José Ignacio Castro de R.
+* **Refined by:** [0039](0039-grammar-in-structured-fields.md), on the grammar the base form takes from its lemma
 
 ## Context
 

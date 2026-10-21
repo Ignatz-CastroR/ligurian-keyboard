@@ -6,11 +6,21 @@
  *            or repeated keys are refused; errors name the form or the
  *            translation; the examples are no longer live; the helpers
  *            are removed at the end of the run.
+ * Updated:   2026/10/21, 12:22:52: grammar [migration 0013]: on the
+ *            lemma "gender", "number", "person", "verb_form",
+ *            "invariable", and for verbs "conjugation", "auxiliary" and
+ *            "pronominal"; on each form "gender", "number", "person" and
+ *            "verb_form"; a value not in its list is refused with the
+ *            list.
+ * Updated:   2026/10/21, 14:29:33: on each form "readings", a list of
+ *            readings, instead of the four keys; a form spelled as the
+ *            headword adds its readings to the base form; the codes of a
+ *            list named in quotes.
  * Purpose:   Add whole entries from the Supabase SQL Editor in the right
  *            shape: a lemma, its inflected forms, and its senses, each
  *            sense with ALL its translations, in Italian, Spanish and
  *            English, every translation its own row with its own
- *            language. Until 0.13.0 brings import_entries[], this is
+ *            language. Until 0.17.0 brings import_entries[], this is
  *            the way to load words by SQL.
  * Usage:     1. Copy this whole file into a new query of the SQL Editor.
  *            2. In step 1 below, replace the zeros with the user id of
@@ -38,7 +48,13 @@
  *                "orthography": "ofiçiâ",            optional
  *                "note": "...",                      optional
  *                "status": "pending",                optional
- *                "forms": [ {"form": "pénne", "tag": "pl."} ],
+ *                "gender": "f", "number": "sg",      optional, the
+ *                "person": "3", "verb_form": "inf",  headword's own
+ *                "invariable": false,                optional
+ *                "conjugation": "-â", "auxiliary": "avéi",
+ *                "pronominal": false,                verbs only
+ *                "forms": [ {"form": "pénne", "tag": "pl.", "readings":
+ *                            [{"gender": "f", "number": "pl"}]} ],
  *                "senses": [
  *                  { "definition_it": "...",          optional
  *                    "translations": {"it": [...], "es": [...], "en": [...]} }
@@ -46,8 +62,20 @@
  *              }
  *            Several translations of one sense in one language go in one
  *            list, ["penna", "stilografica"]; a different meaning is a
- *            different sense. The same format will be read by
- *            import_entries[] in 0.13.0.
+ *            different sense. A form may stand for several readings:
+ *            "parla" is {"verb_form": "ind_pres", "person": "3",
+ *            "number": "sg"} and {"verb_form": "imp", "person": "2",
+ *            "number": "sg"}; the base form's first reading is the
+ *            lemma's, given on the lemma, and a form spelled as the
+ *            headword adds its readings to the base form's [an invariable
+ *            noun's plural]. Grammar values are codes from
+ *            their lists, the tables grammar_genders [m, f, mf],
+ *            grammar_numbers [sg, pl], grammar_persons [1, 2, 3],
+ *            verb_forms [inf, ptcp_pres, ptcp_past, ger, ind_pres,
+ *            ind_impf, ind_past, ind_fut, cond, subj_pres, subj_impf,
+ *            imp], conjugation_classes and auxiliaries; "invariable" and
+ *            "pronominal" are true or false. The same format will be
+ *            read by import_entries[] in 0.17.0.
  */
 
 /* Step 1: whose words these are. */
@@ -83,6 +111,92 @@ begin
         end loop;
     end if;
     return v_found;
+end;
+$$;
+
+/* A grammar value: null when absent, or the code itself when its list
+   holds it; anything else is refused with the codes the list holds,
+   each in quotes, since a code is text: "3", not 3. */
+create or replace function pg_temp.grammar_code(p_list text, p_key text, p_value jsonb)
+returns text
+language plpgsql
+as $$
+declare
+    v_found  boolean;
+    v_codes  text;
+begin
+    if p_value is null or jsonb_typeof(p_value) = 'null' then
+        return null;
+    end if;
+    if jsonb_typeof(p_value) = 'string' then
+        execute format('select exists (select 1 from public.%I where code = $1)', p_list)
+            into v_found using normalize(p_value #>> '{}', NFC);
+        if v_found then
+            return normalize(p_value #>> '{}', NFC);
+        end if;
+    end if;
+    execute format('select string_agg(''"'' || code || ''"'', '', '' order by position) from public.%I', p_list) into v_codes;
+    raise exception '"%" must be one of: %', p_key, v_codes using errcode = '22023';
+end;
+$$;
+
+/* A form's readings: a list of objects, each with some of "gender",
+   "number", "person" and "verb_form", each value a code of its list;
+   absent means none. The database checks them again. */
+create or replace function pg_temp.form_readings(p_value jsonb)
+returns jsonb
+language plpgsql
+as $$
+declare
+    v_out    jsonb := '[]'::jsonb;
+    v_item   jsonb;
+    v_place  integer := 0;
+    v_bad    text;
+begin
+    if p_value is null or jsonb_typeof(p_value) = 'null' then
+        return '[]'::jsonb;
+    end if;
+    if jsonb_typeof(p_value) <> 'array' then
+        raise exception '"readings" must be a list, such as [{"gender": "f", "number": "pl"}]' using errcode = '22023';
+    end if;
+    for v_item in select value from jsonb_array_elements(p_value) loop
+        v_place := v_place + 1;
+        if jsonb_typeof(v_item) <> 'object' then
+            raise exception 'reading %: it must be an object such as {"gender": "f", "number": "pl"}', v_place
+                using errcode = '22023';
+        end if;
+        select string_agg(k, ', ') into v_bad from jsonb_object_keys(v_item) as k
+        where k not in ('gender', 'number', 'person', 'verb_form');
+        if v_bad is not null then
+            raise exception 'reading %: unknown key: %', v_place, v_bad using errcode = '22023';
+        end if;
+        begin
+            v_out := v_out || jsonb_build_array(jsonb_build_object(
+                'gender',    pg_temp.grammar_code('grammar_genders', 'gender', v_item -> 'gender'),
+                'number',    pg_temp.grammar_code('grammar_numbers', 'number', v_item -> 'number'),
+                'person',    pg_temp.grammar_code('grammar_persons', 'person', v_item -> 'person'),
+                'verb_form', pg_temp.grammar_code('verb_forms', 'verb_form', v_item -> 'verb_form')));
+        exception when others then
+            raise exception 'reading %: %', v_place, sqlerrm using errcode = sqlstate;
+        end;
+    end loop;
+    return v_out;
+end;
+$$;
+
+/* true or false; absent means false. */
+create or replace function pg_temp.flag(p_key text, p_value jsonb)
+returns boolean
+language plpgsql
+as $$
+begin
+    if p_value is null or jsonb_typeof(p_value) = 'null' then
+        return false;
+    end if;
+    if jsonb_typeof(p_value) <> 'boolean' then
+        raise exception '"%" must be true or false', p_key using errcode = '22023';
+    end if;
+    return p_value::text::boolean;
 end;
 $$;
 
@@ -122,7 +236,8 @@ begin
             raise exception 'the key "%" is written twice in one object', v_bad using errcode = '22023';
         end if;
         select string_agg(k, ', ') into v_bad from jsonb_object_keys(v_entry) as k
-        where k not in ('headword', 'part_of_speech', 'variety', 'orthography', 'note', 'status', 'forms', 'senses');
+        where k not in ('headword', 'part_of_speech', 'variety', 'orthography', 'note', 'status', 'forms', 'senses',
+                        'gender', 'number', 'person', 'verb_form', 'invariable', 'conjugation', 'auxiliary', 'pronominal');
         if v_bad is not null then
             raise exception 'unknown key: %', v_bad using errcode = '22023';
         end if;
@@ -135,13 +250,23 @@ begin
         end if;
 
         v_status := coalesce(v_entry ->> 'status', 'pending')::public.review_status;
-        insert into public.lemmas (headword, part_of_speech, variety, orthography, note, status)
+        insert into public.lemmas (headword, part_of_speech, variety, orthography, note, status,
+                                   gender, number, person, verb_form, invariable,
+                                   conjugation, auxiliary, pronominal)
         values (v_headword,
                 v_entry ->> 'part_of_speech',
                 coalesce(v_entry ->> 'variety', 'zeneize'),
                 coalesce(v_entry ->> 'orthography', 'ofiçiâ'),
                 v_entry ->> 'note',
-                v_status)
+                v_status,
+                pg_temp.grammar_code('grammar_genders', 'gender', v_entry -> 'gender'),
+                pg_temp.grammar_code('grammar_numbers', 'number', v_entry -> 'number'),
+                pg_temp.grammar_code('grammar_persons', 'person', v_entry -> 'person'),
+                pg_temp.grammar_code('verb_forms', 'verb_form', v_entry -> 'verb_form'),
+                pg_temp.flag('invariable', v_entry -> 'invariable'),
+                pg_temp.grammar_code('conjugation_classes', 'conjugation', v_entry -> 'conjugation'),
+                pg_temp.grammar_code('auxiliaries', 'auxiliary', v_entry -> 'auxiliary'),
+                pg_temp.flag('pronominal', v_entry -> 'pronominal'))
         returning id into v_lemma;
 
         for v_form in select value from jsonb_array_elements(coalesce(v_entry -> 'forms', '[]')) loop
@@ -149,13 +274,28 @@ begin
             if jsonb_typeof(v_form) <> 'object' then
                 raise exception 'a form must be an object such as {"form": "pénne", "tag": "pl."}' using errcode = '22023';
             end if;
-            select string_agg(k, ', ') into v_bad from jsonb_object_keys(v_form) as k where k not in ('form', 'tag');
+            select string_agg(k, ', ') into v_bad from jsonb_object_keys(v_form) as k
+            where k not in ('form', 'tag', 'readings');
             if v_bad is not null then
                 raise exception 'unknown key: %', v_bad using errcode = '22023';
             end if;
             v_where := format('the form "%s"', v_form ->> 'form');
-            insert into public.wordforms (lemma_id, form, grammatical_tag, status)
-            values (v_lemma, btrim(v_form ->> 'form'), v_form ->> 'tag', v_status);
+            if btrim(v_form ->> 'form') = v_headword then
+                /* The headword's own spelling is the base form, made with
+                   the lemma: its readings follow the lemma's, any already
+                   there skipped; its tag is set if one is given. */
+                update public.wordforms as w
+                set readings = w.readings || coalesce((
+                        select jsonb_agg(r.value order by r.ordinality)
+                        from jsonb_array_elements(pg_temp.form_readings(v_form -> 'readings')) with ordinality as r
+                        where not w.readings @> jsonb_build_array(r.value)), '[]'::jsonb),
+                    grammatical_tag = coalesce(v_form ->> 'tag', w.grammatical_tag)
+                where w.lemma_id = v_lemma and w.is_base and w.deleted_at is null;
+            else
+                insert into public.wordforms (lemma_id, form, grammatical_tag, status, readings)
+                values (v_lemma, btrim(v_form ->> 'form'), v_form ->> 'tag', v_status,
+                        pg_temp.form_readings(v_form -> 'readings'));
+            end if;
         end loop;
 
         for v_def in select value from jsonb_array_elements(coalesce(v_entry -> 'senses', '[]')) loop
@@ -212,8 +352,8 @@ $$;
    comments and write nothing; copy their shape.
 
 select pg_temp.add_entry($entry$
-{ "headword": "pénna", "part_of_speech": "noun",
-  "forms": [ {"form": "pénne", "tag": "pl."} ],
+{ "headword": "pénna", "part_of_speech": "noun", "gender": "f", "number": "sg",
+  "forms": [ {"form": "pénne", "tag": "pl.", "readings": [{"gender": "f", "number": "pl"}]} ],
   "senses": [
     { "definition_it": "strumento per scrivere",
       "translations": {"it": ["penna", "stilografica"], "es": ["pluma"], "en": ["pen"]} },
@@ -229,6 +369,9 @@ $entry$);
 */
 
 
-/* Step 4: remove the helpers. Keep these two lines at the very end. */
+/* Step 4: remove the helpers. Keep these lines at the very end. */
 drop function pg_temp.add_entry(text);
+drop function pg_temp.flag(text, jsonb);
+drop function pg_temp.form_readings(jsonb);
+drop function pg_temp.grammar_code(text, text, jsonb);
 drop function pg_temp.duplicate_key(json);

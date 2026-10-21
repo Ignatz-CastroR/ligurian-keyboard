@@ -11,10 +11,17 @@
  *           [migration 0012, decision 0038].
  * Updated:  2026/10/21, 09:30:23: senses_review_needed, the list of
  *           lemmas whose senses wait to be reviewed [migration 0012].
+ * Updated:  2026/10/21, 12:26:04: the grammar of lemmas and forms,
+ *           the grammar's lists, the part of speech "determiner"
+ *           [migration 0013].
+ * Updated:  2026/10/21, 14:29:33: a form's list of readings, instead of its
+ *           four fields; a lemma's queue row with its base form's.
  * Purpose:  The shapes of the rows the lexicon manager reads from the
  *           database. They mirror db/migrations/0001, 0004 and 0006
  *           column by column; a column added there must be added here.
  */
+
+import type { GrammarLists, LemmaGrammar, Reading } from "./grammar.ts";
 
 export type Role = "member" | "contributor" | "reviewer" | "admin";
 export type Status = "pending" | "approved" | "rejected";
@@ -23,7 +30,7 @@ export type LexiconTable = "lemmas" | "wordforms" | "senses" | "glosses";
 export const ROLES: readonly Role[] = ["member", "contributor", "reviewer", "admin"];
 
 export const PARTS_OF_SPEECH: readonly string[] = [
-  "noun", "verb", "adjective", "adverb", "pronoun", "article", "preposition",
+  "noun", "verb", "adjective", "adverb", "pronoun", "determiner", "article", "preposition",
   "conjunction", "interjection", "numeral", "proper_noun", "other",
 ];
 
@@ -38,7 +45,7 @@ export interface Tracked {
   deleted_at: string | null;
 }
 
-export interface Lemma extends Tracked {
+export interface Lemma extends Tracked, LemmaGrammar {
   public_id: string;
   headword: string;
   headword_key: string;
@@ -61,6 +68,10 @@ export interface Wordform extends Tracked {
   is_base: boolean;
   grammatical_tag: string | null;
   freq: number;
+  // From migration 0013: the gender, number, person and verb form the
+  // spelling stands for, as many readings as it has; a base form's
+  // first is its lemma's.
+  readings: Reading[];
 }
 
 export interface Sense extends Tracked {
@@ -116,6 +127,17 @@ export interface QueueItem {
   // Translations only.
   language: string | null;
   gloss: string | null;
+  // From migration 0013: a lemma's grammar [eight fields], a form's
+  // readings; null otherwise.
+  gender?: string | null;
+  number?: string | null;
+  person?: string | null;
+  verb_form?: string | null;
+  invariable?: boolean | null;
+  conjugation?: string | null;
+  auxiliary?: string | null;
+  pronominal?: boolean | null;
+  readings?: Reading[] | null;
   // From migration 0010, in the pages of the queue: the time of the
   // entry's oldest pending row, which orders the entries.
   group_created?: string;
@@ -142,4 +164,6 @@ export interface ReferenceData {
   varieties: RefItem[];
   orthographies: RefItem[];
   languages: RefItem[];
+  // From migration 0013: the grammar's lists.
+  grammar: GrammarLists;
 }

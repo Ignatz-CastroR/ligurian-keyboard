@@ -1,6 +1,11 @@
-# Dizionario ligure [grafîa ofiçiâ]: lexical model history
+# Diçionäio lìgure [grafîa ofiçiâ]: lexical model history
 
 The package version is the date of the dictionary snapshot it was built from, as YYYY.M.D. The model itself changes only with the project's versions; only the project versions that changed the model, or the words and counts it is built from, are listed here.
+
+## Project 0.14.2 2026/10/20
+
+* Named in Ligurian: "Diçionäio lìgure [grafîa ofiçiâ]", for the language "Lìgure" [decision 0037].
+* Every count is doubled, and a form beginning with a lowercase letter weighs one more than its twin spelled with a capital, such as damàsco beside Damàsco. Keyman's auto-correction then turns "damasco" into damàsco, not Damàsco; typed "Damasco", it still gives Damàsco. No other order changes.
 
 ## Project 0.9.0 2026/10/17
 

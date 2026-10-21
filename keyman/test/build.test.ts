@@ -4,6 +4,9 @@
  * Date:     2026/10/17, 04:05:05, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: ñ, Ñ and a decomposed ñ among the
  *           pieces of the pseudo-random strings.
+ * Updated:  2026/10/20, 20:27:10: the names Keyman shows: the language
+ *           as Lìgure, the keyboard as grafîa ofiçiâ, the dictionary as
+ *           Diçionäio lìgure [grafîa ofiçiâ] [decision 0037].
  * Updated:  2026/10/17, 12:27:55: the model's own word breaker, which
  *           must split words exactly where the engine's splitElision[]
  *           does [decision 0029].
@@ -317,12 +320,14 @@ test("the keyboard package declares the keyboard, its version and Ligurian", () 
   const files: Map<string, Buffer> = readZip(readFileSync(join(work, "out", KEYBOARD_PACKAGE)));
   const kmp = JSON.parse(files.get("kmp.json")?.toString("utf8") ?? "{}") as {
     info: { version: { description: string } };
-    keyboards: { id: string; version: string; languages: { id: string }[] }[];
+    keyboards: { id: string; name: string; version: string; languages: { id: string; name: string }[] }[];
   };
   assert.equal(kmp.info.version.description, keyboardVersion());
   assert.equal(kmp.keyboards.length, 1);
   assert.equal(kmp.keyboards[0]?.id, KEYBOARD_ID);
   assert.deepEqual(kmp.keyboards[0]?.languages.map((l) => l.id), ["lij"]);
+  // Keyman's space bar reads "language - keyboard": "Lìgure - grafîa ofiçiâ".
+  assert.deepEqual([kmp.keyboards[0]?.name, kmp.keyboards[0]?.languages[0]?.name], ["grafîa ofiçiâ", "Lìgure"]);
   for (const name of [`${KEYBOARD_ID}.js`, "readme.htm", "welcome.htm", "LICENSE.md"]) {
     assert.ok(files.has(name), `${name} in ${KEYBOARD_PACKAGE}`);
   }
@@ -331,13 +336,17 @@ test("the keyboard package declares the keyboard, its version and Ligurian", () 
 test("the dictionary package declares the model, its dated version and Ligurian", () => {
   const files: Map<string, Buffer> = readZip(readFileSync(join(work, "out", MODEL_PACKAGE)));
   const kmp = JSON.parse(files.get("kmp.json")?.toString("utf8") ?? "{}") as {
-    info: { version: { description: string } };
-    lexicalModels: { id: string; languages: { id: string }[] }[];
+    info: { version: { description: string }; name: { description: string } };
+    lexicalModels: { id: string; name: string; languages: { id: string; name: string }[] }[];
   };
   assert.equal(kmp.info.version.description, "2026.10.17");
   assert.equal(kmp.lexicalModels.length, 1);
   assert.equal(kmp.lexicalModels[0]?.id, MODEL_ID);
   assert.deepEqual(kmp.lexicalModels[0]?.languages.map((l) => l.id), ["lij"]);
+  // kmc names the model by its id in the list of models, which is what
+  // Keyman's settings show under "Dictionary"; the package carries the name.
+  assert.deepEqual([kmp.info.name.description, kmp.lexicalModels[0]?.name, kmp.lexicalModels[0]?.languages[0]?.name],
+    ["Diçionäio lìgure [grafîa ofiçiâ]", MODEL_ID, "Lìgure"]);
   const license: string = files.get("LICENSE.md")?.toString("utf8") ?? "";
   assert.match(license, /CC BY-SA 4\.0/, "the word list carries the data license");
   const packaged: string = files.get(`${MODEL_ID}.model.js`)?.toString("utf8") ?? "";

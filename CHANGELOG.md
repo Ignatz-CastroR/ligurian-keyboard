@@ -14,30 +14,75 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- 0.14.2: in a menu where two forms differ only by a capital, such as
-  a common noun and a proper noun, the capitalized form first only
-  when the word is typed with a capital [decision 0037]. The
-  snapshot counts frequencies in lower case, so today such forms tie
-  and are ordered alphabetically; the dictionary holds 136 such menus.
-- 0.15.0: repairs of the entries loaded by SQL before 0.12.1: a repair
-  page per entry, merging senses split one per translation by default
-  and allowing other groupings; the language of a translation
-  corrected by hand; translations that hold ";" split; possibly the
-  authors of those entries credited afterwards. `import_entries()`, a
-  structured import with a dry run and authors, in the format of
-  `db/templates/add-entries.sql`, and an enrichment format, keyed by
-  public code and sense, for translations and definitions prepared
-  outside the site.
-- 0.16.0: grammar for every form, base lemma included, in structured
+- 0.15.0: repairs of the entries loaded by SQL before 0.12.1. A
+  sample of 25 of the 5,731 lemmas whose senses were split one per
+  translation, judged by a speaker, showed that no default fits them:
+  12 are one meaning, 8 are right as they are, 5 need regrouping. So
+  no bulk change: a queue of senses to review, one page per lemma
+  with three actions [one sense; keep as they are; regroup], each
+  decision applied at once by the database and recorded; translation
+  texts and languages corrected on the way; translations holding ";"
+  split after a dry run; the manager's dashes replaced.
+- 0.16.0: `import_entries()`, a structured import with a dry run and
+  authors, in the format of `db/templates/add-entries.sql`, and an
+  enrichment format, keyed by public code and sense, for translations
+  and definitions prepared outside the site.
+- 0.17.0: grammar for every form, base lemma included, in structured
   fields [gender, number, person, tense and mood]; richer entries:
   etymology, examples, definitions in four languages, usage labels,
   images uploaded to Supabase; pronunciation in IPA by form and
   variety.
-- 0.17.0: recordings by native speakers, with their consent and a free
+- 0.18.0: recordings by native speakers, with their consent and a free
   license.
 - Then: hardening, contributor documentation; a beta with native
   speakers in Genoa.
 - 1.0.0: when every criterion in the README's roadmap is met.
+
+## [0.14.2] [2026/10/20] [lowercase first; Lìgure]
+
+### Fixed
+- On the phone, with Keyman 19's auto-correction, `damasco` typed in
+  lowercase became `Damàsco`, the capitalized twin of `damàsco`. The
+  dictionary holds 147 pairs of approved forms spelled alike but for
+  capitals; the frequency list counts words in lower case, so both
+  forms of a pair tie, and Keyman broke the tie for the capital. The
+  Keyman word list now doubles every count and gives a form beginning
+  with a lowercase letter one more than its capitalized twin, so a
+  word typed in lowercase becomes the lowercase form; typed with a
+  capital, Keyman capitalizes every suggestion and the two are one.
+  Doubling first leaves every other order as it was [decision 0037].
+  The web editor already offered the lowercase form first. Verified
+  by a test of the word list [twins, a twin already heavier, a form
+  with no twin, a form beginning with an apostrophe] and on the phone,
+  where the tie was seen.
+- Keyman's space bar read "Ligure - Ligure [grafîa ofiçiâ]": it shows
+  the language's name and the keyboard's, and ours named the language
+  in Italian and repeated it. The language is now **Lìgure**, the
+  keyboard **grafîa ofiçiâ** and the dictionary **Diçionäio lìgure
+  [grafîa ofiçiâ]**, so the bar reads "Lìgure - grafîa ofiçiâ". The
+  identifiers do not change, so installed copies update in place.
+  Verified by tests of the package sources and of the built packages.
+
+### Changed
+- The install page recommends **Keyman 19**, in beta until early
+  2027, whose auto-correction turns a word typed without accents into
+  Ligurian by itself, and says that with Keyman 18 the suggestion must
+  be tapped. It asks the reader to check two settings: that the
+  dictionary selected for Lìgure is ours, removing any other, since
+  Keyman's catalog offers another Ligurian dictionary,
+  `jeanm.lij.conseggio`, whose suggestions mix in Italian words; and
+  that "Predictions with auto-corrections" is selected. It explains
+  the grey highlight of an uncertain correction, and its elision
+  example is now `l'aegoa`, which becomes `l'ægoa`: the old example's
+  `ægua` is not in the dictionary. In Italian, English and Spanish.
+- Decision 0037 records these choices and refines 0022.
+- The plan: the repairs and the structured import become two
+  releases, 0.15.0 and 0.16.0, and everything after them moves by one.
+- Keyboard version 0.14.2.
+
+Tests: 308, passing on Node.js 22 [engine 54, db 93, admin 66,
+editor 24, dictionary 9, users 4, site 4, keyman 33, corpus 16,
+docs 5].
 
 ## [0.14.1] [2026/10/20] [the frequency list and the long s]
 
@@ -1759,7 +1804,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.1...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.2...HEAD
+[0.14.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.1...v0.14.2
 [0.14.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.0...v0.13.1

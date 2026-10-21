@@ -4,12 +4,15 @@
  * Date:     2026/10/17, 04:03:24, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Purpose:  Tests of the snapshot to Keyman word list conversion
  *           [keyman/src/wordlist.ts], on small TSV texts built here.
+ * Updated:  2026/10/20, 20:09:40: weights are counts doubled; a
+ *           lowercase form weighs one more than its capitalized twin
+ *           [decision 0037].
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { stampSnapshot } from "../../editor/src/snapshot.ts";
-import { buildWordlist, keymanCount, modelVersion, type WordlistResult } from "../src/wordlist.ts";
+import { buildWordlist, keymanCount, keymanWeights, modelVersion, type WordlistResult } from "../src/wordlist.ts";
 
 const HEADER: string = "form\tfreq\tvariety\torthography\tstatus";
 const NOW: Date = new Date(Date.UTC(2026, 0, 2, 3, 4, 5));
@@ -33,17 +36,17 @@ test("only approved zeneize ofiçiâ forms enter the word list", () => {
     "zeneise\t1\tzeneize\tunitäia\tapproved",
     "anâ\t1\tzeneize\tofiçiâ\trejected",
   ), NOW);
-  assert.deepEqual(words(result), ["zenéize\t3"]);
+  assert.deepEqual(words(result), ["zenéize\t6"]);
 });
 
-test("most frequent first, ties in alphabetical order", () => {
+test("most frequent first, ties in alphabetical order; every count doubled", () => {
   const result: WordlistResult = buildWordlist(snapshot(
     "çitæ\t2\tzeneize\tofiçiâ\tapproved",
     "anâ\t2\tzeneize\tofiçiâ\tapproved",
     "Zêna\t9\tzeneize\tofiçiâ\tapproved",
     "dî\t1\tzeneize\tofiçiâ\tapproved",
   ), NOW);
-  assert.deepEqual(words(result), ["Zêna\t9", "anâ\t2", "çitæ\t2", "dî\t1"]);
+  assert.deepEqual(words(result), ["Zêna\t18", "anâ\t4", "çitæ\t4", "dî\t2"]);
 });
 
 test("counts are whole numbers of at least 1, so every approved word is reachable", () => {
@@ -52,7 +55,33 @@ test("counts are whole numbers of at least 1, so every approved word is reachabl
   assert.equal(keymanCount(2.5), 3);
   assert.equal(keymanCount(41), 41);
   const result: WordlistResult = buildWordlist(snapshot("anâ\t0\tzeneize\tofiçiâ\tapproved"), NOW);
-  assert.deepEqual(words(result), ["anâ\t1"]);
+  assert.deepEqual(words(result), ["anâ\t2"]);
+});
+
+test("a lowercase form weighs one more than its capitalized twin, and no other order changes", () => {
+  const result: WordlistResult = buildWordlist(snapshot(
+    "Damàsco\t5\tzeneize\tofiçiâ\tapproved",
+    "damàsco\t5\tzeneize\tofiçiâ\tapproved",
+    "damàschina\t5\tzeneize\tofiçiâ\tapproved",
+    "Zêna\t3\tzeneize\tofiçiâ\tapproved",
+    "zenâ\t3\tzeneize\tofiçiâ\tapproved",
+    "Zenâ\t3\tzeneize\tofiçiâ\tapproved",
+    "Zìtta\t1\tzeneize\tofiçiâ\tapproved",
+    "zìtta\t9\tzeneize\tofiçiâ\tapproved",
+    "'na\t2\tzeneize\tofiçiâ\tapproved",
+  ), NOW);
+  assert.deepEqual(words(result), [
+    // The lowercase twin first; a twin already heavier stays so.
+    "zìtta\t19", "damàsco\t11", "damàschina\t10", "Damàsco\t10",
+    "zenâ\t7", "Zenâ\t6", "Zêna\t6", "'na\t4", "Zìtta\t2",
+  ]);
+  // Only an exact twin but for capitals counts: Zêna has no lowercase
+  // twin, and zenâ's twin is Zenâ, not Zêna.
+  const weights = keymanWeights([
+    { form: "Zêna", freq: 3, variety: "zeneize", orthography: "ofiçiâ", status: "approved" },
+    { form: "zenâ", freq: 3, variety: "zeneize", orthography: "ofiçiâ", status: "approved" },
+  ]);
+  assert.deepEqual([...weights], [["Zêna", 6], ["zenâ", 6]]);
 });
 
 test("the version is the snapshot's date, without leading zeros", () => {

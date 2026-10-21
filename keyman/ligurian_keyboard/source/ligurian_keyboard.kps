@@ -9,6 +9,9 @@
             ligurian_keyboard.kmp. The dictionary is a separate package,
             ignatzcastror.lij.ligurian_keyboard.model.kmp; Keyman joins
             the two through their shared language code, lij.
+  Updated:  2026/10/20, 20:30:30: the language named Lìgure and the
+            keyboard grafîa ofiçiâ, so that Keyman's space bar, which
+            shows both, reads "Lìgure - grafîa ofiçiâ" [decision 0037].
 -->
 <Package>
   <System>
@@ -22,7 +25,7 @@
     <FollowKeyboardVersion/>
   </Options>
   <Info>
-    <Name URL="">Ligure [grafîa ofiçiâ]</Name>
+    <Name URL="">grafîa ofiçiâ</Name>
     <Copyright URL="">© 2026 Eng. José Ignacio Castro de R. and contributors</Copyright>
     <Author URL="">Ignatz-CastroR</Author>
     <WebSite URL="https://ignatz-castror.github.io/ligurian-keyboard/">ignatz-castror.github.io/ligurian-keyboard</WebSite>
@@ -44,10 +47,10 @@
   </Files>
   <Keyboards>
     <Keyboard>
-      <Name>Ligure [grafîa ofiçiâ]</Name>
+      <Name>grafîa ofiçiâ</Name>
       <ID>ligurian_keyboard</ID>
       <Languages>
-        <Language ID="lij">Ligure</Language>
+        <Language ID="lij">Lìgure</Language>
       </Languages>
     </Keyboard>
   </Keyboards>

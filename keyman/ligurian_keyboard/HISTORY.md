@@ -1,4 +1,8 @@
-# Ligure [grafîa ofiçiâ]: keyboard history
+# Lìgure, grafîa ofiçiâ: keyboard history
+
+## 0.14.2 2026/10/20
+
+* Named "grafîa ofiçiâ", for the language "Lìgure": Keyman's space bar now reads "Lìgure - grafîa ofiçiâ" instead of "Ligure - Ligure [grafîa ofiçiâ]" [decision 0037]. The keys are unchanged.
 
 ## 0.14.1 2026/10/20
 

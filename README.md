@@ -161,7 +161,7 @@ The web editor itself needs no download: it opens in any modern browser and, aft
 | Item | Needs |
 |---|---|
 | Web editor | any recent browser: Chrome, Firefox, Safari, Edge, on a computer or a phone |
-| Android keyboard | Android with the free [Keyman](https://keyman.com/android/) app, version 17 or newer; Keyman 18 is current |
+| Android keyboard | Android with the free [Keyman](https://keyman.com/android/) app, version 17 or newer; version 19, in beta, for automatic correction |
 | iPhone and iPad | Keyman exists, but the keyboard is not tested there yet |
 | Windows, macOS, Linux | use the web editor: Keyman offers no suggestions on desktop computers [decision [0021](docs/decisions/0021-keyman-scope-and-toolchain.md)] |
 
@@ -209,7 +209,7 @@ On Android the project does not replace Android's keyboard system; it runs insid
 1. **The keyboard package** draws the keys. Every key types exactly the letter shown; a long press on a vowel, on `c` or on `n` gives every Ligurian letter. A capital comes by itself at the start of a sentence.
 2. **Keyman's predictive text** watches the word being typed. For every letter, it folds the word with our `searchTermToKey`, the keyboard's copy of the skeleton, and searches **the dictionary package**, an index of every approved word built from its skeleton. Keyman also tolerates small typing mistakes.
 3. **The best matches appear in the suggestion bar** above the keys, in the casing the person is typing: `penna` offers `pénna` and `pénn-a`; `Penna`, at the start of a sentence, offers `Pénna`.
-4. **Tapping a suggestion** puts it in the text, followed by a space. In Keyman 18 a suggestion is applied when tapped; Keyman 19, in beta in October 2026, can also apply a very likely suggestion by itself when space is pressed.
+4. **Tapping a suggestion** puts it in the text, followed by a space. With **Keyman 19** [in beta until early 2027] and "Predictions with auto-corrections" selected, space applies the highlighted suggestion by itself: `ligure` becomes `lìgure`, `zeneize` becomes `zenéize`, `AEGOA` becomes `ÆGOA`. When several words compete, the bar shows them and highlights one in grey; a first press of space may only highlight it, a second applies it. Keyman 18 applies a suggestion only when it is tapped. A word typed in lowercase is corrected to the lowercase form of a pair such as `damàsco` and `Damàsco` [decision [0037](docs/decisions/0037-lowercase-first-and-ligurian-names.md)].
 
 The difference from the editor is deliberate: the editor decides on space, Keyman suggests while typing. Both reach the same words, because both fold with the same rules and read the same dictionary.
 
@@ -280,7 +280,7 @@ Both lists live in the database, so adding a variety or a spelling system is a s
 | Users section | `users/` | Profiles, the people of the dictionary, each person's complete history | working, 4 tests |
 | Site sections | `site/` | The bar of five sections and the dictionary's size, shared by every page | working, 4 tests |
 | Web editor | `editor/` | Web page where anyone types Ligurian with the engine and the published dictionary, in Italian, English and Spanish | working, 24 tests |
-| Android keyboard | `keyman/` | Keyman keyboard and dictionary for Android phones and tablets, rebuilt daily | working, 32 tests; to be tested on real phones |
+| Android keyboard | `keyman/` | Keyman keyboard and dictionary for Android phones and tablets, rebuilt daily | working, 33 tests; to be tested on real phones |
 | Other exports | `export/` | Further formats of the dictionary | planned |
 
 **Technology** [decision [0007](docs/decisions/0007-technology-stack.md)]: TypeScript everywhere code must run in a browser or a keyboard, so the folding rules are written once; PostgreSQL hosted by Supabase in Frankfurt, the region closest to Genoa; Keyman, free software by SIL Global, for the phone keyboard; GitHub Pages for the site; GitHub Actions for tests, builds and publication.
@@ -363,16 +363,17 @@ Install page: <https://ignatz-castror.github.io/ligurian-keyboard/tastiera/> · 
 
 ### Installing it
 
-1. Install the free **Keyman** app by SIL Global: <https://keyman.com/android/>.
+1. Install the free **Keyman** app by SIL Global, **version 19** for automatic correction: <https://keyman.com/beta/>. Version 18, on the Play Store, offers the words but does not replace them: <https://keyman.com/android/>.
 2. Download both packages from the install page: the keyboard, `ligurian_keyboard.kmp`, and the dictionary, `ignatzcastror.lij.ligurian_keyboard.model.kmp`.
 3. In Keyman: menu, **Settings**, **Install Keyboard or Dictionary**, **Install from local file**; choose the keyboard package and tap **Install**. Repeat with the dictionary package.
-4. To use it in every app: in Keyman, menu, **Get Started**, **Enable Keyman as system-wide keyboard**. Then switch keyboards in any app with the keyboard icon.
+4. In Keyman: menu, **Settings**, **Installed languages**, **Lìgure**. Under **Dictionary** it must say `ignatzcastror.lij.ligurian_keyboard`; if another Ligurian dictionary is selected, choose ours, and remove the other if it stays. On the same page choose **Predictions with auto-corrections**.
+5. To use it in every app: in Keyman, menu, **Get Started**, **Enable Keyman as system-wide keyboard**. Then switch keyboards in any app with the keyboard icon.
 
 Keyman pairs the two packages through their language code, `lij`, the ISO 639-3 code for Ligurian.
 
 ### Using it
 
-* **Type plain letters**; the suggestion bar offers the word in grafîa ofiçiâ. Tap it.
+* **Type plain letters**; with Keyman 19 the word becomes grafîa ofiçiâ when you press space, and with Keyman 18 the suggestion bar offers it, to tap. On the space bar the keyboard reads "Lìgure - grafîa ofiçiâ".
 * **Long press** for any Ligurian letter, in a fixed order: grave, acute, circumflex, diaeresis.
 
   | Key | Long press |
@@ -394,6 +395,8 @@ Keyman pairs the two packages through their language code, `lij`, the ISO 639-3 
 ### Known limits
 
 * **Not yet tested by native speakers on their phones.** Reports are welcome.
+* **Another Ligurian dictionary** sits in Keyman's catalog, `jeanm.lij.conseggio`, and Keyman may select it for the language; its suggestions mix in Italian words. In Keyman, Settings, Installed languages, Lìgure, the dictionary must be `ignatzcastror.lij.ligurian_keyboard`; remove the other if it stays selected.
+* **Automatic correction needs Keyman 19,** still in beta until early 2027.
 * **Typing `æ` with the long press** probably gives weaker suggestions than typing `ae`: Keyman's correction search compares one typed character at a time, and `æ` stands for two. Typing `ae` always works.
 * **A particle chosen from the suggestion bar** may be followed by a space, which Keyman adds after every accepted suggestion; typing `d'` in full and going on with the word avoids it [decision [0029](docs/decisions/0029-elision.md)].
 * **iPhone and iPad** are not tested yet; **desktop computers** get no suggestions from Keyman.
@@ -467,7 +470,7 @@ npm install
 npm run check
 ```
 
-`npm run check` type checks the whole project and runs all 307 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
+`npm run check` type checks the whole project and runs all 308 tests. The database tests need no server: they run on PGlite, a real PostgreSQL compiled to WebAssembly. The Keyman tests run Keyman's own compiler, `kmc`, installed by `npm install`.
 
 Inside this repository, use `npm run typecheck` or `npx tsc`, never a globally installed `tsc`: the project pins its own TypeScript version.
 
@@ -578,7 +581,7 @@ keyman/                 the Android keyboard and its dictionary
   ligurian_keyboard/      Keyman keyboard project
   ignatzcastror.lij.ligurian_keyboard/   Keyman dictionary project
   src/                    layout, word list, build
-  test/                   32 tests
+  test/                   33 tests
   README.md               build, rules for changes, testing on a phone
 corpus/                 counting the words of the Ligurian Wikipedia
   src/                    words, the choice of the dump, the dump and its markup, the frequency list
@@ -600,7 +603,7 @@ export/                 further dictionary formats, planned
 
 ## Tests
 
-307 tests guard the project, and every one runs on every push to `main` before anything is published:
+308 tests guard the project, and every one runs on every push to `main` before anything is published:
 
 * **Engine [54]:** folding rules, idempotence, collisions, the menu order, casing, punctuation, filters, and the rejection of invalid rows; elided words split after the inner apostrophe and converted part by part, with each part's casing, the menu of combinations and its limit, and the whole word winning over its parts; lexicon files checked line by line, their line numbers kept across comments, a byte order mark and CRLF endings, every error and warning, duplicates, collisions in the menu's own order, the printed report and its exit codes, and the `ñ` and elision warnings proved identical to the lexicon manager's; and the forms the engine accepts, capitals included, refusing `ſ` and the Kelvin sign.
 * **Database [93]:** each rule is tested from the side of the person who must *not* be able to break it: a contributor trying to approve, a member trying to propose, anyone trying to erase. Ten of them guard the search keys: the database's own folding equals the engine's on every test word and on every letter the database accepts, a list read from the database itself; the engine loads a word holding any of those letters; and `ñ` is accepted and found by typing `n`. Thirteen more guard the public codes and backups: every code valid, unique across lemmas and forms, out of every client's reach and never reused; the database and the manager computing the same check symbols; old entries receiving codes with a line of history; and a backup restored into a fresh database giving back an identical backup and export, while a restore into a dictionary that is not empty, or from an incomplete file, is refused; a restore works into the same project after its data was lost, and leaves nothing behind when it fails halfway. Sixteen guard batch review: migration 0007 applied to a database with pending rows keeps the queue's original columns row for row; the queue carries each row's version, lemma and sense and leaves out rows of a deleted lemma or sense; a whole entry approved in one call writes one line of history per row; rows changed, missing or deleted since the queue was read, or refused by a rule, are reported while the rest of the batch goes through; even an admin's batch never touches a deleted row; only pending rows are changed; contributors, members, anonymous visitors and a token without a user are refused before any row is touched; a malformed request changes nothing. Seven guard the queue in pages: every caller gets the rows the view shows them and no parent they could not read, entries come oldest first and whole, one API row each, position and totals stay right while others review, and a page answers many times faster than the view at the live dictionary's size. Six run the SQL templates exactly as committed, fourteen wrong entries among them. Three more guard the backup's time limit of 60 seconds, which leaves every other setting of the backup and restore functions as it was. Ten guard the dictionary for readers: the initials of the index, published rows only for a visitor, a reviewer and a contributor alike, the index in pages, the search folding accents, capitals and punctuation with exact matches first, never treating a query as a pattern and cutting a very long one, an entry found by the code of its lemma or of any form, and query plans that use the indexes. Seven guard the site's sections: the dictionary's size counting published rows only, the same for everyone; a Ligurian word found with or without accents, by headword or by form, published entries only, through the search key indexes, a whole word typed never pushed out by longer words that begin with it; and each person's history complete and in pages, readable by reviewers and admins for anyone, the SQL Editor's changes included, by everyone else for themselves only, and by visitors not at all.
@@ -609,7 +612,7 @@ export/                 further dictionary formats, planned
 * **Users section [4]:** the addresses of its views, any other falling back to the first page; each change of a history read as what it was, on rows the real database writes; and its three languages.
 * **The site's sections [4]:** five sections in one order with their names in three languages; every section reaching every other by a relative address, as the site build publishes them; and the dictionary's size written as each language writes numbers.
 * **Web editor [24]:** finishing a word, replacing, an elided word typed in a sentence, the menu, choosing, undoing with Backspace, the filters, the refusal of a broken or empty dictionary snapshot, and the singular and plural of its messages; its three languages, the same as the manager's, with Spanish really translated; and the install page's own script, run against a stand in for the browser, translating its links to the editor and the dictionary into the language being read, and keeping them in view at the top of the screen.
-* **Android keyboard [32]:** a real build with Keyman's compiler; the model's own word breaker, which splits words exactly where the engine does and keeps hyphenated words whole, in the source and in the compiled model; the compiled dictionary loaded and inspected, proving that its search keys equal the engine's on every character up to U+02FF, every test word in four forms and 5,000 pseudo-random strings whose coverage is itself tested; exactly the Ligurian letters on the layout, in both cases; rows of equal width by Keyman's own arithmetic; the layer rules; the contents of both packages; the refusal of a bad snapshot or a failing compiler, keeping earlier packages; error reporting always off.
+* **Android keyboard [33]:** a real build with Keyman's compiler; the names Keyman shows; a lowercase form outweighing its capitalized twin in the word list, with no other order changed; the model's own word breaker, which splits words exactly where the engine does and keeps hyphenated words whole, in the source and in the compiled model; the compiled dictionary loaded and inspected, proving that its search keys equal the engine's on every character up to U+02FF, every test word in four forms and 5,000 pseudo-random strings whose coverage is itself tested; exactly the Ligurian letters on the layout, in both cases; rows of equal width by Keyman's own arithmetic; the layer rules; the contents of both packages; the refusal of a bad snapshot or a failing compiler, keeping earlier packages; error reporting always off.
 * **Word counts [16]:** the choice of the dump from Wikimedia's own status files, refusing unfinished, unsigned or unreadable runs and any address but Wikimedia's; what a word is, in capitals, with elision and with foreign letters; markup stripped from written-for-the-test wikitext, unclosed markup included; the dump read in pieces cut anywhere, articles only; the frequency list written, read back, and refused line by line when damaged; and, end to end, the corpus deciding which spelling of `penna` the editor offers first; and the committed list itself read without a single problem.
 * **Documents and text files [5]:** no file holds an invisible character written literally, such as a byte order mark, where a reader cannot see it; decision records numbered without gaps; both tables, in `docs/decisions/README.md` and here, name every record exactly as its own title does; and every "Refines" or "Supersedes" is answered by the record it points to.
 
@@ -665,6 +668,7 @@ Every important decision is recorded in [docs/decisions/](docs/decisions/README.
 | [0034](docs/decisions/0034-dictionary-for-readers.md) | The dictionary for readers, an index and a search by translation |
 | [0035](docs/decisions/0035-site-in-five-sections.md) | The site in five sections |
 | [0036](docs/decisions/0036-built-for-more-than-one-language.md) | Built for more than one language |
+| [0037](docs/decisions/0037-lowercase-first-and-ligurian-names.md) | The Android keyboard: lowercase first, Ligurian names, Keyman 19 |
 
 ## Open questions
 
@@ -697,10 +701,11 @@ Version 1.0.0 is a promise of stability, given when these criteria are met, not 
 | 0.12 | Done: the dictionary for readers, a public section with an index by initial letter, a search by translation in Italian, Spanish and English, and a page for every entry |
 | 0.13 | Done: the site in five sections, as clear buttons on every page; the manager's own tabs; Users as a section with each person's complete history; the dictionary's size everywhere; Ligurian words searchable in the dictionary; translations several at once, their language always chosen |
 | 0.14 | Done: a checker for lexicon files, reporting every row that would be refused, duplicates, the words that open a menu and the manager's warnings |
-| 0.15 | Repairs of the entries loaded by SQL before 0.12.1: a repair page per entry, merging split senses and correcting languages; a structured import with a dry run and authors |
-| 0.16 | Grammar for every form in structured fields; etymology, examples, definitions in four languages, usage labels and images in every entry; pronunciation in IPA by variety |
-| 0.17 | Recordings by native speakers, with their consent and a free license |
-| 0.18 | Hardening, contributor documentation; beta with speakers in Genoa |
+| 0.15 | Repairs of the entries loaded by SQL before 0.12.1: every lemma whose senses were split one per translation reviewed by a person, one page each; translations' texts and languages corrected |
+| 0.16 | A structured import with a dry run and authors; an enrichment format for translations and definitions prepared outside the site |
+| 0.17 | Grammar for every form in structured fields; etymology, examples, definitions in four languages, usage labels and images in every entry; pronunciation in IPA by variety |
+| 0.18 | Recordings by native speakers, with their consent and a free license |
+| 0.19 | Hardening, contributor documentation; beta with speakers in Genoa |
 | 1.0 | All criteria met |
 
 Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought throughout.
@@ -713,6 +718,7 @@ Partnerships with the Académia Ligùstica do Brénno and A Compagna are sought 
 
 Every change, file by file, is listed in [CHANGELOG.md](CHANGELOG.md).
 
+* **0.14.2, 2026/10/20:** with Keyman 19's auto-correction, a word typed in lowercase becomes the lowercase form of a pair such as `damàsco` and `Damàsco`; the space bar reads "Lìgure - grafîa ofiçiâ"; the install page recommends Keyman 19 and shows how to make sure our dictionary is the one in use.
 * **0.14.1, 2026/10/20:** the site builds again. The word frequency list still held 28 words written with the long s, `ſ`, from old texts quoted on the Ligurian Wikipedia, which 0.14.0 stopped accepting as letters; they are removed, and a test now reads the committed list.
 * **0.14.0, 2026/10/20: a checker for lexicon files.** `npm run lexicon:validate -- <file.tsv>` reads a word list without changing it and reports, line by line, every row the engine or the database would refuse, rows repeated, the words for which the input method opens a menu, in the menu's order, approved forms with freq 0, and the manager's warnings about `ñ` and elision; its exit code tells a script whether the file may be used. The engine no longer accepts `ſ` or the Kelvin sign as letters, which the database always refused.
 * **0.13.1, 2026/10/20:** the dictionary's subtitle names each language in itself, Ligurian as "lìgure".
@@ -816,7 +822,7 @@ Questo repository resta un metodo di scrittura, il modo di scrivere in ligure ne
 
 * **Lo scheletro.** Ogni parola del dizionario ha uno "scheletro": le lettere semplici con cui la si scrive. Si calcola togliendo gli accenti alle vocali, trasformando `æ` in `ae`, `ç` in `c` e `ñ` in `n`, uniformando gli apostrofi e togliendo i trattini, secondo l'*Arfabêto* dell'Académia. Ciò che si scrive viene ridotto allo stesso modo e cercato nel dizionario.
 * **Nell'editor web**, la parola viene sostituita quando si preme lo spazio: se c'è una sola grafia, subito; se ce ne sono di più, appare un menu; se la parola è sconosciuta, resta com'è. Le maiuscole e la punteggiatura si conservano; Backspace subito dopo annulla la conversione. L'editor funziona anche senza connessione dopo la prima visita, e il testo non lascia mai il browser.
-* **Nella tastiera Android**, che funziona dentro l'app gratuita **Keyman** di SIL Global, le grafie compaiono nella barra dei suggerimenti mentre si scrive: si tocca quella giusta. Tenendo premute le vocali, la `c` e la `n` si ottengono tutte le lettere liguri, `ñ` compresa; c'è un tasto per l'apostrofo; la maiuscola arriva da sola a inizio frase, e due tocchi su Maiusc bloccano le maiuscole. Sui computer Keyman non offre suggerimenti: lì si usa l'editor web.
+* **Nella tastiera Android**, che funziona dentro l'app gratuita **Keyman** di SIL Global, le grafie compaiono nella barra dei suggerimenti mentre si scrive; con Keyman 19, ancora in prova, la parola diventa ligure da sola premendo lo spazio, con Keyman 18 si tocca quella giusta. Sulla barra dello spazio la tastiera si chiama «Lìgure - grafîa ofiçiâ». Tenendo premute le vocali, la `c` e la `n` si ottengono tutte le lettere liguri, `ñ` compresa; c'è un tasto per l'apostrofo; la maiuscola arriva da sola a inizio frase, e due tocchi su Maiusc bloccano le maiuscole. Sui computer Keyman non offre suggerimenti: lì si usa l'editor web.
 
 ### Il dizionario
 

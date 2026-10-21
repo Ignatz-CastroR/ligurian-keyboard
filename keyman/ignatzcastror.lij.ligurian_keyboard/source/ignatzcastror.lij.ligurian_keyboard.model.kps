@@ -8,6 +8,9 @@
             replaces it, in a staging copy, with the dictionary
             snapshot's date as YYYY.M.D, so a newer dictionary always
             has a higher version. The committed file keeps 0.0.0.
+  Updated:  2026/10/20, 20:30:50: the dictionary named in Ligurian,
+            Diçionäio lìgure [grafîa ofiçiâ], and its language Lìgure
+            [decision 0037].
 -->
 <Package>
   <System>
@@ -20,7 +23,7 @@
     <WelcomeFile>welcome.htm</WelcomeFile>
   </Options>
   <Info>
-    <Name URL="">Dizionario ligure [grafîa ofiçiâ]</Name>
+    <Name URL="">Diçionäio lìgure [grafîa ofiçiâ]</Name>
     <Copyright URL="">© 2026 Eng. José Ignacio Castro de R. and contributors</Copyright>
     <Author URL="">Ignatz-CastroR</Author>
     <Version URL="">0.0.0</Version>
@@ -44,10 +47,10 @@
   <Keyboards/>
   <LexicalModels>
     <LexicalModel>
-      <Name>Dizionario ligure [grafîa ofiçiâ]</Name>
+      <Name>Diçionäio lìgure [grafîa ofiçiâ]</Name>
       <ID>ignatzcastror.lij.ligurian_keyboard</ID>
       <Languages>
-        <Language ID="lij">Ligure</Language>
+        <Language ID="lij">Lìgure</Language>
       </Languages>
     </LexicalModel>
   </LexicalModels>

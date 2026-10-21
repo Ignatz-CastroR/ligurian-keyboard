@@ -3,6 +3,8 @@
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/17, 04:03:48, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
  * Updated:  2026/10/17, 07:50:33: ñ on a long press of n.
+ * Updated:  2026/10/20, 20:27:40: the names in the package sources
+ *           [decision 0037].
  * Purpose:  Tests of the Keyman keyboard's sources: the on-screen layout
  *           [keyman/src/touch-layout.ts and the file it writes], the
  *           .kmn header, and the two package sources.
@@ -187,10 +189,13 @@ test("the keyboard version matches the project version", () => {
 test("the package sources declare the right ids, Ligurian and the version placeholder", () => {
   const keyboardKps: string = read(`${KEYBOARD_ID}/source/${KEYBOARD_ID}.kps`);
   assert.match(keyboardKps, new RegExp(`<ID>${KEYBOARD_ID}</ID>`));
-  assert.match(keyboardKps, /<Language ID="lij">/);
+  assert.match(keyboardKps, /<Language ID="lij">Lìgure<\/Language>/);
+  assert.match(keyboardKps, /<Name>grafîa ofiçiâ<\/Name>/);
+  assert.match(read(`${KEYBOARD_ID}/source/${KEYBOARD_ID}.kmn`), /^store\(&NAME\) 'grafîa ofiçiâ'$/m);
   assert.match(keyboardKps, /<FollowKeyboardVersion\/>/);
   const modelKps: string = read(`${MODEL_ID}/source/${MODEL_ID}.model.kps`);
   assert.match(modelKps, new RegExp(`<ID>${MODEL_ID.replaceAll(".", "\\.")}</ID>`));
-  assert.match(modelKps, /<Language ID="lij">/);
+  assert.match(modelKps, /<Language ID="lij">Lìgure<\/Language>/);
+  assert.match(modelKps, /<Name>Diçionäio lìgure \[grafîa ofiçiâ\]<\/Name>/);
   assert.ok(modelKps.includes(MODEL_VERSION_PLACEHOLDER), "the build replaces this placeholder");
 });

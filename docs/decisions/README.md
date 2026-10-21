@@ -42,6 +42,7 @@ A decision is never edited away. If it changes, a new record replaces it, and th
 | [0034](0034-dictionary-for-readers.md) | The dictionary for readers, an index and a search by translation | 2026/10/18 | accepted; superseded in part by [0035](0035-site-in-five-sections.md) |
 | [0035](0035-site-in-five-sections.md) | The site in five sections | 2026/10/20 | accepted |
 | [0036](0036-built-for-more-than-one-language.md) | Built for more than one language | 2026/10/20 | accepted |
+| [0037](0037-lowercase-first-and-ligurian-names.md) | The Android keyboard: lowercase first, Ligurian names, Keyman 19 | 2026/10/20 | accepted |
 
 ## Still open
 

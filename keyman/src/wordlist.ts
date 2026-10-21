@@ -12,7 +12,15 @@
  *           the defaults of decision 0004]. A snapshot that fails the
  *           editor's own checks, or holds no such form, gives problems
  *           and no word list, so a bad dictionary is never packaged.
+ * Updated:  2026/10/20, 20:06:15: when two forms differ only by a
+ *           capital, such as damàsco and Damàsco, the lowercase one
+ *           weighs one more, so that Keyman offers and auto-corrects to
+ *           it first when the word is typed in lowercase; typed with a
+ *           capital, Keyman capitalizes both, and they are one. Every
+ *           count is doubled first, so that this extra one changes no
+ *           other order [decision 0037].
  * Decision: docs/decisions/0022-keyman-keyboard-design.md
+ *           docs/decisions/0037-lowercase-first-and-ligurian-names.md
  */
 
 import type { LexiconEntry } from "../../engine/src/lexicon.ts";
@@ -34,7 +42,7 @@ export type WordlistResult =
 
 // Keyman weighs suggestions by count and never offers a word whose count
 // is 0. An approved word must always be reachable, so counts are whole
-// numbers of at least 1.
+// numbers of at least 1 [then doubled, below].
 export function keymanCount(freq: number): number {
   return Math.max(1, Math.round(freq));
 }
@@ -54,14 +62,29 @@ export function modelVersion(takenAt: string | null, fallback: Date): string {
   return version;
 }
 
-// Most frequent first; ties alphabetical, so the file only changes when
-// the dictionary does.
-function compareForKeyman(a: LexiconEntry, b: LexiconEntry): number {
-  let order: number = keymanCount(b.freq) - keymanCount(a.freq);
-  if (order === 0) {
-    order = a.form.localeCompare(b.form, "it");
+// True when a form begins with a lowercase letter: damàsco, not Damàsco.
+function startsLowercase(form: string): boolean {
+  const first: string = [...form][0] ?? "";
+  return first !== first.toUpperCase() && first === first.toLowerCase();
+}
+
+/* The weight of every form in the word list: its count doubled, plus
+   one for a form that begins with a lowercase letter when another form
+   is spelled the same but for capitals [damàsco beside Damàsco]. Keyman
+   breaks ties between suggestions in its own way, and on 2026/10/20 it
+   auto-corrected "damasco" to Damàsco; with the extra one, a word typed
+   in lowercase is corrected to the lowercase form. Doubling first keeps
+   every other order exactly as the counts give it: 2a + 1 never passes
+   2b when a < b. */
+export function keymanWeights(entries: readonly LexiconEntry[]): Map<string, number> {
+  const capitalized: Set<string> = new Set(
+    entries.filter((e) => !startsLowercase(e.form)).map((e) => e.form.toLowerCase()));
+  const weights: Map<string, number> = new Map();
+  for (const entry of entries) {
+    const partner: boolean = startsLowercase(entry.form) && capitalized.has(entry.form.toLowerCase());
+    weights.set(entry.form, 2 * keymanCount(entry.freq) + (partner ? 1 : 0));
   }
-  return order;
+  return weights;
 }
 
 export function buildWordlist(snapshotText: string, now: Date): WordlistResult {
@@ -72,10 +95,14 @@ export function buildWordlist(snapshotText: string, now: Date): WordlistResult {
     result = { ok: false, problems };
   } else {
     const snapshot: Snapshot = readSnapshot(snapshotText);
-    const entries: LexiconEntry[] = snapshot.lexicon
+    const chosen: LexiconEntry[] = snapshot.lexicon
       .entries()
-      .filter((e) => e.variety === MODEL_VARIETY && e.orthography === MODEL_ORTHOGRAPHY)
-      .sort(compareForKeyman);
+      .filter((e) => e.variety === MODEL_VARIETY && e.orthography === MODEL_ORTHOGRAPHY);
+    const weights: Map<string, number> = keymanWeights(chosen);
+    const weight = (e: LexiconEntry): number => weights.get(e.form) ?? 0;
+    // Heaviest first; ties alphabetical, so the file only changes when
+    // the dictionary does.
+    const entries: LexiconEntry[] = chosen.sort((a, b) => weight(b) - weight(a) || a.form.localeCompare(b.form, "it"));
 
     if (entries.length === 0) {
       result = {
@@ -91,7 +118,7 @@ export function buildWordlist(snapshotText: string, now: Date): WordlistResult {
         "# License: CC BY-SA 4.0, ligurian-keyboard contributors.",
         "# Columns: word, count.",
       ];
-      const lines: string[] = entries.map((e) => `${e.form}\t${keymanCount(e.freq)}`);
+      const lines: string[] = entries.map((e) => `${e.form}\t${weight(e)}`);
       result = {
         ok: true,
         wordlist: {

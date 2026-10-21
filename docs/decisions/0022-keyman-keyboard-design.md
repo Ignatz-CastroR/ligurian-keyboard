@@ -4,7 +4,7 @@
 * **Date:** 2026/10/17
 * **Decided by:** Eng. José Ignacio Castro de R.
 * **Refines:** [0021](0021-keyman-scope-and-toolchain.md), point 3: the key function is a hand-written copy guarded by tests, not generated from the engine's source
-* **Refined by:** [0023](0023-lexicon-manager-spanish-history-csv.md), on the languages of the install page; [0024](0024-letter-enye.md), on the long press of n; [0029](0029-elision.md), on the word breaker and elided forms
+* **Refined by:** [0023](0023-lexicon-manager-spanish-history-csv.md), on the languages of the install page; [0024](0024-letter-enye.md), on the long press of n; [0029](0029-elision.md), on the word breaker and elided forms; [0037](0037-lowercase-first-and-ligurian-names.md), on the names Keyman shows, the weights of the word list and the Keyman version recommended
 
 ## Context
 

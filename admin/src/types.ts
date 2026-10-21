@@ -7,6 +7,10 @@
  * Updated:  2026/10/18, 13:10:41: the columns review_queue gains in
  *           migration 0007, to group and label the queue by entry
  *           [decision 0033].
+ * Updated:  2026/10/20, 23:49:12: senses_reviewed_at on lemmas
+ *           [migration 0012, decision 0038].
+ * Updated:  2026/10/21, 09:30:23: senses_review_needed, the list of
+ *           lemmas whose senses wait to be reviewed [migration 0012].
  * Purpose:  The shapes of the rows the lexicon manager reads from the
  *           database. They mirror db/migrations/0001, 0004 and 0006
  *           column by column; a column added there must be added here.
@@ -42,6 +46,11 @@ export interface Lemma extends Tracked {
   orthography: string;
   part_of_speech: string | null;
   note: string | null;
+  // From migration 0012: on the list of lemmas whose senses wait to be
+  // reviewed, and when a reviewer last confirmed how its translations
+  // are grouped into senses [null: never].
+  senses_review_needed: boolean;
+  senses_reviewed_at: string | null;
 }
 
 export interface Wordform extends Tracked {

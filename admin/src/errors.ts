@@ -8,6 +8,12 @@
  *           a batch failure's SQLSTATE without loading Supabase.
  * Updated:  2026/10/18, 16:24:30: "timeout", for a statement Supabase
  *           stopped at its time limit [SQLSTATE 57014].
+ * Updated:  2026/10/20, 23:49:12: 40001, an entry changed since it was
+ *           shown, is a conflict; P0002, an entry that is gone, is not
+ *           found [migration 0012].
+ * Updated:  2026/10/21, 10:57:43: 40P01, a statement PostgreSQL stopped
+ *           because it waited for another that waited for it, is a
+ *           conflict too: the page reloads and the person tries again.
  * Contract: Every code raised by our migrations has a kind here; any
  *           other code is "generic".
  */
@@ -39,6 +45,10 @@ export function sqlStateKind(code: string): AppErrorKind {
     kind = "notempty";
   } else if (code === "57014") {
     kind = "timeout";
+  } else if (code === "40001" || code === "40P01") {
+    kind = "conflict";
+  } else if (code === "P0002") {
+    kind = "notfound";
   }
   return kind;
 }

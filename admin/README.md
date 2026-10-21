@@ -1,6 +1,6 @@
 # admin: the lexicon manager
 
-A web page where people search the shared Ligurian dictionary, propose words and review proposals; admins also make backups. Profiles, people and roles live in the site's Users section, [users/](../users/README.md), built from this manager's own modules. Plain TypeScript, built with [Vite](https://vite.dev), talking directly to the Supabase database. Design: decisions [0018](../docs/decisions/0018-lexicon-manager-design.md), [0023](../docs/decisions/0023-lexicon-manager-spanish-history-csv.md), [0025](../docs/decisions/0025-csv-semicolon.md), [0030](../docs/decisions/0030-public-identifiers.md), [0031](../docs/decisions/0031-backups.md), [0033](../docs/decisions/0033-batch-review.md) and [0035](../docs/decisions/0035-site-in-five-sections.md).
+A web page where people search the shared Ligurian dictionary, propose words and review proposals; admins also make backups. Profiles, people and roles live in the site's Users section, [users/](../users/README.md), built from this manager's own modules. Plain TypeScript, built with [Vite](https://vite.dev), talking directly to the Supabase database. Design: decisions [0018](../docs/decisions/0018-lexicon-manager-design.md), [0023](../docs/decisions/0023-lexicon-manager-spanish-history-csv.md), [0025](../docs/decisions/0025-csv-semicolon.md), [0030](../docs/decisions/0030-public-identifiers.md), [0031](../docs/decisions/0031-backups.md), [0033](../docs/decisions/0033-batch-review.md), [0035](../docs/decisions/0035-site-in-five-sections.md) and [0038](../docs/decisions/0038-senses-reviewed-one-by-one.md).
 
 The interface is in **Italian**, the default, **English** and **Spanish**; the menu in the header switches between them and the choice is remembered in the browser.
 
@@ -11,14 +11,14 @@ The interface is in **Italian**, the default, **English** and **Spanish**; the m
 | Anyone, signed out | Search the published dictionary, see the latest additions, and download the dictionary as TSV or CSV |
 | member | The same, plus edit their own display name and see their own proposals |
 | contributor | Propose lemmas, forms, senses and translations; edit their own pending proposals |
-| reviewer | Approve, reject and correct anything; see the review queue, the list of people and the history of every entry |
+| reviewer | Approve, reject and correct anything; see the review queue, the list of people and the history of every entry; regroup the senses of a lemma, which removes the senses it replaces |
 | admin | Everything a reviewer can, plus delete, restore, rename people and change roles; download a backup, and restore one into an empty dictionary |
 
 The database enforces all of this [db/README.md](../db/README.md); the page only hides the buttons that would fail.
 
 ## Pages
 
-At the top of every page, the site's bar of five sections [`site/`]; below the manager's title, its own tabs: Search, New lemma [contributors and up], To review [signed in] and Backups [admins], the current one filled.
+At the top of every page, the site's bar of five sections [`site/`]; below the manager's title, its own tabs: Search, New lemma [contributors and up], To review [signed in], Significati da rivedere [reviewers and admins] and Backups [admins], the current one filled.
 
 | Address | Page |
 |---|---|
@@ -26,9 +26,27 @@ At the top of every page, the site's bar of five sections [`site/`]; below the m
 | `#/entry/<id>` | One entry: lemma, forms, numbered senses with translations, history; the public code of the lemma and of every form; a link to the same entry in the dictionary for readers when it is published, otherwise the reason it is not [pending, rejected, deleted]. Translations are added one or several at a time: `penna; stilografica` becomes two rows, shown before saving; the language starts unchosen and must be chosen; an edited translation may not hold ";" |
 | `#/new` | Propose a new lemma; lemmas with the same ASCII key are shown while typing, to avoid duplicates |
 | `#/review` | Everything pending, oldest first, grouped by entry; for staff, batch approval and rejection [see Reviewing below] |
+| `#/senses` | For reviewers and admins: the lemmas whose senses wait to be reviewed, fewest senses first, 50 a page [see Repairing the senses below] |
+| `#/repair/<id>` | For reviewers and admins: the senses of one lemma, regrouped with a key |
 | `#/backups` | For admins: download a backup, restore one into an empty dictionary |
 | `#/signin` | Sign in |
 | `#/users` | Moved in 0.13.0: opens the Users section, `../utenti/` |
+
+## Repairing the senses
+
+Before 0.12.1, words loaded by SQL received one sense per translation. Migration 0012 lists the lemmas left in that shape on the day it runs, once and for all: no edit takes a lemma off the list, and no new entry joins it. The tab **Significati da rivedere** shows the lemmas on the list not yet reviewed, fewest senses first, 50 a page, each with its translations; **Comincia dal primo** opens the first of the whole queue.
+
+The page of a lemma, `#/repair/<id>`, lists its translations, each with its current sense and a **Nuovo significato** menu that starts at the current one, and an Italian definition field for each group of translations, labelled with the number its sense will have. A field shows the definition of the sense that holds exactly its translations, if one does, and keeps what is typed while the menus change. Three actions decide, each also on a key while neither a text field nor a menu has the focus; on a menu the keys choose, as usual, and after a choice made with the mouse the focus leaves the menu:
+
+| Key | Action | Sends |
+|---|---|---|
+| 1 | **Un solo significato** | every translation in one sense, with the first field's text |
+| 2 | **Lascia così** | the senses as they are, ignoring the menus, numbered 1, 2, 3 without gaps; a field whose group holds exactly a sense's translations gives that sense its text |
+| 3 | **Raggruppa** | one sense per number chosen, in increasing order, numbered 1, 2, 3, each with its field's text |
+
+What a field shows is what is sent: what was typed, or else the definition of the sense holding exactly its translations. A definition shown in a field that the chosen action would not use stops the action, with a message, so that no definition is lost by a key press: clear the field first, or use **Raggruppa**. A field that disappears, because no translation is left in its group, takes its typed text with it.
+
+Each action is one call to `regroup_senses()` [migration 0012], with the lemma, every sense and every translation at the version the page read. A sense whose translations stay together is kept, with its id and history; the others are recreated, their translations copied and the originals removed, and the numbers never collide. The lemma is marked reviewed, and the next lemma of the queue opens, or the first still waiting, with a summary of what changed; when none waits, the queue says it is finished. If anyone changed the lemma meanwhile, another reviewer's "Lascia così" included, nothing is saved: the page reloads and says so. **Salta** opens the next lemma without saving; a link opens the entry, where a translation's text or language is corrected. A lemma with a sense that has no translation cannot be regrouped until the sense gets a translation in the entry, or an admin removes it; a lemma with no sense left is closed with **Lascia così**. The entry page links to the repair page for reviewers and admins, and says when the senses were last reviewed [decision [0038](../docs/decisions/0038-senses-reviewed-one-by-one.md)].
 
 ## Reviewing
 
@@ -79,6 +97,7 @@ The **frequency** of a form is a weight, 1 by default. The daily snapshot adds t
 | `src/backup.ts` | A backup assembled from small reads, the check of a backup file before a restore, summaries of counts; pure functions |
 | `src/file-names.ts` | Download names stamped with the local date and time, for the TSV, the CSV and backups; pure functions |
 | `src/queue.ts` | The review queue grouped by entry, its labels, the selection and the items of a batch; pure functions |
+| `src/repair.ts` | The repair page's logic: the rows, what was seen, the definition fields, the groups each action sends, the keys; pure functions |
 | `src/errors.ts` | The kinds of failure, and how a PostgreSQL error code becomes one |
 | `src/messages.ts` | Every text, in Italian, English and Spanish; the language menu's entries |
 | `src/ui.ts` | Page building helpers; never `innerHTML` |
@@ -95,6 +114,7 @@ The **frequency** of a form is a weight, 1 by default. The daily snapshot adds t
 | `test/backup-assembly.test.ts` | The backup assembled from small reads equals `export_backup()`'s on a real database, loses no row when the server sends short pages, starts again when the dictionary changes meanwhile and refuses a dictionary that never rests, retries a failed read, and restores exactly |
 | `test/file-names.test.ts` | Download names: padded, digits only, sorting in time order; no fixed name left in the page |
 | `test/queue.test.ts` | Grouping by entry, labels in three languages, ranges, entry and "select all" selection, batch items, failure reasons, and a real queue approved whole by the database |
+| `test/repair.test.ts` | The repair page's logic: rows, what was seen, definition fields that follow their translations, a definition shown that an action would lose, the keys, the queue's rule; then on the real database, the five entries a speaker grouped and definitions kept through a reordering |
 | `vite.config.ts` | Build settings |
 
 ## Running it on your computer

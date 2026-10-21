@@ -5,9 +5,15 @@
  * Updated:   2026/10/20, 00:21:40: live rows only, under live parents;
  *            every language counted, even with no translation; ","
  *            and "/" measured too.
+ * Updated:   2026/10/21, 09:30:23: two measures of the repairs of 0.15.0
+ *            [migration 0012]: the lemmas waiting on the list for their
+ *            senses to be reviewed, the same the lexicon manager's queue
+ *            lists, and those already reviewed. The shape measured above
+ *            them no longer equals the list once reviewing begins: a
+ *            lemma kept as it is still has that shape.
  * Purpose:   Measure, without changing anything, the shape of entries
  *            loaded by SQL before add-entries.sql existed, so that the
- *            repairs of 0.13.0 can be sized: senses split one per
+ *            repairs of 0.15.0 can be sized: senses split one per
  *            translation, translations that may hold several,
  *            translations by language, rows with no author.
  * Usage:     Paste into the SQL Editor and press Run. Every query only
@@ -68,6 +74,14 @@ select 'translations in ' || l.code, count(g.id)
 union all
 select 'lemmas with no author [written as the trusted backend, or account deleted]', count(*)
     from live_lemmas where created_by is null
+union all
+select 'lemmas waiting for their senses to be reviewed [the queue of 0.15.0]', count(*)
+    from public.lemmas
+    where senses_review_needed and senses_reviewed_at is null and deleted_at is null
+union all
+select 'lemmas whose senses were reviewed', count(*)
+    from public.lemmas
+    where senses_reviewed_at is not null and deleted_at is null
 union all
 select 'rows waiting for review', count(*)
     from (select id from public.lemmas where status = 'pending' and deleted_at is null

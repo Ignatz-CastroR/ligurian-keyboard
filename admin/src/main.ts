@@ -15,12 +15,17 @@
  *           Backups, moved here from the users page. Profiles and people
  *           moved to the site's Users section, /utenti/, where the old
  *           address #/users now leads [decision 0035].
+ * Updated:  2026/10/20, 23:49:12: the repairs of the senses: the tab
+ *           Significati da rivedere, for reviewers and admins, and the
+ *           repair page of one lemma [decision 0038].
  * Purpose:  Start the lexicon manager: connect to Supabase, follow the
  *           session, draw the header and send each address to its view.
  * Routes:   #/search/<query>   search [everyone]
  *           #/entry/<id>       one entry [everyone, as far as visible]
  *           #/new              propose a lemma [contributors and up]
  *           #/review           review queue [signed in]
+ *           #/senses           the senses to review [reviewers and admins]
+ *           #/repair/<id>      the senses of one lemma [reviewers and admins]
  *           #/backups          backup and restore [admins]
  *           #/signin           sign in
  *           #/users            moved: opens ../utenti/
@@ -36,7 +41,7 @@ import type { Profile, ReferenceData } from "./types.ts";
 import { connect, currentSession, exportTsv, myProfile, onSessionChange, referenceData, signOut } from "./db.ts";
 import { tsvToCsv } from "./export.ts";
 import { lexiconFileName } from "./file-names.ts";
-import { canBackup, canPropose } from "./permissions.ts";
+import { canBackup, canPropose, isStaff } from "./permissions.ts";
 import { loadStats, mountSiteBar } from "../../site/bar.ts";
 import {
   attachMessageBar, clear, describeError, downloadText, h, hideMessage, roleLabel, runAction, showError, showInfo,
@@ -45,6 +50,8 @@ import { renderSearch } from "./views/search.ts";
 import { renderEntry } from "./views/entry.ts";
 import { renderNewLemma } from "./views/new-lemma.ts";
 import { renderReview } from "./views/review.ts";
+import { renderSenseQueue } from "./views/sense-queue.ts";
+import { renderRepair } from "./views/repair.ts";
 import { renderBackups } from "./views/backups.ts";
 import { renderSignIn } from "./views/sign-in.ts";
 
@@ -55,6 +62,8 @@ const ROUTES: Readonly<Record<string, View>> = {
   entry: renderEntry,
   new: renderNewLemma,
   review: renderReview,
+  senses: renderSenseQueue,
+  repair: renderRepair,
   backups: renderBackups,
   signin: renderSignIn,
 };
@@ -196,6 +205,7 @@ function drawHeader(state: State): void {
       tab("#/search/", t.navSearch, ["search", "entry"]),
       canPropose(ctx.role) && tab("#/new", t.navNew, ["new"]),
       ctx.userId !== null && tab("#/review", t.navReview, ["review"]),
+      isStaff(ctx.role) && tab("#/senses", t.navRepair, ["senses", "repair"]),
       canBackup(ctx.role) && tab("#/backups", t.navBackups, ["backups"]),
     ),
   );

@@ -14,15 +14,6 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 ## [Unreleased]
 
 ### Planned
-- 0.15.0: repairs of the entries loaded by SQL before 0.12.1. A
-  sample of 25 of the 5,731 lemmas whose senses were split one per
-  translation, judged by a speaker, showed that no default fits them:
-  12 are one meaning, 8 are right as they are, 5 need regrouping. So
-  no bulk change: a queue of senses to review, one page per lemma
-  with three actions [one sense; keep as they are; regroup], each
-  decision applied at once by the database and recorded; translation
-  texts and languages corrected on the way; translations holding ";"
-  split after a dry run; the manager's dashes replaced.
 - 0.16.0: grammar for every form, base lemma included, in structured
   fields chosen by part of speech: gender, number, person, tense and
   mood, with the conjugation class, the auxiliary and the pronominal
@@ -43,6 +34,133 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
 - Then: hardening, contributor documentation; a beta with native
   speakers in Genoa.
 - 1.0.0: when every criterion in the README's roadmap is met.
+
+## [0.15.0] [2026/10/21] [the senses reviewed one by one]
+
+### Added
+- The repairs of the entries loaded by SQL before 0.12.1, which made
+  one sense per translation: 5,731 lemmas in the live dictionary. A
+  speaker's judgement of 25 of them, drawn at random, showed that no
+  default regrouping fits [12 are one meaning, 8 right as they are, 5
+  need a grouping of their own], so every lemma is decided by a person,
+  quickly [decision 0038, migration 0012]:
+  - `lemmas.senses_review_needed`, the list, frozen when migration 0012
+    runs: it marks every live lemma split one sense per translation,
+    by an ordinary update that raises the lemma's version and writes a
+    line of history. Afterwards only the trusted backend changes it, so
+    no edit takes a lemma off the list and no new entry joins it.
+  - `lemmas.senses_reviewed_at`, when a reviewer last confirmed the
+    grouping; set only by reviewers, admins, the trusted backend and a
+    restore, always by the database's clock; clearing it sends a lemma
+    on the list back to the queue.
+  - `sense_review_queue()`: the lemmas on the list not yet reviewed,
+    fewest senses first, 50 a page by key, with each lemma's
+    translations, its position and the number waiting.
+  - `regroup_senses()`: a reviewer's grouping applied in one
+    transaction. It refuses anything changed since the page read it,
+    the lemma's own version included, always as a conflict; and a
+    translation lost, repeated or not the lemma's, or a sense with no
+    translation. A group equal to an existing sense keeps it, id and
+    history included; the others become new senses with copies of
+    their translations, the originals soft deleted; numbers pass
+    through temporary values above every number in use, so that two
+    live senses never share one; duplicates in a group are copied once,
+    the best reviewed of them; a new sense is approved only when all
+    its translations came from approved senses; a group sent without a
+    definition keeps the kept sense's own.
+  - Reviewers may soft delete senses and translations inside
+    `regroup_senses()` only: it raises a flag for its own transaction,
+    as `restore_backup()` does, and the update trigger accepts a
+    reviewer's soft delete of a sense or translation under it, never a
+    restore, never a lemma or a form.
+  - `split_semicolon_glosses()`, admins and the trusted backend only:
+    the 7 translations holding ";" split into one row each in the same
+    sense, after a dry run that counts exactly what the real run adds;
+    pieces normalized as the manager's own field normalizes them.
+    `db/templates/split-semicolon-glosses.sql` runs it from the SQL
+    Editor, a dry run until one word is changed.
+  - `db/templates/check-loaded-entries.sql` gains two measures: the
+    lemmas waiting, the same the queue lists, and those reviewed.
+- The lexicon manager: the tab **Significati da rivedere**, for
+  reviewers and admins, and the page of one lemma, `#/repair/<id>`, with
+  each translation's current sense, a choice of new sense, an Italian
+  definition per new sense, and three actions on three keys:
+  **1** one sense, **2** leave as it is, **3** group as chosen. Each
+  saves at once and opens the next lemma, or the first still waiting.
+  A definition field belongs to its group of translations: it shows
+  what was typed for it, or else the definition of the sense holding
+  exactly them, is labelled with the number the sense will have, and
+  sends what it shows; a definition shown that the action would not
+  use stops it. While a menu has the focus, the keys choose in it. A
+  lemma changed by anyone meanwhile is refused whole and the page
+  reloads. **Salta** skips a lemma; a link opens the entry to correct a
+  translation's text or language. The entry page links to the repair
+  page and says when its senses were last reviewed.
+- The Users section reads a change of `senses_reviewed_at` as
+  "significati rivisti", and the marking as "messo fra i significati da
+  rivedere".
+
+### Fixed
+- A sense with no definition showed a dash, "1. —"; it reads
+  "[senza definizione]". The queue's range read "Voci 1–50"; it reads
+  "Voci da 1 a 50". Both in the three languages.
+- A translation added at the moment its sense was soft deleted could
+  stay live under the deleted sense: the insert trigger of the lexicon
+  tables read the parent without a lock. It now locks the lemma, then
+  the sense, until the end of the transaction, and sees the deletion;
+  `regroup_senses()` takes the same locks in the same order, and locks
+  the translations it reads, so the two never wait for each other.
+- In `db/README.md`, migrations 0010 and 0011 were listed out of order.
+
+### Changed
+- `restore_backup()` restores both new columns. A backup made before
+  0.15.0 restores with no review date, and its list is drawn again from
+  the restored entries' shape, with no version raised and no line of
+  history; inside a restore, the update trigger now keeps rows exactly
+  as the backup holds them, as 0006's other triggers do. Its time limit
+  of 60 seconds is set again, since replacing a function clears it.
+- The lexicon manager reads SQLSTATE 40001 and 40P01 as a conflict,
+  and P0002 as not found.
+- Version 0.15.0; keyboard version 0.15.0, its keys unchanged.
+
+### Verified
+- The five entries a speaker grouped by hand [`stécco`, `sacrificâ`,
+  `sachezâ`, `sachézzo`, `gabìbbo`] come out exactly as he grouped
+  them, in the database tests and again through the repair page's own
+  logic run on the real database; kept senses keep their ids.
+- An independent review of this release, by a reviewer who had not
+  seen its making, found 16 points, three major: definitions moved
+  onto the wrong senses when senses were reordered on the page; a page
+  read before another reviewer's "leave as it is" could still override
+  it; and the queue, then drawn from the entries' shape, lost lemmas
+  on any edit. All three are fixed, and the smaller points too but
+  two, documented in decision 0038 [the history reads a cleared review
+  date as a review; a renumbered sense writes two lines of history].
+  Its proof tests, adapted to the new request, fail on the fixed code;
+  seven rules it showed untested now have tests of their own. A second
+  independent review, of the fixes, confirmed them and found four more
+  defects, all fixed: key 1 dropped the definition field 1 showed; a
+  translation's insert and a regrouping took their locks in opposite
+  orders and could stop each other; a regrouping did not lock the
+  translations it kept; the split's dry run counted a piece repeated
+  across two translations of one sense twice. Two smaller ones too: a
+  digit typed on a focused menu saved an action, and text typed for a
+  group no longer shown could still block every action.
+- Speed at the live dictionary's size [a synthetic dictionary of 28,175
+  lemmas, 5,635 of them split], without table statistics: migration
+  0012 itself 1.8 s, marking the list with its history; a page of the
+  queue 107 ms; a regrouping 48 ms; a dry run of the split 9 ms.
+  The first version took 95 s, 243 s and 97 s, far above the 8 s
+  Supabase allows a signed-in request: the count of translations per
+  sense was left to table statistics, and the regrouping joined the
+  translations to a JSON list, which kept row level security from the
+  index. Both rewritten; a test at 6,000 lemmas fails if either slow
+  plan returns [the old count takes 10 s there, the bound is 3 s].
+- Run migration 0012 before pushing this code; download a backup first.
+
+Tests: 342, passing on Node.js 22 [engine 54, db 114, admin 78,
+editor 24, dictionary 9, users 4, site 4, keyman 34, corpus 16,
+docs 5].
 
 ## [0.14.3] [2026/10/20] [damàsco on the first space]
 
@@ -1850,7 +1968,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.3...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.3...v0.15.0
 [0.14.3]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.2...v0.14.3
 [0.14.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.1...v0.14.2
 [0.14.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.0...v0.14.1

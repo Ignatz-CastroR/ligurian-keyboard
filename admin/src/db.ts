@@ -18,6 +18,8 @@
  * Updated:  2026/10/20, 01:55:30: peopleActivity[], userHistory[] and
  *           userSummary[], for the site's Users section [migration
  *           0011, decision 0035].
+ * Updated:  2026/10/20, 23:49:12: senseReviewQueue[] and regroupSenses[],
+ *           the repairs of the senses [migration 0012, decision 0038].
  * Purpose:  Every conversation between the lexicon manager and the
  *           database. Views never call Supabase directly; they call
  *           these functions, so the queries live in one place.
@@ -32,6 +34,7 @@ import { skeleton } from "../../engine/src/skeleton.ts";
 import { searchKeyFilter } from "./forms.ts";
 import type { BackupSource, RestoreReport, Row } from "./backup.ts";
 import { AppError, sqlStateKind } from "./errors.ts";
+import type { Group, QueueKey, Seen } from "./repair.ts";
 import {
   BATCH_SIZE, chunks, mergeResults, type BatchItem, type BatchOutcome, type BatchResult, type ReviewStatus,
 } from "./queue.ts";
@@ -408,6 +411,81 @@ export async function reviewBatch(items: readonly BatchItem[], status: ReviewSta
     }
   }
   return { result, error };
+}
+
+/* ====================================================================
+   The repairs of the senses [migration 0012], for reviewers and admins
+   ==================================================================== */
+
+// A lemma waiting for its senses to be reviewed, as the queue lists it.
+export interface SenseQueueRow {
+  lemma_id: number;
+  public_id: string;
+  headword: string;
+  headword_key: string;
+  part_of_speech: string | null;
+  status: Status;
+  senses: number;
+  translations: { sense_number: number; language: string; gloss: string }[];
+}
+
+/* One page of the queue after `after` [null for the first], fewest
+   senses first, with the position of the first lemma and how many
+   wait in all, counted by the database in one snapshot. An empty page
+   carries no totals. */
+export interface SenseQueuePage {
+  rows: SenseQueueRow[];
+  first: number;
+  total: number;
+}
+
+interface SenseQueueDbRow extends SenseQueueRow {
+  queue_position: number | string;
+  total: number | string;
+}
+
+export async function senseReviewQueue(after: QueueKey | null, limit: number): Promise<SenseQueuePage> {
+  const { data, error } = await db().rpc("sense_review_queue", {
+    p_after_senses: after?.senses ?? null,
+    p_after_key: after?.key ?? null,
+    p_after_id: after?.id ?? null,
+    p_limit: limit,
+  });
+  if (error !== null) {
+    throw toAppError(error);
+  }
+  const rows: SenseQueueDbRow[] = (data ?? []) as SenseQueueDbRow[];
+  return {
+    rows: rows.map((row) => ({
+      lemma_id: row.lemma_id, public_id: row.public_id, headword: row.headword, headword_key: row.headword_key,
+      part_of_speech: row.part_of_speech, status: row.status, senses: row.senses, translations: row.translations ?? [],
+    })),
+    first: Number(rows[0]?.queue_position ?? 0),
+    total: Number(rows[0]?.total ?? 0),
+  };
+}
+
+export interface RegroupReport {
+  kept: number;
+  created: number;
+  deleted: number;
+  moved: number;
+  merged_duplicates: number;
+  renumbered: number;
+  definitions: number;
+  changed: boolean;
+  senses_reviewed_at: string;
+}
+
+/* Apply a grouping of one lemma's translations into senses, checked by
+   the database against what the page saw, and mark the lemma reviewed.
+   A change made meanwhile by anyone refuses it whole, as a conflict. */
+export async function regroupSenses(lemmaId: number, seen: Seen, groups: readonly Group[]): Promise<RegroupReport> {
+  const { data, error } = await db().rpc("regroup_senses", { p_lemma_id: lemmaId, p_seen: seen, p_groups: groups });
+  if (error !== null) {
+    throw toAppError(error);
+  }
+  return data as RegroupReport;
 }
 
 // Staff see every profile; everyone else sees only their own.

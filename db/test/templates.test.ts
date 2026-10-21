@@ -10,7 +10,13 @@
  *           a refused entry, an unknown or repeated key included, leaves
  *           nothing written and names the place; and
  *           check-loaded-entries.sql measures the shape a load that
- *           split senses leaves behind.
+ *           split senses leaves behind, the same lemmas the queue of
+ *           senses to review lists; split-semicolon-glosses.sql lists
+ *           and changes nothing until its one word is changed.
+ * Updated:  2026/10/20, 23:49:34: the split template, and the check's
+ *           agreement with sense_review_queue[] [migration 0012].
+ * Updated:  2026/10/21, 09:30:23: the check's two new measures, with a
+ *           lemma reviewed and kept as it is.
  * Contract: The template's placeholder user id is replaced with a test
  *           user's, as a person following its Usage would do.
  */
@@ -23,6 +29,7 @@ import { USERS, asUser, createSeededDatabase, rowsAs } from "./harness.ts";
 
 const ADD: string = readFileSync(new URL("../templates/add-entries.sql", import.meta.url), "utf8");
 const CHECK: string = readFileSync(new URL("../templates/check-loaded-entries.sql", import.meta.url), "utf8");
+const SPLIT: string = readFileSync(new URL("../templates/split-semicolon-glosses.sql", import.meta.url), "utf8");
 const PLACEHOLDER: string = "00000000-0000-0000-0000-000000000000";
 
 interface GlossRow { sense_number: number; language: string; gloss: string; status: string }
@@ -173,4 +180,61 @@ test("the check measures what a load that made a sense per translation leaves be
     "select total_items::int as total_items from public.review_queue_page() limit 1");
   assert.equal(queue[0]?.total_items, measures.get("rows waiting for review"));
   assert.deepEqual(await rowsAs(db, "trusted", "select count(*) from audit_log"), before);
+});
+
+interface SplitRow { headword: string | null; translation: string | null; pieces: string[] | null; action: string; reason: string | null }
+
+test("the split template is a dry run as committed, applies when its one word is changed; the check agrees with the queue", async () => {
+  const db = await createSeededDatabase();
+  await db.exec(`
+    insert into lemmas (headword, status) values ('ægua', 'approved'), ('lûxe', 'approved');
+    insert into senses (lemma_id, status) select id, 'approved' from lemmas;
+    insert into senses (lemma_id, status) select id, 'approved' from lemmas where headword = 'ægua';
+    insert into glosses (sense_id, language, gloss, status)
+      select s.id, 'it', case when l.headword = 'lûxe' then 'luce; lume'
+                              when s.sense_number = 1 then 'acqua' else 'water; aqua' end, 'approved'
+      from senses s join lemmas l on l.id = s.lemma_id;
+    insert into lemmas (headword, status) values ('nêuvo', 'approved');
+    insert into senses (lemma_id, sense_number, status) select id, n, 'approved' from lemmas, generate_series(1, 2) as n
+      where headword = 'nêuvo';
+    insert into glosses (sense_id, language, gloss, status)
+      select s.id, 'it', (array['nuovo', 'recente'])[s.sense_number], 'approved'
+      from senses s join lemmas l on l.id = s.lemma_id where l.headword = 'nêuvo';`);
+  await db.query("select private.mark_split_lemmas()");
+  // Two lemmas on the list; one reviewed and kept as it is: it keeps its
+  // shape, and leaves the queue.
+  const aegua = (await rowsAs<{ id: number; version: number }>(db, "trusted",
+    "select id, version from lemmas where headword = 'ægua'"))[0];
+  const seen = {
+    lemma: aegua,
+    senses: await rowsAs(db, "trusted", "select id, version from senses where lemma_id = $1 and deleted_at is null", [aegua?.id]),
+    glosses: await rowsAs(db, "trusted", `select g.id, g.version from glosses g join senses s on s.id = g.sense_id
+                                           where s.lemma_id = $1 and g.deleted_at is null`, [aegua?.id]),
+  };
+  const keep = (await rowsAs<{ id: number }>(db, "trusted", `select g.id from glosses g join senses s on s.id = g.sense_id
+                                                              where s.lemma_id = $1 order by s.sense_number`, [aegua?.id]))
+    .map((g) => ({ glosses: [g.id] }));
+  await rowsAs(db, asUser(USERS.reviewer), "select public.regroup_senses($1, $2::jsonb, $3::jsonb)",
+    [aegua?.id, JSON.stringify(seen), JSON.stringify(keep)]);
+  const measures = new Map((await rowsAs<{ measure: string; value: number }>(db, "trusted", CHECK))
+    .map((r) => [r.measure, Number(r.value)]));
+  const waiting = await rowsAs<{ lemma_id: number }>(db, asUser(USERS.reviewer), "select lemma_id from public.sense_review_queue()");
+  assert.equal(measures.get("lemmas whose senses look split one per translation"), 2);
+  assert.equal(measures.get("lemmas waiting for their senses to be reviewed [the queue of 0.15.0]"), 1);
+  assert.equal(measures.get("lemmas whose senses were reviewed"), 1);
+  assert.equal(waiting.length, measures.get("lemmas waiting for their senses to be reviewed [the queue of 0.15.0]"));
+
+  const marker: string = "public.split_semicolon_glosses(false)";
+  assert.equal(SPLIT.split(marker).length, 2, "one word to change");
+  const dry = await rowsAs<SplitRow>(db, "trusted", SPLIT);
+  assert.deepEqual(dry.map((r) => [r.headword, r.translation, r.action]), [
+    ["ægua", "water; aqua", "split"], ["lûxe", "luce; lume", "split"], ["TOTAL", null, "dry run"]]);
+  assert.match(dry.at(-1)?.reason ?? "", /to split: 2; skipped: 0; pieces added: 4; pieces already there: 0/u);
+  const glosses = async (): Promise<string[]> => (await rowsAs<{ gloss: string }>(db, "trusted",
+    "select gloss from glosses where deleted_at is null order by gloss")).map((r) => r.gloss);
+  assert.deepEqual(await glosses(), ["acqua", "luce; lume", "nuovo", "recente", "water; aqua"]);
+
+  const applied = await rowsAs<SplitRow>(db, "trusted", SPLIT.replace(marker, "public.split_semicolon_glosses(true)"));
+  assert.equal(applied.at(-1)?.action, "applied");
+  assert.deepEqual(await glosses(), ["acqua", "aqua", "luce", "lume", "nuovo", "recente", "water"]);
 });

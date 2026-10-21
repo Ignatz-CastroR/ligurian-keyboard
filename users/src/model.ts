@@ -2,6 +2,14 @@
  * model.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/20, 01:58:20, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/20, 23:49:12: an update that changed only
+ *           senses_reviewed_at reads as the senses reviewed [migration
+ *           0012, decision 0038].
+ * Updated:  2026/10/21, 09:30:23: one that changed only
+ *           senses_review_needed reads as the lemma put on the list of
+ *           senses to review; a change of the review date reads as a
+ *           review even when it clears it, since the history's summary
+ *           names the fields, not their values.
  * Purpose:  The Users section's logic, apart from the page: the
  *           addresses of its views, what each change in a person's
  *           history was [an approval reads better as "approved" than as
@@ -11,6 +19,7 @@
  *           0011: "changed" lists the fields an update changed, without
  *           version and updated_at.
  * Decision: docs/decisions/0035-site-in-five-sections.md
+ *           docs/decisions/0038-senses-reviewed-one-by-one.md
  */
 
 import type { AuditEntry, Status } from "../../admin/src/types.ts";
@@ -51,7 +60,8 @@ export function routeHash(route: Route): string {
   return hash;
 }
 
-export type Verb = "insert" | "update" | "approve" | "reject" | "unreview" | "soft_delete" | "restore";
+export type Verb =
+  "insert" | "update" | "approve" | "reject" | "unreview" | "review_senses" | "list_senses" | "soft_delete" | "restore";
 
 export interface Described {
   verb: Verb;
@@ -60,12 +70,18 @@ export interface Described {
 }
 
 /* What a change was. An update that changed the review status and
-   nothing else is a review: approved, rejected, or sent back to wait. */
+   nothing else is a review: approved, rejected, or sent back to wait.
+   One that changed only senses_reviewed_at, a lemma's column, is a
+   review of its senses [migration 0012]. */
 export function describeChange(change: { action: AuditEntry["action"]; status: Status | null; changed: string[] | null }): Described {
   const fields: string[] = change.changed ?? [];
   let described: Described = { verb: change.action, fields: [] };
   if (change.action === "update") {
-    if (fields.length === 1 && fields[0] === "status") {
+    if (fields.length === 1 && fields[0] === "senses_reviewed_at") {
+      described = { verb: "review_senses", fields: [] };
+    } else if (fields.length === 1 && fields[0] === "senses_review_needed") {
+      described = { verb: "list_senses", fields: [] };
+    } else if (fields.length === 1 && fields[0] === "status") {
       const verbs: Record<Status, Verb> = { approved: "approve", rejected: "reject", pending: "unreview" };
       described = { verb: change.status === null ? "update" : verbs[change.status], fields: change.status === null ? fields : [] };
     } else {

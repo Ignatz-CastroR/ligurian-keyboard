@@ -21,7 +21,11 @@
  *           translations added at once, separated by ";", each its own
  *           row, and a language always chosen, never assumed; an edited
  *           translation may not hold ";" [decision 0035].
- */
+
+ * Updated:  2026/10/20, 23:49:12: "[senza definizione]" instead of a dash
+ *           for a sense with no definition; for reviewers and admins, a
+ *           link to the repair page of the senses, and when they were
+ *           last reviewed [decision 0038]. */
 
 import type { Context } from "../context.ts";
 import type { AuditEntry, Entry, Gloss, LexiconTable, Profile, Sense, Status, Tracked, Wordform } from "../types.ts";
@@ -359,8 +363,13 @@ function sensesSection(ctx: Context, entry: Entry, reload: Reload): HTMLElement 
   for (const { sense, glosses } of entry.senses) {
     list.append(senseItem(ctx, sense, glosses, reload));
   }
+  const live: boolean = entry.lemma.deleted_at === null;
   return h("section", { class: "card" },
     h("h3", {}, t.entrySenses),
+    isStaff(ctx.role) && live && entry.senses.some((s) => s.sense.deleted_at === null) && h("p", { class: "small-text" },
+      h("a", { href: `#/repair/${entry.lemma.id}` }, t.entryRepairLink),
+      entry.lemma.senses_reviewed_at !== null
+        && h("span", { class: "muted" }, ` · ${t.repairReviewedAt(formatDateTime(entry.lemma.senses_reviewed_at))}`)),
     entry.senses.length === 0 ? h("p", { class: "muted" }, t.entryNoSenses) : list,
     entry.lemma.status !== "approved" && entry.senses.length > 0 && h("p", { class: "muted" }, t.entryPublishedNote),
     canAddChild(ctx.role, entry.lemma) && addSenseForm(ctx, entry, reload),
@@ -374,7 +383,7 @@ function senseItem(ctx: Context, sense: Sense, glosses: Gloss[], reload: Reload)
 
   const show = (): void => {
     head.replaceChildren(
-      h("span", { class: sense.definition_it === null ? "muted" : "" }, sense.definition_it ?? "—"),
+      h("span", { class: sense.definition_it === null ? "muted" : "" }, sense.definition_it ?? t.noDefinition),
       " ", statusBadge(t, sense),
       rowActions(ctx, "senses", sense, false, reload, edit),
     );

@@ -2,6 +2,8 @@
  * messages.ts
  * Author:   Eng. José Ignacio Castro de R. and contributors
  * Date:     2026/10/20, 02:00:40, DESAMPARADOS CENTRO, SAN JOSE, COSTA RICA
+ * Updated:  2026/10/20, 23:49:12: "significati rivisti", the review of a
+ *           lemma's senses [decision 0038].
  * Purpose:  The texts of the Users section that the lexicon manager does
  *           not already have, in Italian [default], English and Spanish.
  *           Profiles, roles, statuses and errors keep the manager's own
@@ -51,7 +53,7 @@ const IT = {
   kinds: { lemmas: "lemma", wordforms: "forma", senses: "significato", glosses: "traduzione" } as Record<LexiconTable, string>,
   verbs: {
     insert: "creato", update: "modificato", approve: "approvato", reject: "rifiutato",
-    unreview: "rimesso in attesa", soft_delete: "eliminato", restore: "ripristinato",
+    unreview: "rimesso in attesa", review_senses: "significati rivisti", list_senses: "messo fra i significati da rivedere", soft_delete: "eliminato", restore: "ripristinato",
   } as Record<Verb, string>,
 };
 
@@ -92,7 +94,7 @@ const EN: UserMessages = {
   kinds: { lemmas: "lemma", wordforms: "form", senses: "sense", glosses: "translation" },
   verbs: {
     insert: "created", update: "edited", approve: "approved", reject: "rejected",
-    unreview: "sent back to review", soft_delete: "deleted", restore: "restored",
+    unreview: "sent back to review", review_senses: "senses reviewed", list_senses: "put on the senses to review", soft_delete: "deleted", restore: "restored",
   },
 };
 
@@ -131,7 +133,7 @@ const ES: UserMessages = {
   kinds: { lemmas: "lema", wordforms: "forma", senses: "acepción", glosses: "traducción" },
   verbs: {
     insert: "creado", update: "editado", approve: "aprobado", reject: "rechazado",
-    unreview: "devuelto a revisión", soft_delete: "eliminado", restore: "restaurado",
+    unreview: "devuelto a revisión", review_senses: "acepciones revisadas", list_senses: "puesto entre las acepciones por revisar", soft_delete: "eliminado", restore: "restaurado",
   },
 };
 

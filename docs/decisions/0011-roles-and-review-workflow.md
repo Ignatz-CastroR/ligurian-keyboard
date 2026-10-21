@@ -3,7 +3,7 @@
 * **Status:** accepted
 * **Date:** 2026/10/10, refined 2026/10/11
 * **Decided by:** Eng. José Ignacio Castro de R.
-* **Refined by:** [0033](0033-batch-review.md), on batch review and the queue grouped by entry
+* **Refined by:** [0033](0033-batch-review.md), on batch review and the queue grouped by entry; [0038](0038-senses-reviewed-one-by-one.md), on a reviewer's power to soft delete senses and translations while regrouping them
 
 ## Context
 

@@ -19,6 +19,15 @@
  *           capital, Keyman capitalizes both, and they are one. Every
  *           count is doubled first, so that this extra one changes no
  *           other order [decision 0037].
+ * Updated:  2026/10/20, 21:19:17: the extra one was not enough. Keyman
+ *           19 auto-corrects only to a suggestion holding at least 66%
+ *           of the weight of the suggestions that match the typed keys
+ *           as closely [AUTOSELECT_PROPORTION_THRESHOLD in Keyman's
+ *           predict-helpers.ts, release 19.0.311]; twins at 9 and 8 gave
+ *           53%, so nothing was applied on the first space. The
+ *           lowercase twin now weighs at least three times its
+ *           capitalized twins together, 75% of the pair; counts are no
+ *           longer doubled [decision 0037].
  * Decision: docs/decisions/0022-keyman-keyboard-design.md
  *           docs/decisions/0037-lowercase-first-and-ligurian-names.md
  */
@@ -42,7 +51,7 @@ export type WordlistResult =
 
 // Keyman weighs suggestions by count and never offers a word whose count
 // is 0. An approved word must always be reachable, so counts are whole
-// numbers of at least 1 [then doubled, below].
+// numbers of at least 1.
 export function keymanCount(freq: number): number {
   return Math.max(1, Math.round(freq));
 }
@@ -68,21 +77,39 @@ function startsLowercase(form: string): boolean {
   return first !== first.toUpperCase() && first === first.toLowerCase();
 }
 
-/* The weight of every form in the word list: its count doubled, plus
-   one for a form that begins with a lowercase letter when another form
-   is spelled the same but for capitals [damàsco beside Damàsco]. Keyman
-   breaks ties between suggestions in its own way, and on 2026/10/20 it
-   auto-corrected "damasco" to Damàsco; with the extra one, a word typed
-   in lowercase is corrected to the lowercase form. Doubling first keeps
-   every other order exactly as the counts give it: 2a + 1 never passes
-   2b when a < b. */
+// The smallest share of a twin pair's weight that its lowercase form
+// holds. Keyman 19 auto-corrects only to a suggestion holding at least
+// 66% of the weight of the suggestions that match the typed keys as
+// closely [AUTOSELECT_PROPORTION_THRESHOLD = .66 in Keyman's
+// web/src/engine/predictive-text/worker-thread/src/main/predict-helpers.ts,
+// release 19.0.311]. Three times the capitalized weight gives 75%, a
+// margin over 66% in case a later Keyman raises it a little.
+export const KEYMAN_AUTOSELECT_SHARE: number = 0.66;
+export const LOWERCASE_TWIN_FACTOR: number = 3;
+
+/* The weight of every form in the word list: its count, except for a
+   form that begins with a lowercase letter while other forms are spelled
+   the same but for capitals [damàsco beside Damàsco]. Such a lowercase
+   twin weighs at least LOWERCASE_TWIN_FACTOR times its capitalized twins
+   together, so that "damasco" typed in lowercase is auto-corrected to
+   damàsco on the first space. Typed with a capital, Keyman capitalizes
+   every suggestion, the twins become one, and that one holds their whole
+   weight. A twin already heavier keeps its own count. The extra weight
+   also lifts the lowercase twin among the longer words that start with
+   the same keys; that is the price of a working auto-correction. */
 export function keymanWeights(entries: readonly LexiconEntry[]): Map<string, number> {
-  const capitalized: Set<string> = new Set(
-    entries.filter((e) => !startsLowercase(e.form)).map((e) => e.form.toLowerCase()));
+  const capitalizedWeight: Map<string, number> = new Map();
+  for (const entry of entries) {
+    if (!startsLowercase(entry.form)) {
+      const lowered: string = entry.form.toLowerCase();
+      capitalizedWeight.set(lowered, (capitalizedWeight.get(lowered) ?? 0) + keymanCount(entry.freq));
+    }
+  }
   const weights: Map<string, number> = new Map();
   for (const entry of entries) {
-    const partner: boolean = startsLowercase(entry.form) && capitalized.has(entry.form.toLowerCase());
-    weights.set(entry.form, 2 * keymanCount(entry.freq) + (partner ? 1 : 0));
+    const own: number = keymanCount(entry.freq);
+    const partners: number = startsLowercase(entry.form) ? capitalizedWeight.get(entry.form.toLowerCase()) ?? 0 : 0;
+    weights.set(entry.form, Math.max(own, LOWERCASE_TWIN_FACTOR * partners));
   }
   return weights;
 }

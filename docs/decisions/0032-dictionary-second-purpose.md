@@ -8,7 +8,7 @@
 
 ## Context
 
-The project began as an input method, and the database exists to feed it [decision [0001](0001-input-method-not-editor.md)]. Because that database already records lemmas with every form, numbered senses, definitions, translations into Italian, Spanish and English tied to one sense, review, history, open data and, since 0.10.0, a permanent public code for every entry [decision [0002](0002-one-dictionary-database.md)], it is also the framework of a trilingual Ligurian dictionary. The observation came from Alessio Gastaldi.
+The project began as an input method, and the database exists to feed it [decision [0001](0001-input-method-not-editor.md)]. Because that database already records lemmas with every form, numbered senses, definitions, translations into Italian, Spanish and English tied to one sense, review, history, open data and, since 0.10.0, a permanent public code for every entry [decision [0002](0002-one-dictionary-database.md)], it is also the framework of a trilingual Ligurian dictionary.
 
 A framework is not yet a dictionary: it lacks content, an editorial policy, fields that dictionaries carry, and pages for readers. Without a decision, that second purpose would either be ignored or pull the project away from the keyboard.
 

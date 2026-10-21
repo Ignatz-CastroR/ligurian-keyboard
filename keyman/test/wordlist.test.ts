@@ -7,12 +7,19 @@
  * Updated:  2026/10/20, 20:09:40: weights are counts doubled; a
  *           lowercase form weighs one more than its capitalized twin
  *           [decision 0037].
+ * Updated:  2026/10/20, 21:19:17: counts no longer doubled; a lowercase
+ *           twin weighs at least three times its capitalized twins, so
+ *           it passes Keyman 19's 66% auto-correction share; a test of
+ *           that share on every twin [decision 0037].
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { stampSnapshot } from "../../editor/src/snapshot.ts";
-import { buildWordlist, keymanCount, keymanWeights, modelVersion, type WordlistResult } from "../src/wordlist.ts";
+import {
+  buildWordlist, KEYMAN_AUTOSELECT_SHARE, keymanCount, keymanWeights, LOWERCASE_TWIN_FACTOR, modelVersion,
+  type WordlistResult,
+} from "../src/wordlist.ts";
 
 const HEADER: string = "form\tfreq\tvariety\torthography\tstatus";
 const NOW: Date = new Date(Date.UTC(2026, 0, 2, 3, 4, 5));
@@ -36,17 +43,17 @@ test("only approved zeneize ofiçiâ forms enter the word list", () => {
     "zeneise\t1\tzeneize\tunitäia\tapproved",
     "anâ\t1\tzeneize\tofiçiâ\trejected",
   ), NOW);
-  assert.deepEqual(words(result), ["zenéize\t6"]);
+  assert.deepEqual(words(result), ["zenéize\t3"]);
 });
 
-test("most frequent first, ties in alphabetical order; every count doubled", () => {
+test("most frequent first, ties in alphabetical order", () => {
   const result: WordlistResult = buildWordlist(snapshot(
     "çitæ\t2\tzeneize\tofiçiâ\tapproved",
     "anâ\t2\tzeneize\tofiçiâ\tapproved",
     "Zêna\t9\tzeneize\tofiçiâ\tapproved",
     "dî\t1\tzeneize\tofiçiâ\tapproved",
   ), NOW);
-  assert.deepEqual(words(result), ["Zêna\t18", "anâ\t4", "çitæ\t4", "dî\t2"]);
+  assert.deepEqual(words(result), ["Zêna\t9", "anâ\t2", "çitæ\t2", "dî\t1"]);
 });
 
 test("counts are whole numbers of at least 1, so every approved word is reachable", () => {
@@ -55,10 +62,10 @@ test("counts are whole numbers of at least 1, so every approved word is reachabl
   assert.equal(keymanCount(2.5), 3);
   assert.equal(keymanCount(41), 41);
   const result: WordlistResult = buildWordlist(snapshot("anâ\t0\tzeneize\tofiçiâ\tapproved"), NOW);
-  assert.deepEqual(words(result), ["anâ\t2"]);
+  assert.deepEqual(words(result), ["anâ\t1"]);
 });
 
-test("a lowercase form weighs one more than its capitalized twin, and no other order changes", () => {
+test("a lowercase twin weighs three times its capitalized twins; a heavier twin keeps its count", () => {
   const result: WordlistResult = buildWordlist(snapshot(
     "Damàsco\t5\tzeneize\tofiçiâ\tapproved",
     "damàsco\t5\tzeneize\tofiçiâ\tapproved",
@@ -68,12 +75,18 @@ test("a lowercase form weighs one more than its capitalized twin, and no other o
     "Zenâ\t3\tzeneize\tofiçiâ\tapproved",
     "Zìtta\t1\tzeneize\tofiçiâ\tapproved",
     "zìtta\t9\tzeneize\tofiçiâ\tapproved",
+    "Pànama\t2\tzeneize\tofiçiâ\tapproved",
+    "PÀNAMA\t1\tzeneize\tofiçiâ\tapproved",
+    "pànama\t1\tzeneize\tofiçiâ\tapproved",
     "'na\t2\tzeneize\tofiçiâ\tapproved",
   ), NOW);
   assert.deepEqual(words(result), [
-    // The lowercase twin first; a twin already heavier stays so.
-    "zìtta\t19", "damàsco\t11", "damàschina\t10", "Damàsco\t10",
-    "zenâ\t7", "Zenâ\t6", "Zêna\t6", "'na\t4", "Zìtta\t2",
+    // damàsco: 3 x 5; zìtta keeps 9, already over 3 x 1; pànama weighs
+    // three times both capitalized forms, 3 x [2 + 1]; zenâ, 3 x 3.
+    // Ties in alphabetical order.
+    "damàsco\t15", "pànama\t9", "zenâ\t9", "zìtta\t9",
+    "damàschina\t5", "Damàsco\t5", "Zenâ\t3", "Zêna\t3",
+    "'na\t2", "Pànama\t2", "PÀNAMA\t1", "Zìtta\t1",
   ]);
   // Only an exact twin but for capitals counts: Zêna has no lowercase
   // twin, and zenâ's twin is Zenâ, not Zêna.
@@ -81,7 +94,29 @@ test("a lowercase form weighs one more than its capitalized twin, and no other o
     { form: "Zêna", freq: 3, variety: "zeneize", orthography: "ofiçiâ", status: "approved" },
     { form: "zenâ", freq: 3, variety: "zeneize", orthography: "ofiçiâ", status: "approved" },
   ]);
-  assert.deepEqual([...weights], [["Zêna", 6], ["zenâ", 6]]);
+  assert.deepEqual([...weights], [["Zêna", 3], ["zenâ", 3]]);
+});
+
+/* Keyman 19 auto-corrects to the best suggestion only when it holds at
+   least KEYMAN_AUTOSELECT_SHARE of the weight of the suggestions that
+   match the typed keys as closely; damàsco and Damàsco match "damasco"
+   equally [both differ from it by an accent]. Keyman's prediction engine
+   is not published as a package, so this checks its rule, read from its
+   source at release 19.0.311, not the engine itself. */
+test("on every twin, the lowercase form holds more than Keyman's auto-correction share", () => {
+  assert.equal(LOWERCASE_TWIN_FACTOR / (LOWERCASE_TWIN_FACTOR + 1), 0.75);
+  const freqs: readonly number[] = [0, 1, 2, 3, 4, 7, 13, 100, 2500];
+  for (const lower of freqs) {
+    for (const upper of freqs) {
+      const weights = keymanWeights([
+        { form: "Damàsco", freq: upper, variety: "zeneize", orthography: "ofiçiâ", status: "approved" },
+        { form: "damàsco", freq: lower, variety: "zeneize", orthography: "ofiçiâ", status: "approved" },
+      ]);
+      const low: number = weights.get("damàsco") ?? 0;
+      const cap: number = weights.get("Damàsco") ?? 0;
+      assert.ok(low / (low + cap) > KEYMAN_AUTOSELECT_SHARE, `counts ${lower} and ${upper}: weights ${low} and ${cap}`);
+    }
+  }
 });
 
 test("the version is the snapshot's date, without leading zeros", () => {

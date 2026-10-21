@@ -24,7 +24,7 @@ c Decision: docs/decisions/0022-keyman-keyboard-design.md
 store(&VERSION) '17.0'
 store(&NAME) 'grafîa ofiçiâ'
 store(&COPYRIGHT) '© 2026 Eng. José Ignacio Castro de R. and contributors'
-store(&KEYBOARDVERSION) '0.14.2'
+store(&KEYBOARDVERSION) '0.14.3'
 store(&TARGETS) 'mobile tablet'
 store(&LAYOUTFILE) 'ligurian_keyboard.keyman-touch-layout'
 

@@ -2,6 +2,10 @@
 
 The package version is the date of the dictionary snapshot it was built from, as YYYY.M.D. The model itself changes only with the project's versions; only the project versions that changed the model, or the words and counts it is built from, are listed here.
 
+## Project 0.14.3 2026/10/20
+
+* Counts are the frequency list's own again, and a form beginning with a lowercase letter weighs at least three times its twins spelled with capitals, such as damàsco beside Damàsco. Keyman 19 auto-corrects only to a suggestion holding at least 66% of the weight of those matching the typed keys as closely; the rule of 0.14.2 gave 53%, so "damasco" still became Damàsco, on a second space. Now damàsco holds 75%.
+
 ## Project 0.14.2 2026/10/20
 
 * Named in Ligurian: "Diçionäio lìgure [grafîa ofiçiâ]", for the language "Lìgure" [decision 0037].

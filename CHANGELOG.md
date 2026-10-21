@@ -23,20 +23,68 @@ YYYY/MM/DD. The test counts are those of `npm run check` at the tag.
   decision applied at once by the database and recorded; translation
   texts and languages corrected on the way; translations holding ";"
   split after a dry run; the manager's dashes replaced.
-- 0.16.0: `import_entries()`, a structured import with a dry run and
-  authors, in the format of `db/templates/add-entries.sql`, and an
-  enrichment format, keyed by public code and sense, for translations
-  and definitions prepared outside the site.
-- 0.17.0: grammar for every form, base lemma included, in structured
-  fields [gender, number, person, tense and mood]; richer entries:
-  etymology, examples, definitions in four languages, usage labels,
-  images uploaded to Supabase; pronunciation in IPA by form and
-  variety.
+- 0.16.0: grammar for every form, base lemma included, in structured
+  fields chosen by part of speech: gender, number, person, tense and
+  mood, with the conjugation class, the auxiliary and the pronominal
+  mark on a verb's lemma; an "invariable" mark; the fields shown in the
+  form for a new lemma, on the entry page and in the review queue. The
+  same list of values will tag the forms an inflection generator
+  writes. The enrichment format published as a document. Moved before
+  the import, so that the import carries grammar from its first day.
+- 0.17.0: `import_entries()`, a structured import with a dry run and
+  authors, in the format of `db/templates/add-entries.sql` with the
+  grammar fields, and the enrichment format, keyed by public code and
+  sense, for translations and definitions prepared outside the site;
+  richer entries: etymology, examples, definitions in four languages,
+  usage labels, images uploaded to Supabase; pronunciation in IPA by
+  form and variety.
 - 0.18.0: recordings by native speakers, with their consent and a free
   license.
 - Then: hardening, contributor documentation; a beta with native
   speakers in Genoa.
 - 1.0.0: when every criterion in the README's roadmap is met.
+
+## [0.14.3] [2026/10/20] [damàsco on the first space]
+
+### Fixed
+- The fix of 0.14.2 did not work on the phone: typed in lowercase,
+  `damasco` still became `Damàsco`, and only on a second press of
+  space. The cause, read in Keyman's own source [release 19.0.311,
+  `predict-helpers.ts`]: Keyman 19 auto-corrects only to a suggestion
+  holding at least 66% of the weight of the suggestions that match the
+  typed keys as closely. 0.14.2 gave the twins 9 and 8, so `damàsco`
+  held 53%, nothing was applied on the first space, and Keyman's
+  fallback applied `Damàsco` on the second. A form beginning with a
+  lowercase letter now weighs at least three times the forms spelled
+  the same but for capitals, together, which gives it 75%; counts are
+  no longer doubled. Typed `Damasco`, Keyman still makes the twins one
+  and gives `Damàsco`. Verified by a test that runs the weights over
+  every pair of counts from 0 to 2,500 in a set of nine and checks
+  that the lowercase twin always holds more than 66%, and by the word
+  list tests, rewritten for the new weights and for a lowercase form
+  with two capitalized twins [`pànama`, `Pànama`, `PÀNAMA`]. Keyman's
+  prediction engine is not published as a package, so its rule is
+  tested, not the engine; the phone is the final check.
+- The README promised the web editor's numbered menu "from any
+  keyboard". On a phone, Keyman's suggestion bar shows the spellings
+  side by side and a tap picks one; a lexical model cannot change
+  that bar. The README now says so, in English and in Italian.
+
+### Changed
+- Decision 0037 updated: the new weight and the reason for it, and
+  the phone's suggestion bar as its menu. It also records that the
+  dictionary's version is only the snapshot's date, so two builds on
+  the same UTC day share a version; until that changes, a dictionary
+  is tested on the phone by uninstalling it first.
+- A contributor's name is removed from the README's acknowledgements,
+  decision records 0030 and 0032, and the 0.10.0 entry of this log.
+- The plan: grammar fields move to 0.16.0, before the structured
+  import, which moves to 0.17.0 and carries them from its first day.
+- Keyboard version 0.14.3.
+
+Tests: 309, passing on Node.js 22 [engine 54, db 93, admin 66,
+editor 24, dictionary 9, users 4, site 4, keyman 34, corpus 16,
+docs 5].
 
 ## [0.14.2] [2026/10/20] [lowercase first; Lìgure]
 
@@ -836,8 +884,6 @@ editor 23, keyman 32, corpus 15, docs 5].
   as its first audience; records 0001 and 0002 point to it. The
   README's roadmap describes the dictionary steps that follow the
   beta, in English and in the Italian summary.
-- The README's acknowledgements thank Alessio Gastaldi, who suggested
-  a lasting identifier for every entry.
 
 ### Changed
 - Migration 0005's header names the author as every other file does,
@@ -1804,7 +1850,8 @@ Written and tested, not yet deployed.
 [keepachangelog]: https://keepachangelog.com/en/1.1.0/
 [semver]: https://semver.org/
 [releases]: https://github.com/Ignatz-CastroR/ligurian-keyboard/releases
-[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.2...HEAD
+[Unreleased]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.3...HEAD
+[0.14.3]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.2...v0.14.3
 [0.14.2]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.1...v0.14.2
 [0.14.1]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/Ignatz-CastroR/ligurian-keyboard/compare/v0.13.1...v0.14.0

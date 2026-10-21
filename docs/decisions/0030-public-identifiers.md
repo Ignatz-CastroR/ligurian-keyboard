@@ -9,7 +9,7 @@
 
 Every row already has an `id`, a number the database counts up and never reuses. That number belongs to one database. A restore into a new project, a merge with another source or a future import can renumber rows, and a number such as `37` means nothing outside the database it came from.
 
-The project needs a name for an entry that survives all of that: to link a lemma with its inflected forms in a backup or an import file, to recognize a row that is already in the dictionary when the same file is imported twice, and to let people cite an entry without ambiguity. The suggestion came from Alessio Gastaldi, from his experience with online Ligurian dictionaries.
+The project needs a name for an entry that survives all of that: to link a lemma with its inflected forms in a backup or an import file, to recognize a row that is already in the dictionary when the same file is imported twice, and to let people cite an entry without ambiguity.
 
 ## Decision
 
